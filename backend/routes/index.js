@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const express = require("express");
 
 module.exports = (app) => {
   app.get("/api", (_req, res) => {

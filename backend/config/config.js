@@ -1,5 +1,3 @@
-const { Connection } = require("pg");
-
 require("dotenv").config();
 module.exports = {
   development: {
@@ -8,11 +6,11 @@ module.exports = {
     database: process.env.DB_DATABASE,
     host: process.env.DB_ENDPOINT,
     port: process.env.DB_PORT,
-    dialect: "mysql",
+    dialect: "postgres",
     define: {
       freezeTableName: true,
     },
-    connectString: process.env.DB_CONNECTION_STRING,
+    connectionString: process.env.DB_CONNECTION_STRING,
   },
   test: {
     username: process.env.DB_USER,
@@ -20,7 +18,7 @@ module.exports = {
     database: process.env.DB_DATABASE,
     host: process.env.DB_ENDPOINT,
     port: process.env.DB_PORT,
-    dialect: "mysql",
+    dialect: "postgres",
     define: {
       freezeTableName: true,
     },
@@ -31,7 +29,7 @@ module.exports = {
     database: process.env.DB_DATABASE,
     host: process.env.DB_ENDPOINT,
     port: process.env.DB_PORT,
-    dialect: "mysql",
+    dialect: "postgres",
     define: {
       freezeTableName: true,
     },
