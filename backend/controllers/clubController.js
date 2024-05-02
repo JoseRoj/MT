@@ -21,28 +21,51 @@ module.exports = {
     }
   },
 
-  async createClub(nombre, descripcion, latitud, longitud, id_deporte) {
+  async createClub(
+    nombre,
+    descripcion,
+    latitud,
+    longitud,
+    id_deporte,
+    image,
+    categorias
+  ) {
     try {
-      console.log("Nombre: ", nombre);
-      //* Primero se debe comprobar que el club no exista;
       let query = `SELECT COUNT(*) AS cantidad_clubes
       FROM public."Club"
       WHERE nombre = $1`;
+      //await connectionPostgres.query("BEGIN"); // Inicia la transacción
+      console.log("Nombre: ", nombre);
+      //* Primero se debe comprobar que el club no exista;
+
       let response = await connectionPostgres.query(query, [nombre]);
       if (response.rowCount[0] > 0) {
         return { statusCode: 400, message: "Nombre existente" };
       }
       //* Query para insertar el club
-      query = `INSERT INTO public."Club" (nombre, latitud, longitud, descripcion, id_deporte) VALUES ($1, $2, $3, $4, $5)`;
+      query = `INSERT INTO public."Club" (nombre, latitud, longitud, descripcion, id_deporte, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`;
       response = await connectionPostgres.query(query, [
         nombre,
         latitud,
         longitud,
         descripcion,
         id_deporte,
+        image,
       ]);
+      const id_club = response.rows[0].id;
+      console.log("Id_club: ", id_club);
+      query =
+        'INSERT INTO public."ClubCategoria" (id_club, id_categoria) VALUES ';
+      query += categorias
+        .map((categoria) => `(${id_club}, ${categoria})`)
+        .join(", ");
+
+      response = await connectionPostgres.query(query);
+      //await connectionPostgres.query("COMMIT"); // Confirma la transacción
       return { statusCode: 200, message: "Club creado con éxito" };
-    } catch {
+    } catch (e) {
+      console.log("Error: ", e);
+      //await connectionPostgres.query("ROLLBACK");
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },

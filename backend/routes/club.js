@@ -34,14 +34,24 @@ module.exports = (app) => {
   });
 
   app.post("/club", async (req, res) => {
-    const { nombre, descripcion, latitud, longitud, id_deporte } = req.body;
+    const {
+      nombre,
+      descripcion,
+      latitud,
+      longitud,
+      id_deporte,
+      image,
+      categorias,
+    } = req.body;
     try {
       const response = await clubController.createClub(
         nombre,
         descripcion,
         latitud,
         longitud,
-        id_deporte
+        id_deporte,
+        image,
+        categorias
       );
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
@@ -49,6 +59,7 @@ module.exports = (app) => {
         ? res.status(500).send({ message: response.message })
         : res.status(200).send({ message: response.message });
     } catch (error) {
+      console.log("Error: ", error);
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
