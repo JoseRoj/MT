@@ -14,7 +14,6 @@ module.exports = (app) => {
           });
     } catch (error) {
       res.status(500).send({ message: "Error interno del servidor" });
-      res.status(500).send({ message: "Error interno del servidor" });
     }
   });
 
@@ -29,6 +28,7 @@ module.exports = (app) => {
             data: response.data,
           });
     } catch (error) {
+      console.log("Error: ", error);
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
@@ -40,9 +40,14 @@ module.exports = (app) => {
       latitud,
       longitud,
       id_deporte,
-      image,
+      logo,
+      correo,
+      telefono,
       categorias,
     } = req.body;
+
+    console.log("Categorias: ", categorias);
+
     try {
       const response = await clubController.createClub(
         nombre,
@@ -50,7 +55,9 @@ module.exports = (app) => {
         latitud,
         longitud,
         id_deporte,
-        image,
+        logo,
+        correo,
+        telefono,
         categorias
       );
       return response.statusCode === 400

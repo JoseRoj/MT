@@ -18,7 +18,7 @@ module.exports = (app) => {
 
   app.get("/usuarios/getUser", async (req, res) => {
     try {
-      const response = await usuarioController.getUser(req.query.id);
+      const response = await usuarioController.getUsuario(req.query.id);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -27,6 +27,8 @@ module.exports = (app) => {
             data: response.data,
           });
     } catch (error) {
+      console.log("error: ", error);
+
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
@@ -40,6 +42,7 @@ module.exports = (app) => {
       telefono,
       fecha_nacimiento,
       genero,
+      imagen,
     } = req.body;
     try {
       const response = await usuarioController.createUsuario(
@@ -50,7 +53,8 @@ module.exports = (app) => {
         contrasena,
         telefono,
         fecha_nacimiento,
-        genero
+        genero,
+        imagen
       );
 
       return response.statusCode === 400

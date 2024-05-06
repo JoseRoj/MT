@@ -11,6 +11,10 @@ module.exports = {
       freezeTableName: true,
     },
     connectionString: process.env.DB_CONNECTION_STRING,
+    configToken: {
+      SEED: "secret",
+      expiration: "24h",
+    },
   },
   test: {
     username: process.env.DB_USER,
@@ -22,6 +26,10 @@ module.exports = {
     define: {
       freezeTableName: true,
     },
+    configToken: {
+      SEED: "secret",
+      expiration: "24h",
+    },
   },
   production: {
     username: process.env.DB_USER,
@@ -32,6 +40,10 @@ module.exports = {
     dialect: "postgres",
     define: {
       freezeTableName: true,
+    },
+    configToken: {
+      SEED: "secret",
+      expiration: "24h",
     },
   },
 };
