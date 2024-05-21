@@ -66,4 +66,38 @@ module.exports = (app) => {
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
+  app.get("/usuarios/rol", async (req, res) => {
+    try {
+      const { id_usuario, id_club } = req.query;
+      const response = await usuarioController.getRol(id_usuario, id_club);
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({
+            data: response.data,
+          });
+    } catch (error) {
+      console.log("error: ", error);
+
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
+
+  app.get("/usuarios/getclubesUser", async (req, res) => {
+    try {
+      const { id_usuario } = req.query;
+      const response = await usuarioController.getClubesUser(id_usuario);
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({
+            data: response.data,
+          });
+    } catch (error) {
+      console.log("error: ", error);
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
 };

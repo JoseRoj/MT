@@ -44,10 +44,9 @@ module.exports = (app) => {
       correo,
       telefono,
       categorias,
+      tipos,
+      id_usuario,
     } = req.body;
-
-    console.log("Categorias: ", categorias);
-
     try {
       const response = await clubController.createClub(
         nombre,
@@ -58,7 +57,9 @@ module.exports = (app) => {
         logo,
         correo,
         telefono,
-        categorias
+        categorias,
+        tipos,
+        id_usuario
       );
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })

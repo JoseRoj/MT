@@ -4,6 +4,11 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 module.exports = {
+  /* 
+    * Authenticacion de Usuario
+    ? @param email - email del usuario
+    ? @param contrasena - contraseña del usuario
+  */
   async login(email, contrasena) {
     try {
       let query = `SELECT * FROM public."Usuarios" WHERE email = $1`;

@@ -1,6 +1,9 @@
 const connectionPostgres = require("../database/db");
 
 module.exports = {
+  /*
+   * Obtener todas las categorias
+   */
   async getCategoria() {
     try {
       let query = `SELECT * FROM public."Categoria"`;
