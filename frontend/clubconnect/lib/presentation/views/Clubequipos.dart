@@ -37,6 +37,8 @@ class EquiposState extends ConsumerState<Equipos> {
   late List<Equipo> equipos;
   late Future<List<Solicitud>> _futuresolicitudes;
   late List<Solicitud> solicitudes;
+  late Future<List<User>> _futuremiembros;
+  late List<User> miembros;
 
   Widget equiposBuilder() {
     return FutureBuilder(
@@ -55,9 +57,13 @@ class EquiposState extends ConsumerState<Equipos> {
                 child: ListView.builder(
                   itemCount: equipos.length,
                   itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(equipos[index].nombre),
-                      trailing: Icon(Icons.arrow_forward_ios_sharp),
+                    return Card(
+                      child: ListTile(
+                        title: Text(equipos[index].nombre),
+                        trailing: Icon(Icons.arrow_forward_ios_sharp),
+                        onTap: () => context.go(
+                            '/home/0/club/${widget.idclub}/equipos/${equipos[index].id}'),
+                      ),
                     );
                   },
                 ),
@@ -70,7 +76,7 @@ class EquiposState extends ConsumerState<Equipos> {
         });
   }
 
-  Widget miembrosBuilder(_controllerEquipo) {
+  Widget solicitudesBuilder(_controllerEquipo) {
     return FutureBuilder(
         future: Future.wait([_futuresolicitudes, _futureequipos]),
         builder: (context, snapshot) {
@@ -84,12 +90,6 @@ class EquiposState extends ConsumerState<Equipos> {
                 onRefresh: () async {
                   await getSolicitud();
                 },
-
-                //print("Solicitudes2 : ${solicitudes.map((e) => e.id)}");
-
-                //! TODO : Implementar la función de refrescar
-                //await getEquipos();
-
                 child: ListView.builder(
                   itemCount: solicitudes.length,
                   itemBuilder: (context, index) {
@@ -278,7 +278,17 @@ class EquiposState extends ConsumerState<Equipos> {
                                                         const Color.fromARGB(
                                                             255, 204, 78, 69)),
                                               ),
-                                              onPressed: () {
+                                              onPressed: () async {
+                                                await ref
+                                                    .read(clubConnectProvider)
+                                                    .updateSolicitud(
+                                                        int.parse(
+                                                            solicitudes[index]
+                                                                .id),
+                                                        widget.idclub,
+                                                        "Cancelada");
+                                                Navigator.of(context).pop();
+
                                                 // Acción cuando se presiona el botón
                                               },
                                               child: Text('Rechazar',
@@ -314,6 +324,77 @@ class EquiposState extends ConsumerState<Equipos> {
         });
   }
 
+  Widget miembrosBuilder() {
+    return FutureBuilder(
+      future: _futuremiembros,
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.waiting:
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          case ConnectionState.done:
+            print(" miembros: " + miembros.toString());
+            return RefreshIndicator(
+              onRefresh: () async {
+                await getMiembros();
+              },
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3, // Número de columnas
+                    childAspectRatio: MediaQuery.of(context).size.width /
+                        (MediaQuery.of(context).size.height /
+                            2), // Proporción de aspecto,
+                    mainAxisSpacing: 2,
+                    crossAxisSpacing: 3),
+                itemCount: miembros.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        miembros[index].imagen == "" ||
+                                miembros[index].imagen == null
+                            ? ClipOval(
+                                child: Image.asset(
+                                  'assets/nofoto.jpeg',
+                                  fit: BoxFit.cover,
+                                  width: 60,
+                                  height: 60,
+                                ),
+                              )
+                            : ClipOval(
+                                child: Image.memory(
+                                  imagenFromBase64(club.logo),
+                                  fit: BoxFit.cover,
+                                  width: 60,
+                                  height: 60,
+                                ),
+                              ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            "${miembros[index].nombre} ${miembros[index].apellido1} ${miembros[index].apellido2}",
+                            style: AppTheme().getTheme().textTheme.labelMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            );
+          case ConnectionState.none:
+            return Text('none');
+          case ConnectionState.active:
+            return Text('active');
+        }
+      },
+    );
+  }
+
   List<String> items = List.generate(20, (index) => 'Item $index');
 
   Future<void> getEquipos() async {
@@ -327,11 +408,14 @@ class EquiposState extends ConsumerState<Equipos> {
   Future<bool> addEquipo(String name) async {
     Equipo equipo = Equipo(nombre: name, idClub: widget.idclub.toString());
     final response = await ref.read(clubConnectProvider).addEquipo(equipo);
+    final responseEquipo = await ref.read(clubConnectProvider).getEquipos(
+        widget.idclub); // Simula un proceso de carga o actualización de datos
+    equipos = responseEquipo;
     if (response == false) {
       return false;
     } else {
       setState(() {
-        equipos.add(equipo);
+        //equipos.add(equipo);
       });
       return true;
     }
@@ -341,14 +425,24 @@ class EquiposState extends ConsumerState<Equipos> {
   Future<void> getSolicitud() async {
     final response = await ref.read(clubConnectProvider).getSolicitudes(
         widget.idclub); // Simula un proceso de carga o actualización de datos
-    print("Solicitudes : ${response.map((e) => e.id)}");
     setState(() {
       solicitudes = response;
     });
   }
 
+  Future<void> getMiembros() async {
+    final response = await ref.read(clubConnectProvider).getMiembros(
+        widget.idclub); // Simula un proceso de carga o actualización de datos
+    print("Miembros : ${response.map((e) => e.nombre)}");
+
+    setState(() {
+      miembros = response;
+    });
+  }
+
   @override
   void initState() {
+    print("Entre...");
     _futurerole = ref
         .read(clubConnectProvider)
         .getRole(ref.read(authProvider).id!, widget.idclub)
@@ -364,6 +458,10 @@ class EquiposState extends ConsumerState<Equipos> {
               .read(clubConnectProvider)
               .getSolicitudes(widget.idclub)
               .then((value) => solicitudes = value);
+          _futuremiembros = ref
+              .read(clubConnectProvider)
+              .getMiembros(widget.idclub)
+              .then((value) => miembros = value);
         } else {
           _futureequipos = ref
               .read(clubConnectProvider)
@@ -439,141 +537,152 @@ class EquiposState extends ConsumerState<Equipos> {
               return Text('Error');
             } else {
               return Scaffold(
-                  key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
-                  appBar: AppBar(
-                    title: widgetIndex == 0
-                        ? const Text('Equipos')
-                        : widgetIndex == 1
-                            ? const Text('Miembros')
-                            : widgetIndex == 2
-                                ? const Text('Solicitudes')
-                                : const Text('Información del Club'),
-                    leading: IconButton(
-                      icon: Icon(Icons.arrow_back),
-                      onPressed: () {
-                        GoRouter.of(context).go('/home/0');
-                      },
-                    ),
-                    actions: role == "Administrador"
-                        ? <Widget>[
-                            IconButton(
-                              icon: Icon(Icons.menu),
-                              onPressed: () {
-                                _scaffoldKey.currentState!.openDrawer();
+                key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
+                appBar: AppBar(
+                  title: widgetIndex == 0
+                      ? const Text('Equipos')
+                      : widgetIndex == 1
+                          ? const Text('Miembros')
+                          : widgetIndex == 2
+                              ? const Text('Solicitudes')
+                              : const Text('Información del Club'),
+                  leading: IconButton(
+                    icon: Icon(Icons.arrow_back),
+                    onPressed: () {
+                      GoRouter.of(context).go('/home/0');
+                    },
+                  ),
+                  actions: role == "Administrador"
+                      ? <Widget>[
+                          IconButton(
+                            icon: Icon(Icons.menu),
+                            onPressed: () {
+                              _scaffoldKey.currentState!.openDrawer();
+                            },
+                          ),
+                        ]
+                      : null,
+                ),
+                drawer: role == "Administrador"
+                    ? Drawer(
+                        child: ListView(
+                          padding: EdgeInsets.zero,
+                          children: <Widget>[
+                            DrawerHeader(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 10),
+                              decoration: const BoxDecoration(
+                                color: Colors.blue,
+                              ),
+                              child: Column(
+                                children: [
+                                  club.logo == "" || club.logo == null
+                                      ? ClipOval(
+                                          child: Image.asset(
+                                            'assets/nofoto.jpeg',
+                                            fit: BoxFit.cover,
+                                            width: 80,
+                                            height: 80,
+                                          ),
+                                        )
+                                      : ClipOval(
+                                          child: Image.memory(
+                                            imagenFromBase64(club.logo),
+                                            fit: BoxFit.cover,
+                                            width: 80,
+                                            height: 80,
+                                          ),
+                                        ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    child: Text(
+                                      club.nombre,
+                                      style: styleText.titleSmall,
+                                      maxLines: 1,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            ListTile(
+                              leading: Icon(Icons.group_add),
+                              title: Text('Crear Equipo',
+                                  style: styleText.bodyMedium),
+                              onTap: () {
+                                _scaffoldKey.currentState!.closeDrawer();
+                                _showCreateTeamModal(
+                                    context,
+                                    controllername,
+                                    (value) => emptyOrNull(value, "nombre"),
+                                    addEquipo);
+
+                                // Acción cuando se presiona la opción 1 del Drawer
                               },
                             ),
-                          ]
-                        : null,
-                  ),
-                  drawer: role == "Administrador"
-                      ? Drawer(
-                          child: ListView(
-                            padding: EdgeInsets.zero,
-                            children: <Widget>[
-                              DrawerHeader(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 10),
-                                decoration: const BoxDecoration(
-                                  color: Colors.blue,
-                                ),
-                                child: Column(
-                                  children: [
-                                    ClipOval(
-                                      child: Image.memory(
-                                        imagenFromBase64(club.logo),
-                                        fit: BoxFit.cover,
-                                        width: 80,
-                                        height: 80,
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 10),
-                                      child: Text(
-                                        club.nombre,
-                                        style: styleText.titleSmall,
-                                        maxLines: 1,
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            ListTile(
+                              leading: Icon(Icons.list),
+                              title: Text(
+                                'Todos los equipos',
+                                style: styleText.bodyMedium,
                               ),
-                              ListTile(
-                                leading: Icon(Icons.group_add),
-                                title: Text('Crear Equipo',
-                                    style: styleText.bodyMedium),
-                                onTap: () {
-                                  _scaffoldKey.currentState!.closeDrawer();
-                                  _showCreateTeamModal(
-                                      context,
-                                      controllername,
-                                      (value) => emptyOrNull(value, "nombre"),
-                                      addEquipo);
-
-                                  // Acción cuando se presiona la opción 1 del Drawer
-                                },
+                              onTap: () {
+                                setState(() {
+                                  widgetIndex = 0;
+                                });
+                                // Acción cuando se presiona la opción 2 del Drawer
+                              },
+                            ),
+                            ListTile(
+                              leading: Icon(Icons.groups_3),
+                              title: Text(
+                                'Todos los Miembros',
+                                style: styleText.bodyMedium,
                               ),
-                              ListTile(
-                                leading: Icon(Icons.list),
-                                title: Text(
-                                  'Todos los equipos',
-                                  style: styleText.bodyMedium,
-                                ),
-                                onTap: () {
-                                  setState(() {
-                                    widgetIndex = 0;
-                                  });
-                                  // Acción cuando se presiona la opción 2 del Drawer
-                                },
+                              onTap: () {
+                                setState(() {
+                                  widgetIndex = 1;
+                                });
+                                // Acción cuando se presiona la opción 2 del Drawer
+                              },
+                            ),
+                            ListTile(
+                              leading: Icon(Icons.notification_add),
+                              title: Text('Solicitudes',
+                                  style: AppTheme()
+                                      .getTheme()
+                                      .textTheme
+                                      .bodyMedium),
+                              onTap: () {
+                                setState(() {
+                                  widgetIndex = 2;
+                                });
+                                // Acción cuando se presiona la opción 2 del Drawer
+                              },
+                            ),
+                            ListTile(
+                              leading: Icon(Icons.info),
+                              title: Text(
+                                'Información del Club',
+                                style: styleText.bodyMedium,
                               ),
-                              ListTile(
-                                leading: Icon(Icons.groups_3),
-                                title: Text(
-                                  'Todos los Miembros',
-                                  style: styleText.bodyMedium,
-                                ),
-                                onTap: () {
-                                  setState(() {
-                                    widgetIndex = 1;
-                                  });
-                                  // Acción cuando se presiona la opción 2 del Drawer
-                                },
-                              ),
-                              ListTile(
-                                leading: Icon(Icons.notification_add),
-                                title: Text('Solicitudes',
-                                    style: AppTheme()
-                                        .getTheme()
-                                        .textTheme
-                                        .bodyMedium),
-                                onTap: () {
-                                  setState(() {
-                                    widgetIndex = 2;
-                                  });
-                                  // Acción cuando se presiona la opción 2 del Drawer
-                                },
-                              ),
-                              ListTile(
-                                leading: Icon(Icons.info),
-                                title: Text(
-                                  'Información del Club',
-                                  style: styleText.bodyMedium,
-                                ),
-                                onTap: () {
-                                  // Acción cuando se presiona la opción 2 del Drawer
-                                },
-                              ),
-                              // Agrega más ListTile según sea necesario
-                            ],
-                          ),
-                        )
-                      : null,
-                  body: widgetIndex == 0
-                      ? equiposBuilder()
-                      : widgetIndex == 2
-                          ? miembrosBuilder(controllerEquipo)
-                          : Text('Page 3'));
+                              onTap: () {
+                                // Acción cuando se presiona la opción 2 del Drawer
+                              },
+                            ),
+                            // Agrega más ListTile según sea necesario
+                          ],
+                        ),
+                      )
+                    : null,
+                body: widgetIndex == 0
+                    ? equiposBuilder()
+                    : widgetIndex == 1
+                        ? miembrosBuilder()
+                        : solicitudesBuilder(controllerEquipo),
+              );
+              //pages[widgetIndex],
             }
           case ConnectionState.none:
             return Text('none');

@@ -10,7 +10,8 @@ module.exports = {
       let query = `SELECT * FROM public."Equipo" WHERE id_club = $1`;
       const response = await connectionPostgres.query(query, [id_club]);
       return { statusCode: 200, data: response.rows, message: "" };
-    } catch {
+    } catch (e) {
+      console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },
@@ -47,6 +48,10 @@ module.exports = {
     try {
       let query = `INSERT INTO public."Equipo"(nombre, id_club) VALUES ($1 , $2)`;
       const response = await connectionPostgres.query(query, [nombre, id_club]);
+      console.log(response);
+      if (response.rowCount === 0) {
+        return { statusCode: 400, message: "Error al crear equipo" };
+      }
       return { statusCode: 201, message: "Equipo creado correctamente" };
     } catch (e) {
       console.log("Error: ", e);

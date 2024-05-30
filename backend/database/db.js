@@ -8,9 +8,8 @@ const connectionPostgres = new Pool({
   },
 });
 
-connectionPostgres
+/*connectionPostgres
   .connect()
   .then(() => console.log("Conexión exitosa a PostgreSQL"))
-  .catch((err) => console.error("Error de conexión a PostgreSQL:", err));
-
+  .catch((err) => console.error("Error de conexión a PostgreSQL:", err));*/
 module.exports = connectionPostgres;

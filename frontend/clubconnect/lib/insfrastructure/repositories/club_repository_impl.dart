@@ -10,8 +10,8 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   SupaDBRepositoryImpl({required this.clubConnectDataSource});
 
   @override
-  Future<List<Club>> getClubs() async {
-    return await clubConnectDataSource.getClubs();
+  Future<List<Club>> getClubs(List<int> deportes) async {
+    return await clubConnectDataSource.getClubs(deportes);
   }
 
   @override
@@ -87,6 +87,11 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
+  Future<List<User>> getMiembros(int idclub) async {
+    return await clubConnectDataSource.getMiembros(idclub);
+  }
+
+  @override
   Future<bool> acceptSolicitud(
       List<dynamic> equipos, int idusuario, String rol, int idclub) async {
     return clubConnectDataSource.acceptSolicitud(
@@ -99,7 +104,40 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
+  Future<bool> updateSolicitud(int idusuario, int idclub, String estado) async {
+    return await clubConnectDataSource.updateSolicitud(
+        idusuario, idclub, estado);
+  }
+
+  @override
   Future<List<Equipo>> getEquiposUser(int idusuario, int idclub) async {
     return await clubConnectDataSource.getEquiposUser(idusuario, idclub);
+  }
+
+  @override
+  Future<List<EventoFull>?> getEventos(int idequipo, String estado) async {
+    return await clubConnectDataSource.getEventos(idequipo, estado);
+  }
+
+  @override
+  Future<bool> createEvento(List<String> fechas, String horaInicio,
+      String descripcion, String horaFinal, int idequipo, String titulo) async {
+    return await clubConnectDataSource.createEvento(
+        fechas, horaInicio, descripcion, horaFinal, idequipo, titulo);
+  }
+
+  @override
+  Future<Evento> getEvento(int idevento) async {
+    return await clubConnectDataSource.getEvento(idevento);
+  }
+
+  @override
+  Future<bool> addAsistencia(int idevento, int idusuario) async {
+    return await clubConnectDataSource.addAsistencia(idevento, idusuario);
+  }
+
+  @override
+  Future<bool> deleteAsistencia(int idevento, int idusuario) async {
+    return await clubConnectDataSource.deleteAsistencia(idevento, idusuario);
   }
 }

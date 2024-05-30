@@ -24,7 +24,9 @@ class HomeViewState extends ConsumerState<HomeView> {
 
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
-
+  late List<Deporte> deportes;
+  late Future<LatLng> locationFuture;
+  late LatLng location;
   Set<Marker> markers = {};
   late List<Club> clubs;
   final _icons = Completer<BitmapDescriptor>();
@@ -32,7 +34,11 @@ class HomeViewState extends ConsumerState<HomeView> {
   @override
   void initState() {
     super.initState();
-    ref.read(locationProvider);
+    ref.read(locationProvider).then((value) {
+      location = value;
+    });
+
+    deportes = ref.read(deportesProvider);
     assetToBytes('assets/marker.png').then((value) {
       final bitmap = BitmapDescriptor.fromBytes(value);
       _icons.complete(bitmap);
@@ -67,8 +73,10 @@ class HomeViewState extends ConsumerState<HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    print("Rebuild");
     final id = ref.watch(authProvider).id;
     final user = ref.watch(UsuarioProvider(id!));
+    deportes = ref.watch(deportesProvider);
 
     TextTheme StyleText = AppTheme().getTheme().textTheme;
     // Obtener el valor actual del proveedor locationProvider
@@ -85,7 +93,7 @@ class HomeViewState extends ConsumerState<HomeView> {
         ),
       ],
     );
-    return FutureBuilder<LatLng>(
+    return FutureBuilder(
       future: locationFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -99,8 +107,8 @@ class HomeViewState extends ConsumerState<HomeView> {
             child: Text('Error al obtener la ubicación: ${snapshot.error}'),
           );
         } else {
+          location = snapshot.data as LatLng;
           // Cuando se ha obtenido la ubicación, puedes mostrar el mapa
-          final location = snapshot.data!;
           return Column(children: [
             Container(
               decoration: decoration,

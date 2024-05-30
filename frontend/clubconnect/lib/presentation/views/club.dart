@@ -40,11 +40,7 @@ class ClubViewState extends ConsumerState<ClubView>
     _futureEstado = ref
         .read(clubConnectProvider)
         .getEstadoSolicitud(ref.read(authProvider).id!, widget.id)
-        .then((value) {
-      estado = value;
-      print("value: $value");
-      setState(() {});
-    });
+        .then((value) => estado = value);
     _futureClub = ref.read(clubConnectProvider).getClub(widget.id);
     _futureClub.then((value) {
       club = value;
@@ -100,7 +96,8 @@ class ClubViewState extends ConsumerState<ClubView>
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              print(snapshot.data);
+              print("data" + snapshot.data.toString());
+              print("Estado: $estado");
               return Scaffold(
                 backgroundColor: color,
                 appBar: AppBar(
@@ -254,7 +251,7 @@ class ClubViewState extends ConsumerState<ClubView>
                                                   ref.read(authProvider).id!,
                                                   int.parse(club.club.id!));
                                           setState(() {
-                                            estado = "Solicitud Enviada";
+                                            estado = "Pendiente";
                                           });
                                         }
                                       },
@@ -269,10 +266,17 @@ class ClubViewState extends ConsumerState<ClubView>
                                                   "Ya eres Miembro",
                                                   style: StyleText.bodySmall,
                                                 )
-                                              : Text(
-                                                  "Solicitud Enviada",
-                                                  style: StyleText.bodySmall,
-                                                ),
+                                              : estado == "Pendiente"
+                                                  ? Text(
+                                                      "Solicitud Enviada",
+                                                      style:
+                                                          StyleText.bodySmall,
+                                                    )
+                                                  : Text(
+                                                      "Solicitud Cancelada",
+                                                      style:
+                                                          StyleText.bodySmall,
+                                                    ),
                                     ),
                                   ],
                                 ),

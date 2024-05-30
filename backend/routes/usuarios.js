@@ -34,6 +34,7 @@ module.exports = (app) => {
   });
   app.post("/usuarios/create", async (req, res) => {
     const {
+      id,
       nombre,
       apellido1,
       apellido2,
@@ -46,6 +47,7 @@ module.exports = (app) => {
     } = req.body;
     try {
       const response = await usuarioController.createUsuario(
+        id,
         nombre,
         apellido1,
         apellido2,
@@ -69,13 +71,14 @@ module.exports = (app) => {
   app.get("/usuarios/rol", async (req, res) => {
     try {
       const { id_usuario, id_club } = req.query;
-      const response = await usuarioController.getRol(id_usuario, id_club);
+      const response = await usuarioController.getRolClub(id_usuario, id_club);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
         ? res.status(500).send({ message: response.message })
         : res.status(200).send({
             data: response.data,
+            message: response.message,
           });
     } catch (error) {
       console.log("error: ", error);

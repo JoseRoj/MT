@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 Widget formInput({
   required String label,
   String? hint,
+  int? maxLines,
   required TextEditingController controller,
   required String? Function(String?)? validator,
 }) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
     child: TextFormField(
+        maxLines: maxLines ?? 1,
         controller: controller,
         decoration: InputDecoration(
           labelText: label,

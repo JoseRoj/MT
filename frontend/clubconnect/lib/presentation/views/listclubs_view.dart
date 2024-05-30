@@ -18,6 +18,7 @@ class ListClubViewState extends ConsumerState<ListClubView> {
   List<Club> clubs = [];
   @override
   void initState() {
+    print("Entree");
     futureClubs = ref
         .read(clubConnectProvider)
         .getClubsUser(ref.read(authProvider).id!)

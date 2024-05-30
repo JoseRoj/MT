@@ -1,8 +1,11 @@
+import 'package:clubconnect/insfrastructure/models/evento.dart';
+import 'package:clubconnect/presentation/screens/evento_screen.dart';
 import 'package:clubconnect/presentation/screens/home_screen.dart';
 import 'package:clubconnect/presentation/screens/login_screen.dart';
 import 'package:clubconnect/presentation/screens/registration_screen.dart';
 import 'package:clubconnect/presentation/views/Clubequipos.dart';
 import 'package:clubconnect/presentation/views/club.dart';
+import 'package:clubconnect/presentation/views/equipo.dart';
 import 'package:clubconnect/presentation/views/newClub/newClub.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,6 +33,29 @@ final appRouter = GoRouter(initialLocation: '/login', routes: [
             final clubId = state.pathParameters['id'] ?? 'no-id';
             return Equipos(idclub: int.parse(clubId));
           },
+          routes: [
+            GoRoute(
+              path: ':idequipo', //:id',
+              name: Equipo.name,
+              builder: (context, state) {
+                final clubId = state.pathParameters['id'] ?? 'no-id';
+                final equipoId = state.pathParameters['idequipo'] ?? 'no-id';
+
+                return Equipo(
+                    idclub: int.parse(clubId), idequipo: int.parse(equipoId));
+              },
+            ),
+            GoRoute(
+                path: ':idequipo/:idevento',
+                name: EventoView.name,
+                builder: (context, state) {
+                  final clubId = state.pathParameters['id'] ?? 'no-id';
+                  final equipoId = state.pathParameters['idequipo'] ?? 'no-id';
+                  final eventoId = state.pathParameters['idevento'] ?? 'no-id';
+
+                  return EventoView(idevento: int.parse(eventoId));
+                }),
+          ],
         ),
         GoRoute(
           path: 'newClub', //:id',

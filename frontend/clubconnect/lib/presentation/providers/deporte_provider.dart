@@ -13,7 +13,7 @@ class DeporteNotifier extends StateNotifier<List<Deporte>> {
   final SupaDBRepositoryImpl _supaDBRepositoryImpl;
   DeporteNotifier(this._supaDBRepositoryImpl) : super([]);
 
-  void getDeportes() async {
+  Future<void> getDeportes() async {
     final sports = await _supaDBRepositoryImpl.getDeportes();
     state = sports;
   }

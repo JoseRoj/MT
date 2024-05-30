@@ -20,7 +20,11 @@ module.exports = {
   async getUsuario(id) {
     try {
       let query = `SELECT * FROM public."Usuarios" WHERE id = $1`;
+
       const response = await connectionPostgres.query(query, [id]);
+      if (response.rowCount === 0) {
+        return { statusCode: 400, message: "Usuario no encontrado" };
+      }
       return { statusCode: 200, data: response.rows, message: "" };
     } catch (e) {
       console.log("error: ", e);
@@ -40,6 +44,7 @@ module.exports = {
     ? @param imagen - imagen del usuario
   */
   async createUsuario(
+    id,
     nombre,
     apellido1,
     apellido2,
@@ -56,24 +61,40 @@ module.exports = {
             FROM public."Usuarios"
             WHERE email = $1`;
       let response = await connectionPostgres.query(query, [email]);
-      console.log("value : ", response.rows[0].cantidad_usuarios);
       if (response.rows[0].cantidad_usuarios > 0) {
-        return { statusCode: 400, message: "Usuario existente" };
+        return { statusCode: 400, message: "Correo existente" };
       }
-      console.log("response:", response);
+
       //* Query para insertar el usuario
-      let query1 = `INSERT INTO public."Usuarios" (nombre, apellido1, apellido2, email, telefono, contrasena, fecha_nacimiento, genero, imagen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`;
-      response = await connectionPostgres.query(query1, [
-        nombre,
-        apellido1,
-        apellido2,
-        email,
-        telefono,
-        contrasena,
-        fecha_nacimiento,
-        genero,
-        imagen,
-      ]);
+      if (id) {
+        let query1 = `INSERT INTO public."Usuarios" (id, nombre, apellido1, apellido2, email, telefono, contrasena, fecha_nacimiento, genero, imagen) VALUES ($10 ,$1, $2, $3, $4, $5, $6, $7, $8, $9);`;
+        response = await connectionPostgres.query(query1, [
+          nombre,
+          apellido1,
+          apellido2,
+          email,
+          telefono,
+          contrasena,
+          fecha_nacimiento,
+          genero,
+          imagen,
+          id,
+        ]);
+      } else {
+        let query1 = `INSERT INTO public."Usuarios" (nombre, apellido1, apellido2, email, telefono, contrasena, fecha_nacimiento, genero, imagen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`;
+        response = await connectionPostgres.query(query1, [
+          nombre,
+          apellido1,
+          apellido2,
+          email,
+          telefono,
+          contrasena,
+          fecha_nacimiento,
+          genero,
+          imagen,
+        ]);
+      }
+
       return { statusCode: 201, message: "Usuario creado con éxito" };
     } catch (error) {
       console.log("error: ", error);
@@ -85,7 +106,7 @@ module.exports = {
    * * Obtener el rol del usuario
    *
    */
-  async getRol(id_usuario, id_club) {
+  async getRolClub(id_usuario, id_club) {
     try {
       // *  Verficar que el usuario es administrador del club
       let query = `SELECT * FROM public."Administra" WHERE id_usuario = $1 AND id_club = $2`;
@@ -96,7 +117,7 @@ module.exports = {
       if (response.rows.length === 0) {
         return {
           statusCode: 200,
-          data: "Normal",
+          data: "",
           message: "No existe información",
         };
       }
@@ -139,8 +160,12 @@ module.exports = {
       JOIN public."Equipo" ON "Club".id = "Equipo".id_club
       JOIN public."Miembros" ON "Equipo".id = "Miembros".id_equipo
       WHERE "Miembros".id_usuario = $1;`;
+
+      /* Obetener no repetidos por id de club */
       const response2 = await connectionPostgres.query(query2, [id_usuario]);
-      return { statusCode: 200, data: response2.rows, message: "" };
+      const uniqueClub = new Map(response2.rows.map((club) => [club.id, club]));
+      const arrayUniqueClub = Array.from(uniqueClub.values());
+      return { statusCode: 200, data: arrayUniqueClub, message: "" };
     } catch (e) {
       console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };

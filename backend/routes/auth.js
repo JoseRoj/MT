@@ -4,7 +4,7 @@ module.exports = (app) => {
     try {
       const { email, contrasena } = req.body;
       const response = await auth.login(email, contrasena);
-      return response.statusCode === 400
+      return response.statusCode === 401
         ? res
             .status(401)
             .send({ message: response.message, data: response.data })

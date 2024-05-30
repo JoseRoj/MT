@@ -1,8 +1,8 @@
 const connectionPostgres = require("../database/db");
 const estado = {
   Pendiente: "Pendiente",
-  Aceptado: "Aceptado",
-  Rechazado: "Rechazado",
+  Aceptado: "Aceptada",
+  Rechazado: "Rechazada",
 };
 module.exports = {
   /*

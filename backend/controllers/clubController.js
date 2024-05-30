@@ -3,12 +3,16 @@ module.exports = {
   /*
    * Obtener todos los clubes
    */
-  async getClubs() {
+  async getClubs(deportes) {
+    console.log("Deportes: ", deportes);
+    const placeholders = deportes.map((_, index) => `$${index + 1}`).join(", ");
+    console.log("Placeholders: ", placeholders);
     try {
-      let query = `SELECT * FROM public."Club"`;
-      const response = await connectionPostgres.query(query);
+      let query = `SELECT * FROM public."Club" WHERE id_deporte IN (${placeholders})`;
+      const response = await connectionPostgres.query(query, deportes);
       return { statusCode: 200, data: response.rows, message: "" };
-    } catch {
+    } catch (e) {
+      console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },
@@ -23,14 +27,15 @@ module.exports = {
         categorias: [],
         tipo: [],
       };
-
       //* Get Club
       let query = `SELECT "Club".*, "Deporte".nombre AS deporte
       FROM public."Club"
       JOIN public."Deporte" ON "Club".id_deporte = "Deporte".id
       WHERE "Club".id = $1;`;
       const response = await connectionPostgres.query(query, [id]);
-
+      if (response.rowCount === 0) {
+        return { statusCode: 400, message: "Club no encontrado" };
+      }
       //* Get Categorias
       let query2 = `SELECT "Categoria".nombre AS categoria
       FROM public."ClubCategoria"
@@ -74,6 +79,7 @@ module.exports = {
     ? @param id_usuario - id del usuario que crea el club
   */
   async createClub(
+    id,
     nombre,
     descripcion,
     latitud,
@@ -98,18 +104,34 @@ module.exports = {
       if (response.rowCount[0] > 0) {
         return { statusCode: 400, message: "Nombre existente" };
       }
-      //* Query para insertar el club
-      query = `INSERT INTO public."Club" (nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`;
-      response = await connectionPostgres.query(query, [
-        nombre,
-        latitud,
-        longitud,
-        descripcion,
-        id_deporte,
-        logo,
-        correo,
-        telefono,
-      ]);
+      if (id) {
+        query = `INSERT INTO public."Club" (id, nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono) VALUES ($9,$1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`;
+        response = await connectionPostgres.query(query, [
+          nombre,
+          latitud,
+          longitud,
+          descripcion,
+          id_deporte,
+          logo,
+          correo,
+          telefono,
+          id,
+        ]);
+      } else {
+        //* Query para insertar el club
+        query = `INSERT INTO public."Club" (nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`;
+        response = await connectionPostgres.query(query, [
+          nombre,
+          latitud,
+          longitud,
+          descripcion,
+          id_deporte,
+          logo,
+          correo,
+          telefono,
+        ]);
+      }
+
       const id_club = response.rows[0].id;
       console.log("Id_club: ", id_club);
       query =
@@ -133,6 +155,59 @@ module.exports = {
     } catch (e) {
       console.log("Error: ", e);
       //await connectionPostgres.query("ROLLBACK");
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
+  async getMiembros(id_club) {
+    /* Obtener todos los equipos de un club */
+    try {
+      let query = `SELECT * FROM public."Equipo"
+      WHERE id_club = $1`;
+      const equipos = await connectionPostgres.query(query, [id_club]);
+      console.log("response: ", equipos.rows);
+      // Obtener todos los miembros de un club
+      const queryadministrador = ` SELECT "Usuarios".*
+      FROM public."Usuarios"
+      JOIN public."Administra" ON "Usuarios".id = "Administra".id_usuario
+      WHERE "Administra".id_club = $1`;
+      const administrador = await connectionPostgres.query(queryadministrador, [
+        id_club,
+      ]);
+      const miembros = equipos.rows.map(async (equipo) => {
+        query = `SELECT "Usuarios".*
+        FROM public."Usuarios" 
+        JOIN public."Miembros" ON "Usuarios".id = "Miembros".id_usuario
+        WHERE "Miembros".id_equipo = $1`;
+        const response = await connectionPostgres.query(query, [equipo.id]);
+        return response.rows;
+        //return response.rows;
+        /* Obtener el rol que tiene en este equipo */
+      });
+      const resultados = await Promise.all(miembros);
+      resultados.push(administrador.rows);
+      console.log("resultados: ", resultados);
+
+      const uniqueUsuarios = [];
+      const ids = new Set();
+
+      resultados.forEach((subArray) => {
+        subArray.forEach((usuario) => {
+          if (!ids.has(usuario.id)) {
+            ids.add(usuario.id);
+            uniqueUsuarios.push(usuario);
+          }
+        });
+      });
+
+      //resultados.push(administrador.rows);
+      //const uniqueUser = new Map(resultados.map((user) => [user.id, user]));
+      //console.log("uniqueUser: ", uniqueUser);
+      //const arrayUniqueUser = Array.from(uniqueUser.values());
+
+      return { statusCode: 200, data: uniqueUsuarios, message: "" };
+    } catch (e) {
+      console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },

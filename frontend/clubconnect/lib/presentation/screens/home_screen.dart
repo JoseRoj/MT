@@ -23,9 +23,14 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     //print(";");
-    ref.read(clubesRegisterProvider.notifier).getClubes();
     ref.read(categoriasProvider.notifier).getCategorias();
-    ref.read(deportesProvider.notifier).getDeportes();
+    ref.read(deportesProvider.notifier).getDeportes().then((value) => ref
+        .read(clubesRegisterProvider.notifier)
+        .getClubes(
+            ref.read(deportesProvider).map((e) => int.parse(e.id)).toList()));
+
+    //      final deportes = ref.watch(deportesProvider);
+
     ref.read(tiposProvider.notifier).getTipos();
     ref.read(authProvider).loadToken();
   }
@@ -47,6 +52,13 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       );
     } else {
+      print("Entre...");
+      final deportes = ref.watch(deportesProvider);
+
+      /*ref
+          .read(clubesRegisterProvider.notifier)
+          .getClubes(deportes.map((e) => int.parse(e.id)).toList());
+*/
       return Scaffold(
         body: IndexedStack(
           index: widget.pageIndex,

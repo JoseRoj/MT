@@ -53,6 +53,8 @@ module.exports = {
     } catch (error) {
       console.log("Error: ", error);
       return { statusCode: 500, error: "Error al realizar petición" };
+    } finally {
+      //await connectionPostgres.end();
     }
   },
 };

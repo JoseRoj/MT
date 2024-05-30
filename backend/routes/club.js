@@ -4,7 +4,7 @@ const express = require("express");
 module.exports = (app) => {
   app.get("/club/getclubs", async (req, res) => {
     try {
-      const response = await clubController.getClubs();
+      const response = await clubController.getClubs(req.body.deportes);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -13,13 +13,15 @@ module.exports = (app) => {
             data: response.data,
           });
     } catch (error) {
+      console.log("Error: ", error);
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
 
   app.get("/club/getclub", async (req, res) => {
     try {
-      const response = await clubController.getClub(req.query.id);
+      const { id } = req.query;
+      const response = await clubController.getClub(id);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -35,6 +37,7 @@ module.exports = (app) => {
 
   app.post("/club", async (req, res) => {
     const {
+      id,
       nombre,
       descripcion,
       latitud,
@@ -49,6 +52,7 @@ module.exports = (app) => {
     } = req.body;
     try {
       const response = await clubController.createClub(
+        id,
         nombre,
         descripcion,
         latitud,
@@ -66,6 +70,23 @@ module.exports = (app) => {
         : response.statusCode === 500
         ? res.status(500).send({ message: response.message })
         : res.status(200).send({ message: response.message });
+    } catch (error) {
+      console.log("Error: ", error);
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
+
+  app.get("/club/getmiembros", async (req, res) => {
+    const { id_club } = req.query;
+    try {
+      const response = await clubController.getMiembros(id_club);
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({
+            data: response.data,
+          });
     } catch (error) {
       console.log("Error: ", error);
       res.status(500).send({ message: "Error interno del servidor" });

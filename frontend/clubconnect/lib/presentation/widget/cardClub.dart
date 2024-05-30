@@ -1,4 +1,5 @@
 import 'package:clubconnect/config/theme/app_theme.dart';
+import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'package:clubconnect/presentation/views/Clubequipos.dart';
 import 'package:flutter/material.dart';
@@ -36,24 +37,32 @@ class CardClub extends StatelessWidget {
                       width: 2, // Ancho del borde
                     ),
                   ),
-                  child: ClipOval(
-                    child: Image(
-                      image: AssetImage('assets/miembros.png'),
-                      fit: BoxFit.cover,
-                      width: 40,
-                      height: 40,
-                    ),
-                  ),
+                  child: club.logo == "" || club.logo == null
+                      ? ClipOval(
+                          child: Image.asset(
+                            'assets/nofoto.jpeg',
+                            fit: BoxFit.cover,
+                            width: 80,
+                            height: 80,
+                          ),
+                        )
+                      : ClipOval(
+                          child: Image.memory(
+                            imagenFromBase64(club.logo),
+                            fit: BoxFit.cover,
+                            width: 80,
+                            height: 80,
+                          ),
+                        ),
                 ),
                 SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.35,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("${club.nombre}", style: StyleText.titleSmall),
                       Text(
-                        'Voleibol',
+                        '${club.deporte}',
                         style: TextStyle(
                             color: const Color.fromARGB(255, 188, 78, 78)),
                       ),
@@ -63,35 +72,6 @@ class CardClub extends StatelessWidget {
               ],
             ),
           ),
-          Positioned(
-              top: 10,
-              right: 10,
-              child: GestureDetector(
-                onTap: () => context.go("/home/0/club/${club.id}"),
-                child: Container(
-                    padding: EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(7),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              Color.fromARGB(255, 41, 98, 28).withOpacity(0.5),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                          offset: Offset(0, 4), // changes position of shadow
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Image(
-                          image: AssetImage("assets/actividad.png"),
-                        ),
-                        Text('  3', style: StyleText.labelSmall)
-                      ],
-                    )),
-              ))
         ]),
       ),
     );

@@ -12,9 +12,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SupabdDatasource extends ClubConnectDataSource {
   @override
-  Future<List<Club>> getClubs() async {
+  Future<List<Club>> getClubs(List<int> deportes) async {
     final dio = Dio(BaseOptions(headers: {}));
-    final response = await dio.get('${dotenv.env["API_URL"]}/club/getclubs');
+    final response = await dio.get('${dotenv.env["API_URL"]}/club/getclubs',
+        data: jsonEncode(<String, dynamic>{"deportes": deportes}));
+    if (response.statusCode != 200) return [];
     List<Club> clubs = response.data["data"].map<Club>((club) {
       return Club.fromJson(club);
     }).toList();
@@ -244,6 +246,25 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
+  Future<List<User>> getMiembros(int idclub) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.get(
+        '${dotenv.env["API_URL"]}/club/getmiembros',
+        queryParameters: {'id_club': idclub},
+      );
+      List<User> users = response.data["data"].map<User>((user) {
+        return User.fromJson(user);
+      }).toList();
+      print("respuesta de miembros: $users");
+
+      return users;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  @override
   Future<String?> getEstadoSolicitud(int idusuario, int idclub) async {
     try {
       final dio = Dio(BaseOptions(headers: {}));
@@ -251,9 +272,10 @@ class SupabdDatasource extends ClubConnectDataSource {
         '${dotenv.env["API_URL"]}/solicitud/getEstado',
         queryParameters: {'id_usuario': idusuario, 'id_club': idclub},
       );
-      return response.data["data"];
+      if (response.data["data"] == "") return "";
+      return response.data["data"][0]["estado"];
     } catch (e) {
-      return Future.value(null);
+      return null;
     }
   }
 
@@ -271,6 +293,138 @@ class SupabdDatasource extends ClubConnectDataSource {
       return equipos;
     } catch (e) {
       return [];
+    }
+  }
+
+  @override
+  Future<bool> updateSolicitud(int idusuario, int idclub, String estado) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.patch(
+        '${dotenv.env["API_URL"]}/solicitud',
+        data: jsonEncode(
+          <String, dynamic>{
+            "id_usuario": idusuario,
+            "id_club": idclub,
+            "estado": estado,
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<List<EventoFull>?> getEventos(int idequipo, String estado) async {
+    final dio = Dio(BaseOptions(headers: {}));
+    final response = await dio.get(
+      '${dotenv.env["API_URL"]}/eventos',
+      queryParameters: {'id_equipo': idequipo, 'estado': estado},
+    );
+
+    List<EventoFull> eventos = response.data["data"].map<EventoFull>((evento) {
+      return EventoFull.fromJson(evento);
+    }).toList();
+    return eventos;
+  }
+
+  @override
+  Future<bool> createEvento(List<String> fechas, String horaInicio,
+      String descripcion, String horaFinal, int idequipo, String titulo) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      print(fechas);
+      print(horaInicio);
+      print(descripcion);
+      print(horaFinal);
+      print(idequipo);
+      final response = await dio.post(
+        '${dotenv.env["API_URL"]}/eventos',
+        data: jsonEncode(
+          <String, dynamic>{
+            "fechas": fechas,
+            "horaFin": horaFinal,
+            "descripcion": descripcion,
+            "horaInicio": horaInicio,
+            "id_equipo": idequipo,
+            "titulo": titulo,
+          },
+        ),
+      );
+      print("Hola");
+
+      if (response.statusCode == 201) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print("Error: $e");
+      return false;
+    }
+  }
+
+  @override
+  Future<Evento> getEvento(int idevento) async {
+    final dio = Dio(BaseOptions(headers: {}));
+    final response = await dio.get(
+      '${dotenv.env["API_URL"]}/evento',
+      queryParameters: {'id_evento': idevento},
+    );
+    Evento evento = Evento.fromJson(response.data["data"]);
+    return evento;
+  }
+
+  @override
+  Future<bool> addAsistencia(int idevento, int idusuario) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.post(
+        '${dotenv.env["API_URL"]}/asistencia',
+        data: jsonEncode(
+          <String, dynamic>{
+            "id_evento": idevento,
+            "id_usuario": idusuario,
+          },
+        ),
+      );
+      if (response.statusCode == 201) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteAsistencia(int idevento, int idusuario) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.delete(
+        '${dotenv.env["API_URL"]}/asistencia',
+        data: jsonEncode(
+          <String, dynamic>{
+            "id_evento": idevento,
+            "id_usuario": idusuario,
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
     }
   }
 }
