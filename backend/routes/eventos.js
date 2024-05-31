@@ -16,7 +16,7 @@ module.exports = (app) => {
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
-
+  /*
   app.get("/evento", async (req, res) => {
     try {
       const { id_evento } = req.query;
@@ -32,7 +32,7 @@ module.exports = (app) => {
       console.log("Error: ", e);
       res.status(500).send({ message: "Error interno del servidor" });
     }
-  });
+  });*/
 
   app.post("/eventos", async (req, res) => {
     console.log("req.body");

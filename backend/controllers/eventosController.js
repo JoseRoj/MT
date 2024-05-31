@@ -36,16 +36,7 @@ module.exports = {
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },
-  async getEvento(id_evento) {
-    try {
-      let query = `SELECT * FROM public."Evento" WHERE "Evento".id = $1`;
-      const response = await connectionPostgres.query(query, [id_evento]);
-      return { statusCode: 200, data: response.rows[0], message: "" };
-    } catch (e) {
-      console.log("Error: ", e);
-      return { statusCode: 500, message: "Error al realizar petición" };
-    }
-  },
+
   async createEvento(
     fechas,
     id_equipo,
@@ -55,11 +46,11 @@ module.exports = {
     titulo
   ) {
     try {
-      let query = `INSERT INTO public."Evento" (fecha, id_equipo, descripcion, hora_inicio, hora_final, estado, titulo) VALUES `;
+      let query = `INSERT INTO public."Evento" (fecha, id_equipo, descripcion, hora_inicio, hora_final, titulo, estado ) VALUES `;
       const values = [];
       const valueInserts = fechas
         .map((fecha, index) => {
-          const offset = index * 5;
+          const offset = index * 6;
           values.push(
             fecha,
             id_equipo,
@@ -70,7 +61,7 @@ module.exports = {
           );
           return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${
             offset + 4
-          }, $${offset + 5}, 'Activo', $${offset + 6})`;
+          }, $${offset + 5}, $${offset + 6}, 'Activo')`;
         })
         .join(", ");
 

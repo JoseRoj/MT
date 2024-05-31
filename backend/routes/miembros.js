@@ -1,4 +1,4 @@
-const MiembrosController = require("../controllers/miembros");
+const MiembrosController = require("../controllers/miembrosController");
 module.exports = (app) => {
   app.post("/miembro/assignMiembro", async (req, res) => {
     const { id_usuario, equipos, rol, id_club } = req.body;

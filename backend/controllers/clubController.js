@@ -7,7 +7,15 @@ module.exports = {
     console.log("Deportes: ", deportes);
     const placeholders = deportes.map((_, index) => `$${index + 1}`).join(", ");
     console.log("Placeholders: ", placeholders);
+
     try {
+      if (deportes.length === 0) {
+        return {
+          statusCode: 200,
+          data: [],
+          message: "No se han seleccionado deportes",
+        };
+      }
       let query = `SELECT * FROM public."Club" WHERE id_deporte IN (${placeholders})`;
       const response = await connectionPostgres.query(query, deportes);
       return { statusCode: 200, data: response.rows, message: "" };
@@ -93,15 +101,16 @@ module.exports = {
     id_usuario
   ) {
     try {
-      let query = `SELECT COUNT(*) AS cantidad_clubes
+      let query = `SELECT COUNT(*) 
       FROM public."Club"
-      WHERE nombre = $1`;
+      WHERE nombre = $1 OR correo = $2`;
       //await connectionPostgres.query("BEGIN"); // Inicia la transacción
-      console.log("Nombre: ", id_usuario);
+      console.log("Nombre: ", id_usuario, correo);
       //* Primero se debe comprobar que el club no exista;
 
-      let response = await connectionPostgres.query(query, [nombre]);
-      if (response.rowCount[0] > 0) {
+      let response = await connectionPostgres.query(query, [nombre, correo]);
+
+      if (response.rows[0].count > 0) {
         return { statusCode: 400, message: "Nombre existente" };
       }
       if (id) {
@@ -134,6 +143,8 @@ module.exports = {
 
       const id_club = response.rows[0].id;
       console.log("Id_club: ", id_club);
+      /* Comprobar que el correo o nombre del club no exista */
+
       query =
         'INSERT INTO public."ClubCategoria" (id_club, id_categoria) VALUES ';
       query += categorias

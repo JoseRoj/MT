@@ -7,8 +7,8 @@ const id_usuario = 34;
 const id_club = 87;
 
 describe("Test de Envio Solicitud", () => {
-  /*it("Enviar solicitud y comprobar estado", async () => {
-    /*const responseSolicitud = await api.post("/solicitud/send").send({
+  it("Enviar solicitud y comprobar estado", async () => {
+    const responseSolicitud = await api.post("/solicitud/send").send({
       id_usuario: id_usuario,
       id_club: id_club,
     });
@@ -21,7 +21,7 @@ describe("Test de Envio Solicitud", () => {
       });
     expect(responsestadoSolicitudes.statusCode).toBe(200);
     expect(responsestadoSolicitudes.body.data[0].estado).toBe("Pendiente");
-  });*/
+  });
 });
 describe("Actualizar Estado Solicitud", () => {
   it("Actualizar estado de solicitud", async () => {

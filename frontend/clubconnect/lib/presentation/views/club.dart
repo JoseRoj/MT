@@ -244,7 +244,8 @@ class ClubViewState extends ConsumerState<ClubView>
                                     ),
                                     ElevatedButton.icon(
                                       onPressed: () async {
-                                        if (estado == "") {
+                                        if (estado == "" ||
+                                            estado == "Pendiente") {
                                           await ref
                                               .read(clubConnectProvider)
                                               .sendSolicitud(

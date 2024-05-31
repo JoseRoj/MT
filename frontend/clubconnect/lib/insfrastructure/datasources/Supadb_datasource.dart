@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
-
 import 'package:clubconnect/domain/datasources/clubConnect_datasource.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/categoria.dart';

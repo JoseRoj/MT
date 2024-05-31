@@ -57,13 +57,11 @@ class EquiposState extends ConsumerState<Equipos> {
                 child: ListView.builder(
                   itemCount: equipos.length,
                   itemBuilder: (context, index) {
-                    return Card(
-                      child: ListTile(
-                        title: Text(equipos[index].nombre),
-                        trailing: Icon(Icons.arrow_forward_ios_sharp),
-                        onTap: () => context.go(
-                            '/home/0/club/${widget.idclub}/equipos/${equipos[index].id}'),
-                      ),
+                    return ListTile(
+                      title: Text(equipos[index].nombre),
+                      trailing: Icon(Icons.arrow_forward_ios, size: 14),
+                      onTap: () => context.go(
+                          '/home/0/club/${widget.idclub}/equipos/${equipos[index].id}'),
                     );
                   },
                 ),

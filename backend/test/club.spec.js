@@ -18,16 +18,31 @@ const club = {
   id_usuario: 34,
 };
 
-const clubDataBase = {};
+const deportes = [1, 2, 3, 4];
 
 describe("Test Obtener Clubes", () => {
   it("Obtener todos los clubes", async () => {
-    const response = await api.get("/club/getclubs").send();
+    const response = await api.get("/club/getclubs").send({ deportes });
     expect(response.statusCode).toBe(200);
     expect(response.body.data).toBeInstanceOf(Array);
     expect(response.body.data.length).toBeGreaterThan(0);
   });
-  /*it("Obtener un club valido", async () => {
+  describe("Test Crear Club", () => {
+    it("Crear un club", async () => {
+      const response = await api.post("/club").send(club);
+      expect(response.statusCode).toBe(200);
+    });
+    it("Crear un club con datos invalidos", async () => {
+      const response = await api.post("/club").send({
+        ...club,
+        nombre: "",
+        id: Math.floor(Math.random() * 10000),
+      });
+      expect(response.statusCode).toBe(400);
+    });
+  });
+
+  it("Obtener un club valido", async () => {
     const response = await api.get("/club/getclub").query({ id: club.id });
     expect(response.statusCode).toBe(200);
     expect(response.body.data).toBeInstanceOf(Object);
@@ -36,17 +51,8 @@ describe("Test Obtener Clubes", () => {
     const response = await api.get("/club/getclub").query({ id: 0 });
     expect(response.statusCode).toBe(400);
   });
-});
 
-describe("Test Crear Club", () => {
-  it("Crear un club", async () => {
-    const response = await api.post("/club").send(club);
-    expect(response.statusCode).toBe(200);
-  });
-  it("Crear un club con datos invalidos", async () => {
-    const response = await api.post("/club").send({ ...club, nombre: "" });
-    expect(response.statusCode).toBe(400);
-  });*/
+  // TODO : GETmiembros
 });
 
 afterAll(async () => {

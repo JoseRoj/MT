@@ -1,5 +1,4 @@
 import 'package:clubconnect/insfrastructure/models/evento.dart';
-import 'package:clubconnect/presentation/screens/evento_screen.dart';
 import 'package:clubconnect/presentation/screens/home_screen.dart';
 import 'package:clubconnect/presentation/screens/login_screen.dart';
 import 'package:clubconnect/presentation/screens/registration_screen.dart';
@@ -45,16 +44,6 @@ final appRouter = GoRouter(initialLocation: '/login', routes: [
                     idclub: int.parse(clubId), idequipo: int.parse(equipoId));
               },
             ),
-            GoRoute(
-                path: ':idequipo/:idevento',
-                name: EventoView.name,
-                builder: (context, state) {
-                  final clubId = state.pathParameters['id'] ?? 'no-id';
-                  final equipoId = state.pathParameters['idequipo'] ?? 'no-id';
-                  final eventoId = state.pathParameters['idevento'] ?? 'no-id';
-
-                  return EventoView(idevento: int.parse(eventoId));
-                }),
           ],
         ),
         GoRoute(

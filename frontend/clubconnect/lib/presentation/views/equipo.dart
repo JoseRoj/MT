@@ -6,8 +6,9 @@ import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
-import 'package:clubconnect/presentation/widget/buttonAsistencia.dart';
+import 'package:clubconnect/presentation/widget/Cardevento.dart';
 import 'package:clubconnect/presentation/widget/formInput.dart';
+import 'package:clubconnect/presentation/widget/modalDelete.dart';
 import 'package:clubconnect/presentation/widget/userlist.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -301,13 +302,15 @@ class EquipoState extends ConsumerState<Equipo> {
                 return;
               }
               final fechas = _dates.map((e) => e!.toIso8601String()).toList();
-              await ref.read(clubConnectProvider).createEvento(
+
+              final response = await ref.read(clubConnectProvider).createEvento(
                   fechas,
                   _selectedTimeInicio.format(context),
                   controllerDes.text,
                   _selectedTimeFin.format(context),
                   widget.idequipo,
                   controllerName.text);
+              print("Response: $response");
               customToast("Evento Registrado con éxito", context, "isSuccess");
               eventos = await ref
                   .read(clubConnectProvider)
@@ -341,302 +344,12 @@ class EquipoState extends ConsumerState<Equipo> {
                     onRefresh: () async {
                       await getEventos(EstadosEventos.activo);
                     },
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height,
-                      child: ListView.builder(
-                        itemCount: eventos!.length,
-                        itemBuilder: (context, index) {
-                          return GestureDetector(
-                            child: Container(
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 5, horizontal: 35),
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: Colors.white, // Background color
-                                  borderRadius: BorderRadius.circular(
-                                      20), // Rounded corners
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black26, // Shadow color
-                                      blurRadius: 10, // Blur radius
-                                      offset: Offset(0, 4), // Shadow position
-                                    ),
-                                  ],
-                                  border: Border.all(
-                                    color: Colors.grey, // Border color
-                                    width: 1, // Border width
-                                  ),
-                                ),
-                                margin: const EdgeInsets.symmetric(
-                                    vertical: 5, horizontal: 10),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Container(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.6,
-                                          child: Text(
-                                            eventos![index].evento.titulo,
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ),
-                                        Container(
-                                            width: 40,
-                                            child: Row(children: [
-                                              const Icon(Icons.group),
-                                              SizedBox(width: 5), // Espacio
-                                              Text(
-                                                  eventos![index]
-                                                      .asistentes
-                                                      .length
-                                                      .toString(),
-                                                  style: styleText.labelSmall),
-                                            ])),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                            DateFormat('dd / MM / yyyy').format(
-                                                eventos![index].evento.fecha),
-                                            style: styleText.labelSmall),
-                                        Text(
-                                            "${eventos![index].evento.horaInicio} - ${eventos![index].evento.horaFinal}",
-                                            style: styleText.labelSmall),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Lugar : ${eventos![index].evento.titulo}",
-                                          style: styleText.labelSmall,
-                                          textAlign: TextAlign.left,
-                                        )
-                                      ],
-                                    )
-                                  ],
-                                )),
-                            onTap: () {
-                              if (eventos![index].asistentes.isEmpty) {
-                                buttonText = "Asistir";
-                              } else {
-                                for (int i = 0;
-                                    i < eventos![index].asistentes.length;
-                                    i++) {
-                                  if (int.parse(
-                                          eventos![index].asistentes[i].id) ==
-                                      ref.read(authProvider).id) {
-                                    buttonText = "Cancelar";
-                                    break;
-                                  } else {
-                                    buttonText = "Asistir";
-                                  }
-                                }
-                              }
-                              showModalBottomSheet(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return SingleChildScrollView(
-                                    child: StatefulBuilder(builder:
-                                        (context, StateSetter setModalState) {
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 15, horizontal: 10),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              eventos![index].evento.titulo,
-                                              style: styleText.titleSmall,
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              DateFormat('dd / MM / yyyy')
-                                                  .format(eventos![index]
-                                                      .evento
-                                                      .fecha),
-                                              style: styleText.bodyMedium,
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  "${eventos![index].evento.horaInicio} - ${eventos![index].evento.horaFinal}",
-                                                  style: styleText.bodyMedium,
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              eventos![index]
-                                                  .evento
-                                                  .descripcion,
-                                              style: styleText.bodyMedium,
-                                            ),
-                                            eventos![index].asistentes.isEmpty
-                                                ? const SizedBox()
-                                                : Row(
-                                                    children: [
-                                                      Text("Asistentes : ",
-                                                          textAlign:
-                                                              TextAlign.left,
-                                                          style: styleText
-                                                              .labelSmall),
-                                                    ],
-                                                  ),
-                                            SizedBox(
-                                              width: MediaQuery.of(context)
-                                                  .size
-                                                  .width,
-                                              height:
-                                                  150, // Ajusta la altura según sea necesario
-                                              child: ListView.builder(
-                                                scrollDirection:
-                                                    Axis.horizontal,
-                                                itemCount: eventos![index]
-                                                    .asistentes
-                                                    .length,
-                                                itemBuilder: (context, index2) {
-                                                  return userList(
-                                                      name: eventos![index]
-                                                          .asistentes[index2]
-                                                          .nombre,
-                                                      image: null);
-                                                },
-                                              ),
-                                            ),
-                                            Container(
-                                              margin: const EdgeInsets.only(
-                                                  bottom: 20),
-                                              width: MediaQuery.of(context)
-                                                  .size
-                                                  .width,
-                                              child: FilledButton.icon(
-                                                style: ButtonStyle(
-                                                  backgroundColor:
-                                                      MaterialStateProperty.all(
-                                                          buttonText ==
-                                                                  "Asistir"
-                                                              ? const Color
-                                                                  .fromARGB(255,
-                                                                  117, 204, 124)
-                                                              : const Color
-                                                                  .fromARGB(255,
-                                                                  237, 65, 65)),
-                                                ),
-                                                onPressed: () async {
-                                                  if (buttonText ==
-                                                      "Cancelar") {
-                                                    var response = await ref
-                                                        .read(
-                                                            clubConnectProvider)
-                                                        .deleteAsistencia(
-                                                            int.parse(
-                                                                eventos![index]
-                                                                    .evento
-                                                                    .id),
-                                                            ref
-                                                                .read(
-                                                                    authProvider)
-                                                                .id!);
-                                                    if (response) {
-                                                      buttonText = "Asistir";
-                                                      setModalState(() {});
-                                                      eventos = await ref
-                                                          .read(
-                                                              clubConnectProvider)
-                                                          .getEventos(
-                                                              widget.idequipo,
-                                                              EstadosEventos
-                                                                  .activo);
-                                                      // ignore: use_build_context_synchronously
-                                                      customToast(
-                                                          "Asistencia cancelada con éxito",
-                                                          context,
-                                                          "isSuccess");
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    } else {
-                                                      customToast(
-                                                          "Error al cancelar asistencia",
-                                                          context,
-                                                          "isError");
-                                                    }
-                                                  } else {
-                                                    var response = await ref
-                                                        .read(
-                                                            clubConnectProvider)
-                                                        .addAsistencia(
-                                                            int.parse(
-                                                                eventos![index]
-                                                                    .evento
-                                                                    .id),
-                                                            ref
-                                                                .read(
-                                                                    authProvider)
-                                                                .id!);
-                                                    if (response) {
-                                                      buttonText = "Cancelar";
-                                                      setModalState(() {});
-                                                      eventos = await ref
-                                                          .read(
-                                                              clubConnectProvider)
-                                                          .getEventos(
-                                                              widget.idequipo,
-                                                              EstadosEventos
-                                                                  .activo);
-                                                      // ignore: use_build_context_synchronously
-                                                      customToast(
-                                                          "Asistencia registrada con éxito",
-                                                          context,
-                                                          "isSuccess");
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    } else {
-                                                      customToast(
-                                                          "Error al registrar asistencia",
-                                                          context,
-                                                          "isError");
-                                                    }
-                                                  }
-                                                },
-                                                icon: buttonText == "Asistir"
-                                                    ? Icon(Icons.check)
-                                                    : Icon(Icons.cancel),
-                                                label: Text(buttonText,
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 16,
-                                                    )),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }),
-                                  );
-                                },
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ));
+                    child: CardEvento(
+                        eventos: eventos,
+                        buttonText: buttonText,
+                        idequipo: widget.idequipo));
               }
+
             case ConnectionState.none:
               return const Text('none');
             case ConnectionState.active:
@@ -669,15 +382,130 @@ class EquipoState extends ConsumerState<Equipo> {
                     child: ListView.builder(
                       itemCount: eventos!.length,
                       itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(eventos![index].evento.titulo,
-                              style: styleText.bodyMedium),
-                          subtitle: Text(
-                              DateFormat('dd / MM / yyyy')
-                                  .format(eventos![index].evento.fecha),
-                              style: styleText.labelSmall),
-                          trailing: IconButton(
-                              icon: const Icon(Icons.delete), onPressed: () {}),
+                        return Stack(
+                          children: [
+                            Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 5, horizontal: 35),
+                                margin: const EdgeInsets.symmetric(
+                                    vertical: 5, horizontal: 10),
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: Colors.white, // Background color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // Rounded corners
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26, // Shadow color
+                                      blurRadius: 10, // Blur radius
+                                      offset: Offset(0, 4), // Shadow position
+                                    ),
+                                  ],
+                                  border: Border.all(
+                                    color: Colors.grey, // Border color
+                                    width: 1, // Border width
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceAround,
+                                        children: [
+                                          SizedBox(
+                                            width: 200,
+                                            child: Text(
+                                                eventos![index].evento.titulo,
+                                                style: styleText.titleSmall,
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1),
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                  DateFormat('dd / MM / yyyy')
+                                                      .format(eventos![index]
+                                                          .evento
+                                                          .fecha),
+                                                  style: styleText.labelSmall),
+                                              const SizedBox(width: 10),
+                                              Icon(
+                                                Icons.circle,
+                                                size: 15,
+                                                color: eventos![index]
+                                                            .evento
+                                                            .estado
+                                                            .toLowerCase() ==
+                                                        "activo"
+                                                    ? colorAsistir
+                                                    : colorCancelar,
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                  eventos![index].evento.estado,
+                                                  style: styleText.labelSmall),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                )),
+                            Positioned(
+                              top: 0,
+                              right: 10,
+                              child: IconButton(
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () async {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        content: const Text(
+                                            '¿Está seguro que desea eliminar el evento?'),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: const Text(
+                                              'Cancelar',
+                                              style: TextStyle(fontSize: 20),
+                                            ),
+                                          ),
+                                          TextButton(
+                                            onPressed: () async {
+                                              //  TODO: ELIMINAR DE LA BASE DE DATOS
+                                              eventos?.removeAt(index);
+                                              setState(() {});
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: const Text('Eliminar',
+                                                style: TextStyle(
+                                                    fontSize: 20,
+                                                    color: Colors.red)),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                  setState(() {});
+                                },
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 10,
+                              right: 10,
+                              child: IconButton(
+                                  icon: const Icon(Icons.edit,
+                                      color: Color.fromARGB(255, 161, 161, 41)),
+                                  onPressed: () {}),
+                            ),
+                          ],
                         );
                       },
                     ),
@@ -694,43 +522,157 @@ class EquipoState extends ConsumerState<Equipo> {
 
   @override
   Widget build(BuildContext context) {
-    print("Days: $_dates");
+    if (role != "") {
+      return Scaffold(
+        key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
+        appBar: AppBar(
+          title: indexWidget == 0
+              ? const Text("Eventos")
+              : indexWidget == 1
+                  ? const Text("Crear Evento")
+                  : const Text("Todos los Eventos"),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              if (indexWidget == 0) {
+                context.pop();
+              } else {
+                indexWidget = 0;
+                setState(() {});
+              }
+            },
+          ),
+          actions: role == "Administrador"
+              ? <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () {
+                      _scaffoldKey.currentState!.openDrawer();
+                    },
+                  ),
+                ]
+              : null,
+        ),
+        drawer: role == "Administrador"
+            ? Drawer(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: <Widget>[
+                    DrawerHeader(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 10),
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Text(
+                              "Equipo dsfsd",
+                              style: styleText.titleSmall,
+                              maxLines: 1,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.calendar_today),
+                      title:
+                          Text('Eventos Activos', style: styleText.bodyMedium),
+                      onTap: () {
+                        setState(() {
+                          indexWidget = 0;
+                        });
+                        _scaffoldKey.currentState!.closeDrawer();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.calendar_today),
+                      title: Text('Crear Evento', style: styleText.bodyMedium),
+                      onTap: () {
+                        setState(() {
+                          indexWidget = 1;
+                        });
+                        _scaffoldKey.currentState!.closeDrawer();
+                      },
+                    ),
 
-    return FutureBuilder(
-      future: Future.wait<dynamic?>([_futurerole]),
-      builder: (context, snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.waiting:
-            return Scaffold(
-              key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
-              appBar: AppBar(
-                title: const Text("Eventos"),
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () {
-                    context.pop();
-                  },
+                    ListTile(
+                      leading: const Icon(Icons.list_alt),
+                      title: Text(
+                        'Todos los Eventos',
+                        style: styleText.bodyMedium,
+                      ),
+                      onTap: () {
+                        setState(() {
+                          indexWidget = 2;
+                        });
+                        _scaffoldKey.currentState!
+                            .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
+                      },
+                    ),
+
+                    ListTile(
+                      leading: const Icon(Icons.group),
+                      title: Text(
+                        'Miembros',
+                        style: styleText.bodyMedium,
+                      ),
+                      onTap: () {
+                        // Acción cuando se presiona la opción 2 del Drawer
+                      },
+                    ),
+                    // Agrega más ListTile según sea necesario
+                  ],
                 ),
-                actions: role == "Administrador" || role == "Entrenador"
-                    ? <Widget>[
-                        IconButton(
-                          icon: const Icon(Icons.menu),
-                          onPressed: () {
-                            _scaffoldKey.currentState!.openDrawer();
-                          },
-                        ),
-                      ]
-                    : null,
-              ),
-              body: const Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          case ConnectionState.done:
-            if (snapshot.hasError) {
-              return const Text('Error');
-            } else {
+              )
+            : null,
+        body: indexWidget == 0
+            ? builderEvents()
+            : indexWidget == 1
+                ? buildCreateEvents()
+                : builderAllEvents(),
+      );
+    } else {
+      return FutureBuilder(
+        future: Future.wait<dynamic?>([_futurerole]),
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.waiting:
               return Scaffold(
+                key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
+                appBar: AppBar(
+                  title: const Text("Eventos"),
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      indexWidget == 0;
+                      setState(() {});
+                    },
+                  ),
+                  actions: role == "Administrador" || role == "Entrenador"
+                      ? <Widget>[
+                          IconButton(
+                            icon: const Icon(Icons.menu),
+                            onPressed: () {
+                              _scaffoldKey.currentState!.openDrawer();
+                            },
+                          ),
+                        ]
+                      : null,
+                ),
+                body: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            case ConnectionState.done:
+              if (snapshot.hasError) {
+                return const Text('Error');
+              } else {
+                return Scaffold(
                   key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
                   appBar: AppBar(
                     title: indexWidget == 0
@@ -741,7 +683,12 @@ class EquipoState extends ConsumerState<Equipo> {
                     leading: IconButton(
                       icon: const Icon(Icons.arrow_back),
                       onPressed: () {
-                        context.pop();
+                        if (indexWidget == 0) {
+                          context.pop();
+                        } else {
+                          indexWidget = 0;
+                          setState(() {});
+                        }
                       },
                     ),
                     actions: role == "Administrador"
@@ -834,23 +781,20 @@ class EquipoState extends ConsumerState<Equipo> {
                           ),
                         )
                       : null,
-                  body: SingleChildScrollView(
-                      child: Column(children: [
-                    indexWidget == 0
-                        ? builderEvents()
-                        : indexWidget == 1
-                            ? buildCreateEvents()
-                            : builderAllEvents(),
-                  ])));
-
-              //pages[widgetIndex],
-            }
-          case ConnectionState.none:
-            return const Text('none');
-          case ConnectionState.active:
-            return const Text('active');
-        }
-      },
-    );
+                  body: indexWidget == 0
+                      ? builderEvents()
+                      : indexWidget == 1
+                          ? buildCreateEvents()
+                          : builderAllEvents(),
+                );
+              }
+            case ConnectionState.none:
+              return const Text('none');
+            case ConnectionState.active:
+              return const Text('active');
+          }
+        },
+      );
+    }
   }
 }

@@ -22,7 +22,6 @@ describe("Test de Obtener Equipos de un Club", () => {
   });
 });
 
-// TODO: GETEQUIPBYUSER
 describe("Test de Obtener Equipos de un Usuario", () => {
   it("Obtener todos los equipos de un usuario especifico", async () => {
     const response = await api

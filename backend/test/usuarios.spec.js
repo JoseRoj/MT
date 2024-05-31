@@ -19,6 +19,7 @@ const user = {
 const id_usuario_admin = 33;
 const id_club = 87;
 const id_usuario_no_admin = 34;
+const id_usuario_no_club = 35;
 /*
 describe("Test Crear Usuario", () => {
   it("Crear un usuario", async () => {
@@ -68,11 +69,25 @@ describe("Test Obtener Rol Administrador", () => {
   });
 });
 // TODO: Realizar este caso mas en profundidad que traiga todos los clibes a los que esta un usuario
-/*
-describe("Test ClubesUser", () => {
 
+describe("Test ClubesUser", () => {
+  it("Obtener clubes de un usuario", async () => {
+    const response = await api
+      .get("/usuarios/getclubesUser")
+      .query({ id_usuario: id_usuario_admin });
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data).toBeInstanceOf(Array);
+    expect(response.body.data.length).toBeGreaterThan(0);
+  });
+  it("Obtener clubes de un usuario que no tiene", async () => {
+    const response = await api
+      .get("/usuarios/getclubesUser")
+      .query({ id_usuario: id_usuario_no_club });
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data).toBeInstanceOf(Array);
+    expect(response.body.data.length).toBe(0);
+  });
 });
-*/
 afterAll(async () => {
   await connectionPostgres.end();
   server.close();
