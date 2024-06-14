@@ -9,7 +9,10 @@ abstract class ClubConnectDataSource {
   Future<List<Tipo>> getTipos();
   Future<bool> addClub(
       Club club, List<dynamic> categorias, List<dynamic> tipos, int id_user);
+
+  //* --------------- AUTH  ----------- *//
   Future<Data?> validar(String email, String contrasena);
+  Future<bool> updateToken(int idusuario, String tokenfb);
   Future<User> getUsuario(int id);
   Future<List<User>> getMiembros(int idclub);
 
@@ -34,10 +37,27 @@ abstract class ClubConnectDataSource {
 
   //* --------------- EVENTOS ----------------*//
   Future<List<EventoFull>?> getEventos(int idequipo, String estado);
-  Future<bool> createEvento(List<String> fechas, String horaInicio,
-      String descripcion, String horaFinal, int idequipo, String titulo);
+  Future<bool> createEvento(
+      List<String> fechas,
+      String horaInicio,
+      String descripcion,
+      String horaFinal,
+      int idequipo,
+      int idclub,
+      String titulo,
+      String lugar);
   Future<Evento> getEvento(int idevento);
-
+  Future<bool> deleteEvento(int idevento);
+  Future<bool> editEvento(
+      String fecha,
+      String horaInicio,
+      String descripcion,
+      String horaFinal,
+      int idevento,
+      String titulo,
+      String lugar,
+      List<int> asistentesDelete);
+  Future<bool> updateEstadoEvento(int idevento, String estado);
   //* --------------- ASISTENCIA ----------------*//
   Future<bool> addAsistencia(int idevento, int idusuario);
   Future<bool> deleteAsistencia(int idevento, int idusuario);

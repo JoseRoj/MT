@@ -88,7 +88,7 @@ class SupabdDatasource extends ClubConnectDataSource {
     try {
       final dio = Dio(BaseOptions(headers: {}));
 
-      final response = await dio.post('${dotenv.env["API_URL"]}/login',
+      final response = await dio.post('http://10.0.2.2:3002/login',
           data: jsonEncode(
               <String, String>{"email": email, "contrasena": contrasena}));
       if (response.statusCode == 200) {
@@ -96,9 +96,33 @@ class SupabdDatasource extends ClubConnectDataSource {
         return res.data;
       }
     } catch (e) {
+      print("Error: $e");
       return null;
     }
     return null;
+  }
+
+  @override
+  Future<bool> updateToken(int idusuario, String tokenfb) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.patch(
+        '${dotenv.env["API_URL"]}/token',
+        data: jsonEncode(
+          <String, dynamic>{
+            "id_usuario": idusuario,
+            "tokenfb": tokenfb,
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
   }
 
   @override
@@ -333,15 +357,18 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
-  Future<bool> createEvento(List<String> fechas, String horaInicio,
-      String descripcion, String horaFinal, int idequipo, String titulo) async {
+  Future<bool> createEvento(
+      List<String> fechas,
+      String horaInicio,
+      String descripcion,
+      String horaFinal,
+      int idequipo,
+      int idclub,
+      String titulo,
+      String lugar) async {
     try {
       final dio = Dio(BaseOptions(headers: {}));
-      print(fechas);
-      print(horaInicio);
-      print(descripcion);
-      print(horaFinal);
-      print(idequipo);
+
       final response = await dio.post(
         '${dotenv.env["API_URL"]}/eventos',
         data: jsonEncode(
@@ -351,11 +378,12 @@ class SupabdDatasource extends ClubConnectDataSource {
             "descripcion": descripcion,
             "horaInicio": horaInicio,
             "id_equipo": idequipo,
+            "id_club": idclub,
             "titulo": titulo,
+            "lugar": lugar,
           },
         ),
       );
-      print("Hola");
 
       if (response.statusCode == 201) {
         return true;
@@ -377,6 +405,76 @@ class SupabdDatasource extends ClubConnectDataSource {
     );
     Evento evento = Evento.fromJson(response.data["data"]);
     return evento;
+  }
+
+  @override
+  Future<bool> deleteEvento(int idevento) async {
+    final dio = Dio(BaseOptions(headers: {}));
+    final response = await dio.delete(
+      '${dotenv.env["API_URL"]}/eventos',
+      data: jsonEncode(<String, dynamic>{"id_evento": idevento}),
+    );
+    return response.statusCode == 200 ? true : false;
+  }
+
+  @override
+  Future<bool> editEvento(
+      String fecha,
+      String horaInicio,
+      String descripcion,
+      String horaFinal,
+      int idevento,
+      String titulo,
+      String lugar,
+      List<int> asistentesDelete) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.put(
+        '${dotenv.env["API_URL"]}/eventos',
+        data: jsonEncode(
+          <String, dynamic>{
+            "fecha": fecha,
+            "horaInicio": horaInicio,
+            "descripcion": descripcion,
+            "horaFin": horaFinal,
+            "id_evento": idevento,
+            "titulo": titulo,
+            "lugar": lugar,
+            "asistentesDelete": asistentesDelete
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> updateEstadoEvento(int idevento, String estado) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.patch(
+        '${dotenv.env["API_URL"]}/eventos/estado',
+        data: jsonEncode(
+          <String, dynamic>{
+            "id_evento": idevento,
+            "estado": estado,
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
   }
 
   @override

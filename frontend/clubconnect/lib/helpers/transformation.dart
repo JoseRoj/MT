@@ -40,3 +40,11 @@ String DateToString(DateTime date) {
   String formattedDate = DateFormat('dd/MM/yyyy').format(date);
   return formattedDate;
 }
+
+TimeOfDay convertirStringATimeOfDay(String horaString) {
+  List<String> tiempo = horaString.split(":");
+  int hora = int.parse(tiempo[0]);
+  int minuto = int.parse(tiempo[1]);
+
+  return TimeOfDay(hour: hora, minute: minuto);
+}

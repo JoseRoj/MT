@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
+import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/providers/usuario_provider.dart';
 import 'package:clubconnect/presentation/widget/formInput.dart';
 import 'package:flutter/material.dart';
@@ -125,8 +126,14 @@ class LoginScreenState extends ConsumerState<LoginScreen> {
                             .saveToken(controllerCorreo.text,
                                 controllerContrasena.text);
 
-                        print(responde);
                         if (responde != null) {
+                          //* Save user data in the provider
+                          final id = ref.read(authProvider).id;
+                          final tokenfb =
+                              ref.read(authProvider).tokenDispositivo;
+                          ref
+                              .read(clubConnectProvider)
+                              .updateToken(id!, tokenfb!);
                           context.go('/home/1');
                           //ref.watch(UsuarioProvider(responde.id as int));
                         } else {

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 class Evento {
-  String id;
+  String? id;
   String descripcion;
   DateTime fecha;
   String horaInicio;
@@ -9,9 +9,10 @@ class Evento {
   String estado;
   String idEquipo;
   String titulo;
+  String lugar;
 
   Evento({
-    required this.id,
+    this.id,
     required this.descripcion,
     required this.fecha,
     required this.horaInicio,
@@ -19,6 +20,7 @@ class Evento {
     required this.estado,
     required this.idEquipo,
     required this.titulo,
+    required this.lugar,
   });
 
   factory Evento.fromRawJson(String str) => Evento.fromJson(json.decode(str));
@@ -34,6 +36,7 @@ class Evento {
         estado: json["estado"],
         idEquipo: json["id_equipo"],
         titulo: json["titulo"],
+        lugar: json["lugar"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -45,6 +48,7 @@ class Evento {
         "estado": estado,
         "id_equipo": idEquipo,
         "titulo": titulo,
+        "lugar": lugar,
       };
 }
 

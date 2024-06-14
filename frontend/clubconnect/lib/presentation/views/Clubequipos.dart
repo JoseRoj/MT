@@ -8,6 +8,7 @@ import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/widget.dart';
 import 'package:clubconnect/presentation/widget/solicitud.dart';
+import 'package:clubconnect/services/firebase.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -440,7 +441,6 @@ class EquiposState extends ConsumerState<Equipos> {
 
   @override
   void initState() {
-    print("Entre...");
     _futurerole = ref
         .read(clubConnectProvider)
         .getRole(ref.read(authProvider).id!, widget.idclub)
@@ -478,6 +478,7 @@ class EquiposState extends ConsumerState<Equipos> {
 
   @override
   Widget build(BuildContext context) {
+    print("TK : ${ref.read(authProvider).tokenDispositivo}");
     final String title = widgetIndex == 0
         ? 'Equipos'
         : widgetIndex == 1

@@ -24,10 +24,11 @@ abstract class ClubConnectRepository {
   Future<bool> addEquipo(Equipo equipo);
   Future<List<Equipo>> getEquiposUser(int idusuario, int idclub);
 
+  //* --------------- AUTH  ----------- *//
   Future<Data?> validar(String email, String contrasena);
+  Future<bool> updateToken(int idusuario, String tokenfb);
 
   Future<bool?> createUser(User usuario);
-
   Future<User> getUsuario(int id);
 
   //* --------------- SOLICITUDES  ----------- *//
@@ -42,9 +43,27 @@ abstract class ClubConnectRepository {
 
   //* --------------- EVENTOS ----------------*//
   Future<List<EventoFull>?> getEventos(int idequipo, String estado);
-  Future<bool> createEvento(List<String> fechas, String horaInicio,
-      String descripcion, String horaFinal, int idequipo, String titulo);
+  Future<bool> createEvento(
+      List<String> fechas,
+      String horaInicio,
+      String descripcion,
+      String horaFinal,
+      int idequipo,
+      int idclub,
+      String titulo,
+      String lugar);
   Future<Evento> getEvento(int idevento);
+  Future<bool> deleteEvento(int idevento);
+  Future<bool> editEvento(
+      String fecha,
+      String horaInicio,
+      String descripcion,
+      String horaFinal,
+      int idevento,
+      String titulo,
+      String lugar,
+      List<int> asistentesDelete);
+  Future<bool> updateEstadoEvento(int idevento, String estado);
 
   //* --------------- ASISTENCIA ----------------*//
   Future<bool> addAsistencia(int idevento, int idusuario);

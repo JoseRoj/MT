@@ -4,6 +4,7 @@ import 'package:clubconnect/presentation/views/listclubs_view.dart';
 import 'package:clubconnect/presentation/views/home_view.dart';
 import 'package:clubconnect/presentation/views/perfil.dart';
 import 'package:clubconnect/presentation/widget.dart';
+import 'package:clubconnect/services/firebase.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 class HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
+    /*  FirebaseApi()
+        .initNotification(ref)
+        .then((value) => print("Notificaciones inicializadas"));
+*/
     super.initState();
     //print(";");
     ref.read(categoriasProvider.notifier).getCategorias();

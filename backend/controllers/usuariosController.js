@@ -20,7 +20,6 @@ module.exports = {
   async getUsuario(id) {
     try {
       let query = `SELECT * FROM public."Usuarios" WHERE id = $1`;
-
       const response = await connectionPostgres.query(query, [id]);
       if (response.rowCount === 0) {
         return { statusCode: 400, message: "Usuario no encontrado" };
@@ -151,8 +150,6 @@ module.exports = {
       JOIN public."Administra" ON "Club".id = "Administra".id_club
       WHERE "Administra".id_usuario = $1;`;
       const response = await connectionPostgres.query(query, [id_usuario]);
-      if (response.rows.length > 0)
-        return { statusCode: 200, data: response.rows, message: "" };
       //* Si el usuario es deportista se obtienen los clubes de deportista
       let query2 = `SELECT "Club".*, "Deporte".nombre AS deporte
       FROM public."Club"
@@ -160,10 +157,11 @@ module.exports = {
       JOIN public."Equipo" ON "Club".id = "Equipo".id_club
       JOIN public."Miembros" ON "Equipo".id = "Miembros".id_equipo
       WHERE "Miembros".id_usuario = $1;`;
-
       /* Obetener no repetidos por id de club */
       const response2 = await connectionPostgres.query(query2, [id_usuario]);
-      const uniqueClub = new Map(response2.rows.map((club) => [club.id, club]));
+      /* Unir ambos clubes */
+      const arrayClubes = response.rows.concat(response2.rows);
+      const uniqueClub = new Map(arrayClubes.map((club) => [club.id, club]));
       const arrayUniqueClub = Array.from(uniqueClub.values());
       return { statusCode: 200, data: arrayUniqueClub, message: "" };
     } catch (e) {

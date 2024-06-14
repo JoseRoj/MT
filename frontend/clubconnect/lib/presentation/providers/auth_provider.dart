@@ -86,9 +86,13 @@ class AuthProvider extends ChangeNotifier {
   final SupaDBRepositoryImpl _supaDBRepositoryImpl;
   AuthProvider(this._supaDBRepositoryImpl) : super();
   String? _token;
+  String? _tokenDispositivo;
+
   int? _id;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   String? get token => _token;
+  String? get tokenDispositivo => _tokenDispositivo;
+
   int? get id => _id;
 
   Future<usuario?> saveToken(String email, String contrasena) async {
@@ -118,6 +122,22 @@ class AuthProvider extends ChangeNotifier {
   Future<void> clearToken() async {
     _token = null;
     await _secureStorage.delete(key: 'token');
+    notifyListeners();
+  }
+
+  Future<void> saveTokenDispositivo(String tokenDispositivo) async {
+    _tokenDispositivo = tokenDispositivo;
+    await _secureStorage.write(
+      key: 'tokenDispositivo',
+      value: tokenDispositivo,
+    );
+    notifyListeners();
+  }
+
+  Future<void> loadTokenDispositivo() async {
+    _token = await _secureStorage.read(
+      key: 'tokenDispositivo',
+    );
     notifyListeners();
   }
 }

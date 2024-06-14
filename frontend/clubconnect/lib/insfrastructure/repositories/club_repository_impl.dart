@@ -47,6 +47,11 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
+  Future<bool> updateToken(int idusuario, String tokenfb) async {
+    return await clubConnectDataSource.updateToken(idusuario, tokenfb);
+  }
+
+  @override
   Future<bool?> createUser(User usuario) async {
     return await clubConnectDataSource.createUser(usuario);
   }
@@ -120,15 +125,46 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
-  Future<bool> createEvento(List<String> fechas, String horaInicio,
-      String descripcion, String horaFinal, int idequipo, String titulo) async {
-    return await clubConnectDataSource.createEvento(
-        fechas, horaInicio, descripcion, horaFinal, idequipo, titulo);
+  Future<bool> createEvento(
+      List<String> fechas,
+      String horaInicio,
+      String descripcion,
+      String horaFinal,
+      int idequipo,
+      int idclub,
+      String titulo,
+      String lugar) async {
+    return await clubConnectDataSource.createEvento(fechas, horaInicio,
+        descripcion, horaFinal, idequipo, idclub, titulo, lugar);
   }
 
   @override
   Future<Evento> getEvento(int idevento) async {
     return await clubConnectDataSource.getEvento(idevento);
+  }
+
+  @override
+  Future<bool> deleteEvento(int idevento) async {
+    return await clubConnectDataSource.deleteEvento(idevento);
+  }
+
+  @override
+  Future<bool> editEvento(
+      String fecha,
+      String horaInicio,
+      String descripcion,
+      String horaFinal,
+      int idevento,
+      String titulo,
+      String lugar,
+      List<int> asistentesDelete) async {
+    return await clubConnectDataSource.editEvento(fecha, horaInicio,
+        descripcion, horaFinal, idevento, titulo, lugar, asistentesDelete);
+  }
+
+  @override
+  Future<bool> updateEstadoEvento(int idevento, String estado) async {
+    return await clubConnectDataSource.updateEstadoEvento(idevento, estado);
   }
 
   @override

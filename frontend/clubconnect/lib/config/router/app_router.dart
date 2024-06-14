@@ -6,9 +6,13 @@ import 'package:clubconnect/presentation/views/Clubequipos.dart';
 import 'package:clubconnect/presentation/views/club.dart';
 import 'package:clubconnect/presentation/views/equipo.dart';
 import 'package:clubconnect/presentation/views/newClub/newClub.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-final appRouter = GoRouter(initialLocation: '/login', routes: [
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+final appRouter =
+    GoRouter(navigatorKey: navigatorKey, initialLocation: '/login', routes: [
   GoRoute(
       path: '/home/:page',
       name: HomeScreen.name,

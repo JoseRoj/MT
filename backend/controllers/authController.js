@@ -57,4 +57,18 @@ module.exports = {
       //await connectionPostgres.end();
     }
   },
+  // TODO: TESTEAR
+  async updateToken(id_usuario, tokenfb) {
+    try {
+      let query = `UPDATE public."Usuarios" SET tokenfb = $1 WHERE id = $2`;
+      const response = await connectionPostgres.query(query, [
+        tokenfb,
+        id_usuario,
+      ]);
+      return { statusCode: 200, data: response.rows, message: "" };
+    } catch (error) {
+      console.log("Error: ", error);
+      return { statusCode: 500, error: "Error al realizar petición" };
+    }
+  },
 };

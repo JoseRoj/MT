@@ -14,7 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class CardEvento extends ConsumerStatefulWidget {
-  var eventos;
+  List<EventoFull?>? eventos;
   String buttonText;
   int idequipo;
   CardEvento({
@@ -65,7 +65,7 @@ class CardEventoState extends ConsumerState<CardEvento> {
                         Container(
                           width: MediaQuery.of(context).size.width * 0.6,
                           child: Text(
-                            widget.eventos![index].evento.titulo,
+                            widget.eventos![index]!.evento.titulo,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -79,7 +79,7 @@ class CardEventoState extends ConsumerState<CardEvento> {
                               const Icon(Icons.group),
                               SizedBox(width: 5), // Espacio
                               Text(
-                                  widget.eventos![index].asistentes.length
+                                  widget.eventos![index]!.asistentes.length
                                       .toString(),
                                   style: styleText.labelSmall),
                             ])),
@@ -90,17 +90,17 @@ class CardEventoState extends ConsumerState<CardEvento> {
                       children: [
                         Text(
                             DateFormat('dd / MM / yyyy')
-                                .format(widget.eventos![index].evento.fecha),
+                                .format(widget.eventos![index]!.evento.fecha),
                             style: styleText.labelSmall),
                         Text(
-                            "${widget.eventos![index].evento.horaInicio} - ${widget.eventos![index].evento.horaFinal}",
+                            "${widget.eventos![index]!.evento.horaInicio} - ${widget.eventos![index]!.evento.horaFinal}",
                             style: styleText.labelSmall),
                       ],
                     ),
                     Row(
                       children: [
                         Text(
-                          "Lugar : ${widget.eventos![index].evento.titulo}",
+                          "Lugar : ${widget.eventos![index]!.evento.lugar}",
                           style: styleText.labelSmall,
                           textAlign: TextAlign.left,
                         )
@@ -109,13 +109,13 @@ class CardEventoState extends ConsumerState<CardEvento> {
                   ],
                 )),
             onTap: () {
-              if (widget.eventos![index].asistentes.isEmpty) {
+              if (widget.eventos![index]!.asistentes.isEmpty) {
                 widget.buttonText = "Asistir";
               } else {
                 for (int i = 0;
-                    i < widget.eventos![index].asistentes.length;
+                    i < widget.eventos![index]!.asistentes.length;
                     i++) {
-                  if (int.parse(widget.eventos![index].asistentes[i].id) ==
+                  if (int.parse(widget.eventos![index]!.asistentes[i].id) ==
                       ref.read(authProvider).id) {
                     widget.buttonText = "Cancelar";
                     break;
@@ -137,13 +137,13 @@ class CardEventoState extends ConsumerState<CardEvento> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              widget.eventos![index].evento.titulo,
+                              widget.eventos![index]!.evento.titulo,
                               style: styleText.titleSmall,
                             ),
                             const SizedBox(height: 8),
                             Text(
                               DateFormat('dd / MM / yyyy')
-                                  .format(widget.eventos![index].evento.fecha),
+                                  .format(widget.eventos![index]!.evento.fecha),
                               style: styleText.bodyMedium,
                             ),
                             const SizedBox(height: 8),
@@ -151,23 +151,29 @@ class CardEventoState extends ConsumerState<CardEvento> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  "${widget.eventos![index].evento.horaInicio} - ${widget.eventos![index].evento.horaFinal}",
+                                  "${widget.eventos![index]!.evento.horaInicio} - ${widget.eventos![index]!.evento.horaFinal}",
                                   style: styleText.bodyMedium,
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
                             Text(
-                              widget.eventos![index].evento.descripcion,
+                              "${widget.eventos![index]!.evento.lugar}",
                               style: styleText.bodyMedium,
                             ),
-                            widget.eventos![index].asistentes.isEmpty
+                            const SizedBox(height: 8),
+                            Text(
+                              widget.eventos![index]!.evento.descripcion,
+                              style: styleText.bodyMedium,
+                            ),
+                            widget.eventos![index]!.asistentes.isEmpty
                                 ? const SizedBox()
                                 : Row(
                                     children: [
                                       Text("Asistentes : ",
                                           textAlign: TextAlign.left,
-                                          style: styleText.labelSmall),
+                                          style: styleText.labelSmall,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis),
                                     ],
                                   ),
                             SizedBox(
@@ -177,10 +183,10 @@ class CardEventoState extends ConsumerState<CardEvento> {
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount:
-                                    widget.eventos![index].asistentes.length,
+                                    widget.eventos![index]!.asistentes.length,
                                 itemBuilder: (context, index2) {
                                   return userList(
-                                      name: widget.eventos![index]
+                                      name: widget.eventos![index]!
                                           .asistentes[index2].nombre,
                                       image: null);
                                 },
@@ -204,20 +210,21 @@ class CardEventoState extends ConsumerState<CardEvento> {
                                         .read(clubConnectProvider)
                                         .deleteAsistencia(
                                             int.parse(widget
-                                                .eventos![index].evento.id),
+                                                .eventos![index]!.evento.id!),
                                             ref.read(authProvider).id!);
                                     if (response) {
                                       widget.buttonText = "Asistir";
-                                      setModalState(() {});
-                                      widget.eventos = await ref
+                                      widget.eventos = (await ref
                                           .read(clubConnectProvider)
                                           .getEventos(widget.idequipo,
-                                              EstadosEventos.activo);
+                                              EstadosEventos.activo));
                                       // ignore: use_build_context_synchronously
                                       customToast(
                                           "Asistencia cancelada con éxito",
                                           context,
                                           "isSuccess");
+                                      setModalState(() {});
+                                      setState(() {});
                                       Navigator.of(context).pop();
                                     } else {
                                       customToast(
@@ -230,15 +237,16 @@ class CardEventoState extends ConsumerState<CardEvento> {
                                         .read(clubConnectProvider)
                                         .addAsistencia(
                                             int.parse(widget
-                                                .eventos![index].evento.id),
+                                                .eventos![index]!.evento.id!),
                                             ref.read(authProvider).id!);
                                     if (response) {
                                       widget.buttonText = "Cancelar";
-                                      setModalState(() {});
                                       widget.eventos = await ref
                                           .read(clubConnectProvider)
                                           .getEventos(widget.idequipo,
                                               EstadosEventos.activo);
+                                      setModalState(() {});
+                                      setState(() {});
                                       // ignore: use_build_context_synchronously
                                       customToast(
                                           "Asistencia registrada con éxito",
@@ -254,8 +262,8 @@ class CardEventoState extends ConsumerState<CardEvento> {
                                   }
                                 },
                                 icon: widget.buttonText == "Asistir"
-                                    ? Icon(Icons.check)
-                                    : Icon(Icons.cancel),
+                                    ? const Icon(Icons.check)
+                                    : const Icon(Icons.cancel),
                                 label: Text(widget.buttonText,
                                     style: const TextStyle(
                                       color: Colors.white,

@@ -17,7 +17,8 @@ Widget userList({
         ),
         Text(
           name,
-          style: const TextStyle(fontSize: 12),
+          style: const TextStyle(fontSize: 12, overflow: TextOverflow.ellipsis),
+          maxLines: 2,
         ),
       ],
     ),
