@@ -49,7 +49,8 @@ class AppTheme {
           ),
           labelMedium: TextStyle(
             color: Colors.black,
-            fontSize: 12,
+            fontSize: 15,
+            overflow: TextOverflow.ellipsis,
           ),
           labelSmall: TextStyle(
             color: Colors.black,

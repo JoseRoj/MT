@@ -2,7 +2,7 @@ import 'package:clubconnect/insfrastructure/models/evento.dart';
 import 'package:clubconnect/presentation/screens/home_screen.dart';
 import 'package:clubconnect/presentation/screens/login_screen.dart';
 import 'package:clubconnect/presentation/screens/registration_screen.dart';
-import 'package:clubconnect/presentation/views/Clubequipos.dart';
+import 'package:clubconnect/presentation/views/clubEquipos/Clubequipos.dart';
 import 'package:clubconnect/presentation/views/club.dart';
 import 'package:clubconnect/presentation/views/equipo.dart';
 import 'package:clubconnect/presentation/views/newClub/newClub.dart';

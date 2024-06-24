@@ -177,6 +177,7 @@ module.exports = {
       WHERE id_club = $1`;
       const equipos = await connectionPostgres.query(query, [id_club]);
       console.log("response: ", equipos.rows);
+
       // Obtener todos los miembros de un club
       const queryadministrador = ` SELECT "Usuarios".*
       FROM public."Usuarios"
@@ -186,9 +187,10 @@ module.exports = {
         id_club,
       ]);
       const miembros = equipos.rows.map(async (equipo) => {
-        query = `SELECT "Usuarios".*
+        query = `SELECT "Usuarios".*, "Miembros".rol, "Equipo".nombre AS equipo, "Equipo".id AS idequipo
         FROM public."Usuarios" 
         JOIN public."Miembros" ON "Usuarios".id = "Miembros".id_usuario
+        JOIN public."Equipo" ON "Miembros".id_equipo = "Equipo".id
         WHERE "Miembros".id_equipo = $1`;
         const response = await connectionPostgres.query(query, [equipo.id]);
         return response.rows;
@@ -197,7 +199,10 @@ module.exports = {
       });
       const resultados = await Promise.all(miembros);
       resultados.push(administrador.rows);
+
       console.log("resultados: ", resultados);
+
+      //* Obtener todos los equipos de un usuario //*
 
       const uniqueUsuarios = [];
       const ids = new Set();
@@ -206,7 +211,59 @@ module.exports = {
         subArray.forEach((usuario) => {
           if (!ids.has(usuario.id)) {
             ids.add(usuario.id);
-            uniqueUsuarios.push(usuario);
+            if (usuario.equipo != null && usuario.rol != null) {
+              uniqueUsuarios.push({
+                id: usuario.id,
+                nombre: usuario.nombre,
+                email: usuario.email,
+                apellido1: usuario.apellido1,
+                apellido2: usuario.apellido2,
+                genero: usuario.genero,
+                imagen: usuario.imagen,
+                fecha_nacimiento: usuario.fecha_nacimiento,
+                telefono: usuario.telefono,
+                equipos: [
+                  {
+                    nombre: usuario.equipo ?? "",
+                    id: usuario.idequipo ?? "",
+                    rol: usuario.rol ?? "",
+                  },
+                ],
+              });
+            } else {
+              uniqueUsuarios.push({
+                id: usuario.id,
+                nombre: usuario.nombre,
+                email: usuario.email,
+                apellido1: usuario.apellido1,
+                apellido2: usuario.apellido2,
+                genero: usuario.genero,
+                imagen: usuario.imagen,
+                fecha_nacimiento: usuario.fecha_nacimiento,
+                telefono: usuario.telefono,
+                equipos: [],
+              });
+            }
+          } else {
+            console.log("Usss");
+            const index = uniqueUsuarios.findIndex(
+              (user) => user.id === usuario.id
+            );
+            if (!uniqueUsuarios[index].equipos) {
+              uniqueUsuarios[index].equipos = [];
+            }
+            if (
+              usuario.equipo !== null &&
+              usuario.equipo != "" &&
+              usuario.rol !== null &&
+              usuario.rol != ""
+            ) {
+              uniqueUsuarios[index].equipos.push({
+                nombre: usuario.equipo ?? "",
+                id: usuario.idequipo ?? "",
+                rol: usuario.rol ?? "",
+              });
+            }
           }
         });
       });
@@ -217,6 +274,29 @@ module.exports = {
       //const arrayUniqueUser = Array.from(uniqueUser.values());
 
       return { statusCode: 200, data: uniqueUsuarios, message: "" };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
+  // TODO : TEASTEAR
+  async expulsarMiembros(id_club, id_usuario) {
+    try {
+      //* obtener todos los equipos de un club //*
+      const queryEquipos = `SELECT * FROM public."Equipo" WHERE id_club = $1`;
+      const equipos = await connectionPostgres.query(queryEquipos, [id_club]);
+
+      //* Eliminar al usuario de todos los equipos del club //*
+      const queryDeleteMiembro = `DELETE FROM public."Miembros" WHERE id_usuario = $1 AND id_equipo = $2`;
+      equipos.rows.forEach(async (equipo) => {
+        await connectionPostgres.query(queryDeleteMiembro, [
+          id_usuario,
+          equipo.id,
+        ]);
+      });
+
+      return { statusCode: 200, message: "Usuario expulsado con éxito" };
     } catch (e) {
       console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };

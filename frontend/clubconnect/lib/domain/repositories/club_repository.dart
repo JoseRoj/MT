@@ -1,28 +1,28 @@
+import 'package:clubconnect/insfrastructure/models/userTeam.dart';
+
 import '../../insfrastructure/models.dart';
 import '../../presentation/providers/auth_provider.dart';
 
 abstract class ClubConnectRepository {
+  //* --------------- CLUBS  ----------- *//
   Future<List<Club>> getClubs(List<int> deportes);
-
   Future<ClubEspecifico> getClub(int id);
-
   Future<List<Deporte>> getDeportes();
-
   Future<List<Categoria>> getCategorias();
-
   Future<List<Tipo>> getTipos();
-
   Future<bool> addClub(
       Club club, List<dynamic> categorias, List<dynamic> tipos, int id_user);
+  Future<bool> deleteMiembroClub(int idusuario, int idclub);
 
   Future<List<Club>> getClubsUser(int idusuario);
-  Future<String> getRole(int idusuario, int idclub);
-  Future<List<User>> getMiembros(int idclub);
+  Future<String> getRole(int idusuario, int idclub, int? idequipo);
+  Future<List<UserTeam>> getMiembros(int idclub);
 
   //* ------ EQUIPOS USUARIO ------- *//
   Future<List<Equipo>> getEquipos(int idclub);
   Future<bool> addEquipo(Equipo equipo);
   Future<List<Equipo>> getEquiposUser(int idusuario, int idclub);
+  Future<List<User>> getMiembrosEquipo(int idequipo);
 
   //* --------------- AUTH  ----------- *//
   Future<Data?> validar(String email, String contrasena);
@@ -40,6 +40,8 @@ abstract class ClubConnectRepository {
   //* --------------- MIEMBROS ----------- *//
   Future<bool> acceptSolicitud(
       List<dynamic> equipos, int idusuario, String rol, int idclub);
+  Future<bool> addMiembro(int idusuario, int idequipo, String rol);
+  Future<bool> deleteMiembro(int idusuario, int idequipo);
 
   //* --------------- EVENTOS ----------------*//
   Future<List<EventoFull>?> getEventos(int idequipo, String estado);

@@ -1,18 +1,25 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:clubconnect/config/theme/app_theme.dart';
+import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
+import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
+import 'package:clubconnect/presentation/views/clubEquipos/modalUserPerfil.dart';
 import 'package:clubconnect/presentation/widget.dart';
 import 'package:clubconnect/presentation/widget/solicitud.dart';
 import 'package:clubconnect/services/firebase.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
+
+import '../../widget/modalCarga.dart';
 
 class Equipos extends ConsumerStatefulWidget {
   static const name = 'club-equipo';
@@ -22,6 +29,8 @@ class Equipos extends ConsumerStatefulWidget {
   @override
   EquiposState createState() => EquiposState();
 }
+
+enum Menu { eliminar, perfil }
 
 class EquiposState extends ConsumerState<Equipos> {
   final _controllerTipo = MultiSelectController();
@@ -38,8 +47,31 @@ class EquiposState extends ConsumerState<Equipos> {
   late List<Equipo> equipos;
   late Future<List<Solicitud>> _futuresolicitudes;
   late List<Solicitud> solicitudes;
-  late Future<List<User>> _futuremiembros;
-  late List<User> miembros;
+  late Future<List<UserTeam>> _futuremiembros;
+  late List<UserTeam> miembros;
+
+  Future<void> _expulsarmiembro(int idmiembro, int idclub, int index) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return modalCarga("Expulsando Miembro del Club...");
+      },
+    );
+    var result = await ref
+        .read(clubConnectProvider)
+        .deleteMiembroClub(idmiembro, idclub);
+    if (Navigator.of(context, rootNavigator: true).canPop()) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+    if (result) {
+      miembros.removeAt(index);
+      setState(() {});
+      customToast("Se ha explusado del club", context, "isSuccess");
+    } else {
+      customToast("Error al eliminar del club", context, "isError");
+    }
+  }
 
   Widget equiposBuilder() {
     return FutureBuilder(
@@ -338,51 +370,109 @@ class EquiposState extends ConsumerState<Equipos> {
               onRefresh: () async {
                 await getMiembros();
               },
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3, // Número de columnas
-                    childAspectRatio: MediaQuery.of(context).size.width /
-                        (MediaQuery.of(context).size.height /
-                            2), // Proporción de aspecto,
-                    mainAxisSpacing: 2,
-                    crossAxisSpacing: 3),
-                itemCount: miembros.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3, // Número de columnas
+                      childAspectRatio: MediaQuery.of(context).size.width /
+                          (MediaQuery.of(context).size.height /
+                              2), // Proporción de aspecto,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 3),
+                  itemCount: miembros.length,
+                  itemBuilder: (context, index) {
+                    return Stack(
                       children: [
-                        miembros[index].imagen == "" ||
-                                miembros[index].imagen == null
-                            ? ClipOval(
-                                child: Image.asset(
-                                  'assets/nofoto.jpeg',
-                                  fit: BoxFit.cover,
-                                  width: 60,
-                                  height: 60,
-                                ),
-                              )
-                            : ClipOval(
-                                child: Image.memory(
-                                  imagenFromBase64(club.logo),
-                                  fit: BoxFit.cover,
-                                  width: 60,
-                                  height: 60,
+                        Card(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              miembros[index].imagen == "" ||
+                                      miembros[index].imagen == null
+                                  ? ClipOval(
+                                      child: Image.asset(
+                                        'assets/nofoto.jpeg',
+                                        fit: BoxFit.cover,
+                                        width: 60,
+                                        height: 60,
+                                      ),
+                                    )
+                                  : ClipOval(
+                                      child: Image.memory(
+                                        imagenFromBase64(club.logo),
+                                        fit: BoxFit.cover,
+                                        width: 60,
+                                        height: 60,
+                                      ),
+                                    ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 10),
+                                child: Text(
+                                  "${miembros[index].nombre} ${miembros[index].apellido1} ${miembros[index].apellido2}",
+                                  style: AppTheme()
+                                      .getTheme()
+                                      .textTheme
+                                      .labelMedium,
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            "${miembros[index].nombre} ${miembros[index].apellido1} ${miembros[index].apellido2}",
-                            style: AppTheme().getTheme().textTheme.labelMedium,
-                            textAlign: TextAlign.center,
+                            ],
                           ),
                         ),
+                        Positioned(
+                            top: 0,
+                            right: -10,
+                            child: PopupMenuButton<Menu>(
+                              //popUpAnimationStyle: _animationStyle,
+                              icon: const Icon(Icons.more_vert),
+                              onSelected: (Menu item) {},
+                              itemBuilder: (BuildContext context) =>
+                                  <PopupMenuEntry<Menu>>[
+                                PopupMenuItem<Menu>(
+                                  value: Menu.perfil,
+                                  child: ListTile(
+                                    dense: true,
+                                    leading: const Icon(
+                                      Icons.person_remove_alt_1,
+                                      color: Colors.red,
+                                    ),
+                                    title: const Text('Expulsar'),
+                                    onTap: () async {
+                                      Navigator.of(context).pop();
+                                      await _expulsarmiembro(
+                                          int.parse(miembros[index].id),
+                                          widget.idclub,
+                                          index);
+                                    },
+                                  ),
+                                ),
+                                PopupMenuItem<Menu>(
+                                  value: Menu.eliminar,
+                                  child: ListTile(
+                                    dense: true,
+                                    leading: const Icon(Icons.info,
+                                        color: Colors.black),
+                                    title: const Text('Perfil'),
+                                    onTap: () async {
+                                      Navigator.of(context).pop();
+                                      await Future.delayed(
+                                          const Duration(milliseconds: 500));
+                                      // ignore: use_build_context_synchronously
+                                      modalUserPerfil(context, miembros[index],
+                                          club, equipos, ref);
+                                      // ignore: use_build_context_synchronously
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ))
                       ],
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             );
           case ConnectionState.none:
@@ -393,8 +483,6 @@ class EquiposState extends ConsumerState<Equipos> {
       },
     );
   }
-
-  List<String> items = List.generate(20, (index) => 'Item $index');
 
   Future<void> getEquipos() async {
     final response = await ref.read(clubConnectProvider).getEquipos(
@@ -432,7 +520,7 @@ class EquiposState extends ConsumerState<Equipos> {
   Future<void> getMiembros() async {
     final response = await ref.read(clubConnectProvider).getMiembros(
         widget.idclub); // Simula un proceso de carga o actualización de datos
-    print("Miembros : ${response.map((e) => e.nombre)}");
+    print("Miembros : ${response.map((e) => e).toList()}");
 
     setState(() {
       miembros = response;
@@ -443,7 +531,7 @@ class EquiposState extends ConsumerState<Equipos> {
   void initState() {
     _futurerole = ref
         .read(clubConnectProvider)
-        .getRole(ref.read(authProvider).id!, widget.idclub)
+        .getRole(ref.read(authProvider).id!, widget.idclub, null)
         .then(
       (value) {
         role = value;
@@ -500,7 +588,6 @@ class EquiposState extends ConsumerState<Equipos> {
     /*if (role.isEmpty) {
       return CircularProgressIndicator();
     }*/
-
     return FutureBuilder(
       future: Future.wait<dynamic?>([_futurerole, _futureclub]),
       builder: (context, snapshot) {

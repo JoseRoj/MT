@@ -105,7 +105,10 @@ module.exports = {
    * * Obtener el rol del usuario
    *
    */
-  async getRolClub(id_usuario, id_club) {
+  async getRolClub(id_usuario, id_club, id_equipo) {
+    console.log("id_usuario: ", id_usuario);
+    console.log("id_club: ", id_club);
+    console.log("id_equipo: ", id_equipo);
     try {
       // *  Verficar que el usuario es administrador del club
       let query = `SELECT * FROM public."Administra" WHERE id_usuario = $1 AND id_club = $2`;
@@ -114,13 +117,28 @@ module.exports = {
         id_club,
       ]);
       if (response.rows.length === 0) {
+        //* Si no es Administrador Verificar si es Entrenador  --- cuando se ingresa al equipo especifico**/
+        if (id_equipo != null && id_equipo != undefined && id_equipo != "") {
+          let queryEntrenador = `SELECT * FROM public."Miembros" WHERE id_usuario = $1 AND id_equipo = $2 AND rol = 'Entrenador'`;
+          const rolEntrenador = await connectionPostgres.query(
+            queryEntrenador,
+            [id_usuario, id_equipo]
+          );
+
+          if (rolEntrenador.rows.length > 0) {
+            return {
+              statusCode: 200,
+              data: "Entrenador",
+              message: "",
+            };
+          }
+        }
         return {
           statusCode: 200,
           data: "",
           message: "No existe información",
         };
       }
-
       // * Si no es administrador del club, ver si es Deportista o Entrenador
       /*if (response.rows.length === 0) {
         // No es administrador del club
@@ -131,9 +149,9 @@ module.exports = {
         ]);
 
       }*/
-
       return { statusCode: 200, data: "Administrador", message: "" };
-    } catch {
+    } catch (error) {
+      console.log("Error: ", error);
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },

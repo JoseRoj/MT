@@ -22,7 +22,12 @@ void main() async {
 
 Future<void> _initializeFirebase() async {
   if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+        options: FirebaseOptions(
+            apiKey: "AIzaSyBa6yV6q3NRgauqF8ww2Zit4E7YNyebClQ",
+            appId: "1:244455361948:ios:0ad346b9d0968df68dcc59",
+            messagingSenderId: "244455361948",
+            projectId: "clubconnect-5bd71"));
   }
 }
 

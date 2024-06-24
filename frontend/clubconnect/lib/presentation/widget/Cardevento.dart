@@ -6,7 +6,7 @@ import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'package:clubconnect/insfrastructure/models/evento.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
-import 'package:clubconnect/presentation/views/Clubequipos.dart';
+import 'package:clubconnect/presentation/views/clubEquipos/Clubequipos.dart';
 import 'package:clubconnect/presentation/widget/userlist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

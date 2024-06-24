@@ -30,4 +30,42 @@ module.exports = {
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },
+
+  async AddMiembrotoEquipo(id_usuario, id_equipo, rol) {
+    try {
+      let query = `INSERT INTO public."Miembros" (id_usuario, id_equipo, rol) VALUES ($1, $2, $3)`;
+      const response = await connectionPostgres.query(query, [
+        id_usuario,
+        id_equipo,
+        rol,
+      ]);
+      return {
+        statusCode: 200,
+        message: "Miembro asignado correctamente",
+      };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
+  async deleteMiembro(id_usuario, id_equipo) {
+    try {
+      let query = `DELETE FROM public."Miembros" WHERE id_usuario = $1 AND id_equipo = $2`;
+      const response = await connectionPostgres.query(query, [
+        id_usuario,
+        id_equipo,
+      ]);
+      if (response.rowCount === 0) {
+        return { statusCode: 400, message: "No se pudo eliminar" };
+      }
+      return {
+        statusCode: 200,
+        message: "Miembro eliminado correctamente",
+      };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
 };

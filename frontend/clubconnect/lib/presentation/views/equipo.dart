@@ -5,8 +5,10 @@ import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
+import 'package:clubconnect/presentation/views/clubEquipos/modalUserPerfil.dart';
 import 'package:clubconnect/presentation/widget/Cardevento.dart';
 import 'package:clubconnect/presentation/widget/formInput.dart';
+import 'package:clubconnect/presentation/widget/modalCarga.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,7 +37,7 @@ class Equipo extends ConsumerStatefulWidget {
 class EquipoState extends ConsumerState<Equipo> {
   var buttonText = "";
   Color colorAsistir = const Color.fromARGB(255, 117, 204, 124);
-  Color colorCancelar = Color.fromARGB(255, 237, 65, 65);
+  Color colorCancelar = const Color.fromARGB(255, 237, 65, 65);
 
   int indexWidget = 0;
   bool selectTimeInicio = false;
@@ -90,6 +92,8 @@ class EquipoState extends ConsumerState<Equipo> {
   final TextEditingController controllerLugarEdit = TextEditingController();
   late List<Asistente> asistentes;
   List<int> asistentesId = [];
+  late Future<List<User>> _futuremiembros;
+  late List<User> miembros;
 
   Future<bool?> _showDialog(Widget child) async {
     final response = await showCupertinoModalPopup<bool>(
@@ -143,28 +147,19 @@ class EquipoState extends ConsumerState<Equipo> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const AlertDialog(
-          content: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text("Eliminando Evento ..."),
-            ],
-          ),
-        );
+        return modalCarga("Elimimando Evento... ");
       },
     );
-
     // Realiza la operación asíncrona
     var result = await ref
         .read(clubConnectProvider)
         .deleteEvento(int.parse(eventos![index].evento.id!));
-
     // Cierra el diálogo de carga solo si está activo
+    // ignore: use_build_context_synchronously
     if (Navigator.of(context, rootNavigator: true).canPop()) {
+      // ignore: use_build_context_synchronously
       Navigator.of(context, rootNavigator: true).pop();
     }
-
     // Actualiza el estado y maneja el resultado
     if (result) {
       setState(() {
@@ -186,10 +181,16 @@ class EquipoState extends ConsumerState<Equipo> {
     });
     _futurerole = ref
         .read(clubConnectProvider)
-        .getRole(ref.read(authProvider).id!, widget.idclub)
+        .getRole(ref.read(authProvider).id!, widget.idclub, widget.idequipo)
         .then((value) {
       role = value;
-      if (value == "Administrador") {}
+      print("Role: $value");
+      if (role == "Administrador" || role == "Entrenador") {
+        _futuremiembros = ref
+            .read(clubConnectProvider)
+            .getMiembrosEquipo(widget.idequipo)
+            .then((value) => miembros = value);
+      }
     });
   }
 
@@ -198,6 +199,14 @@ class EquipoState extends ConsumerState<Equipo> {
     eventos =
         await ref.read(clubConnectProvider).getEventos(widget.idequipo, estado);
     setState(() {});
+  }
+
+  Future<void> getMiembros() async {
+    final response = await ref.read(clubConnectProvider).getMiembrosEquipo(
+        widget.idequipo); // Simula un proceso de carga o actualización de datos
+    setState(() {
+      miembros = response;
+    });
   }
 
   Widget buildCreateEvents() {
@@ -950,6 +959,95 @@ class EquipoState extends ConsumerState<Equipo> {
     );
   }
 
+  Widget buildMiembros() {
+    return FutureBuilder(
+      future: _futuremiembros,
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.waiting:
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          case ConnectionState.done:
+            print(" miembros: " + miembros.toString());
+            return RefreshIndicator(
+              onRefresh: () async {
+                await getMiembros();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3, // Número de columnas
+                      childAspectRatio: MediaQuery.of(context).size.width /
+                          (MediaQuery.of(context).size.height /
+                              2), // Proporción de aspecto,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 3),
+                  itemCount: miembros.length,
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () {
+                        modalUserPerfil(
+                            context, miembros[index], null, null, ref);
+                      },
+                      child: Stack(
+                        children: [
+                          Card(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                miembros[index].imagen == "" ||
+                                        miembros[index].imagen == null
+                                    ? ClipOval(
+                                        child: Image.asset(
+                                          'assets/nofoto.jpeg',
+                                          fit: BoxFit.cover,
+                                          width: 60,
+                                          height: 60,
+                                        ),
+                                      )
+                                    : ClipOval(
+                                        child: Image.memory(
+                                          imagenFromBase64(
+                                              miembros[index].imagen),
+                                          fit: BoxFit.cover,
+                                          width: 60,
+                                          height: 60,
+                                        ),
+                                      ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10),
+                                  child: Text(
+                                    "${miembros[index].nombre} ${miembros[index].apellido1} ${miembros[index].apellido2}",
+                                    style: AppTheme()
+                                        .getTheme()
+                                        .textTheme
+                                        .labelMedium,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          case ConnectionState.none:
+            return Text('none');
+          case ConnectionState.active:
+            return Text('active');
+        }
+      },
+    );
+  }
+
   Widget _getBody() {
     switch (indexWidget) {
       case 0:
@@ -973,6 +1071,8 @@ class EquipoState extends ConsumerState<Equipo> {
         return builderAllEvents();
       case 3:
         return builderEditEvent();
+      case 4:
+        return buildMiembros();
       default:
         return builderEvents();
     }
@@ -988,6 +1088,8 @@ class EquipoState extends ConsumerState<Equipo> {
         return const Text("Todos los Eventos");
       case 3:
         return const Text("Editar Evento");
+      case 4:
+        return const Text("Miembros");
       default:
         return const Text("Eventos");
     }
@@ -1016,19 +1118,20 @@ class EquipoState extends ConsumerState<Equipo> {
               }
             },
           ),
-          actions:
-              role == "Administrador" && (indexWidget == 0 || indexWidget == 2)
-                  ? <Widget>[
-                      IconButton(
-                        icon: const Icon(Icons.menu),
-                        onPressed: () {
-                          _scaffoldKey.currentState!.openDrawer();
-                        },
-                      ),
-                    ]
-                  : null,
+          actions: (role == "Administrador" || role == "Entrenador") &&
+                  (indexWidget == 0 || indexWidget == 2)
+              ? <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () {
+                      _scaffoldKey.currentState!.openDrawer();
+                    },
+                  ),
+                ]
+              : null,
         ),
-        drawer: role == "Administrador" && indexWidget != 1
+        drawer: (role == "Administrador" || role == "Entrenador") &&
+                indexWidget != 1
             ? Drawer(
                 child: ListView(
                   padding: EdgeInsets.zero,
@@ -1074,7 +1177,6 @@ class EquipoState extends ConsumerState<Equipo> {
                         _scaffoldKey.currentState!.closeDrawer();
                       },
                     ),
-
                     ListTile(
                       leading: const Icon(Icons.list_alt),
                       title: Text(
@@ -1083,19 +1185,12 @@ class EquipoState extends ConsumerState<Equipo> {
                       ),
                       onTap: () {
                         setState(() {
-                          _futureEventos = ref
-                              .read(clubConnectProvider)
-                              .getEventos(widget.idequipo, EstadosEventos.todos)
-                              .then((value) {
-                            value != null ? eventos = value : eventos = null;
-                          });
                           indexWidget = 2;
                         });
                         _scaffoldKey.currentState!
                             .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
                       },
                     ),
-
                     ListTile(
                       leading: const Icon(Icons.group),
                       title: Text(
@@ -1103,7 +1198,11 @@ class EquipoState extends ConsumerState<Equipo> {
                         style: styleText.bodyMedium,
                       ),
                       onTap: () {
-                        // Acción cuando se presiona la opción 2 del Drawer
+                        setState(() {
+                          indexWidget = 4;
+                        });
+                        _scaffoldKey.currentState!
+                            .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
                       },
                     ),
                     // Agrega más ListTile según sea necesario
@@ -1115,7 +1214,7 @@ class EquipoState extends ConsumerState<Equipo> {
       );
     } else {
       return FutureBuilder(
-        future: Future.wait<dynamic?>([_futurerole]),
+        future: _futurerole,
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.waiting:
@@ -1150,115 +1249,112 @@ class EquipoState extends ConsumerState<Equipo> {
                 return const Text('Error');
               } else {
                 return Scaffold(
-                  key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
-                  appBar: AppBar(
-                    title: indexWidget == 0
-                        ? const Text("Eventos")
-                        : indexWidget == 1
-                            ? const Text("Crear Evento")
-                            : const Text("Todos los Eventos"),
-                    leading: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () {
-                        if (indexWidget == 0) {
-                          context.pop();
-                        } else {
-                          indexWidget = 0;
-                          setState(() {});
-                        }
-                      },
+                    key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
+                    appBar: AppBar(
+                      title: _getTitle(),
+                      leading: IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () {
+                          if (indexWidget == 0) {
+                            context.pop();
+                          } else {
+                            indexWidget = 0;
+                            setState(() {});
+                          }
+                        },
+                      ),
+                      actions: role == "Administrador" || role == "Entrenador"
+                          ? <Widget>[
+                              IconButton(
+                                icon: const Icon(Icons.menu),
+                                onPressed: () {
+                                  _scaffoldKey.currentState!.openDrawer();
+                                },
+                              ),
+                            ]
+                          : null,
                     ),
-                    actions: role == "Administrador"
-                        ? <Widget>[
-                            IconButton(
-                              icon: const Icon(Icons.menu),
-                              onPressed: () {
-                                _scaffoldKey.currentState!.openDrawer();
-                              },
-                            ),
-                          ]
-                        : null,
-                  ),
-                  drawer: role == "Administrador"
-                      ? Drawer(
-                          child: ListView(
-                            padding: EdgeInsets.zero,
-                            children: <Widget>[
-                              DrawerHeader(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 10),
-                                decoration: const BoxDecoration(
-                                  color: Colors.blue,
-                                ),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 10),
-                                      child: Text(
-                                        "Equipo dsfsd",
-                                        style: styleText.titleSmall,
-                                        maxLines: 1,
-                                        textAlign: TextAlign.center,
+                    drawer: role == "Administrador" || role == "Entrenador"
+                        ? Drawer(
+                            child: ListView(
+                              padding: EdgeInsets.zero,
+                              children: <Widget>[
+                                DrawerHeader(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 10),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.blue,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 10),
+                                        child: Text(
+                                          "Equipo ds",
+                                          style: styleText.titleSmall,
+                                          maxLines: 1,
+                                          textAlign: TextAlign.center,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.calendar_today),
-                                title: Text('Eventos Activos',
-                                    style: styleText.bodyMedium),
-                                onTap: () {
-                                  setState(() {
-                                    indexWidget = 0;
-                                  });
-                                  _scaffoldKey.currentState!.closeDrawer();
-                                },
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.calendar_today),
-                                title: Text('Crear Evento',
-                                    style: styleText.bodyMedium),
-                                onTap: () {
-                                  setState(() {
-                                    indexWidget = 1;
-                                  });
-                                  _scaffoldKey.currentState!.closeDrawer();
-                                },
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.list_alt),
-                                title: Text(
-                                  'Todos los Eventos',
-                                  style: styleText.bodyMedium,
+                                ListTile(
+                                  leading: const Icon(Icons.calendar_today),
+                                  title: Text('Eventos Activos',
+                                      style: styleText.bodyMedium),
+                                  onTap: () {
+                                    setState(() {
+                                      indexWidget = 0;
+                                    });
+                                    _scaffoldKey.currentState!.closeDrawer();
+                                  },
                                 ),
-                                onTap: () {
-                                  setState(() {
-                                    indexWidget = 2;
-                                  });
-                                  _scaffoldKey.currentState!
-                                      .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
-                                },
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.group),
-                                title: Text(
-                                  'Miembros',
-                                  style: styleText.bodyMedium,
+                                ListTile(
+                                  leading: const Icon(Icons.calendar_today),
+                                  title: Text('Crear Evento',
+                                      style: styleText.bodyMedium),
+                                  onTap: () {
+                                    setState(() {
+                                      indexWidget = 1;
+                                    });
+                                    _scaffoldKey.currentState!.closeDrawer();
+                                  },
                                 ),
-                                onTap: () {},
-                              ),
-                            ],
-                          ),
-                        )
-                      : null,
-                  body: indexWidget == 0
-                      ? builderEvents()
-                      : indexWidget == 1
-                          ? buildCreateEvents()
-                          : builderAllEvents(),
-                );
+                                ListTile(
+                                  leading: const Icon(Icons.list_alt),
+                                  title: Text(
+                                    'Todos los Eventos',
+                                    style: styleText.bodyMedium,
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      indexWidget = 2;
+                                    });
+                                    _scaffoldKey.currentState!
+                                        .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.group),
+                                  title: Text(
+                                    'Miembros',
+                                    style: styleText.bodyMedium,
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      indexWidget = 4;
+                                    });
+                                    _scaffoldKey.currentState!
+                                        .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
+                                  },
+                                ),
+                              ],
+                            ),
+                          )
+                        : null,
+                    body: _getBody());
               }
             case ConnectionState.none:
               return const Text('none');

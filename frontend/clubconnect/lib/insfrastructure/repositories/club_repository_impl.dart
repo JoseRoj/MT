@@ -2,6 +2,7 @@ import 'package:clubconnect/domain/datasources/clubConnect_datasource.dart';
 import 'package:clubconnect/domain/repositories/club_repository.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/categoria.dart';
+import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 
 class SupaDBRepositoryImpl extends ClubConnectRepository {
@@ -42,6 +43,11 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
+  Future<bool> deleteMiembroClub(int idusuario, int idclub) async {
+    return await clubConnectDataSource.deleteMiembroClub(idusuario, idclub);
+  }
+
+  @override
   Future<Data?> validar(String email, String contrasena) async {
     return await clubConnectDataSource.validar(email, contrasena);
   }
@@ -57,8 +63,8 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
-  Future<String> getRole(int idusuario, int idclub) async {
-    return await clubConnectDataSource.getRole(idusuario, idclub);
+  Future<String> getRole(int idusuario, int idclub, int? idequipo) async {
+    return await clubConnectDataSource.getRole(idusuario, idclub, idequipo);
   }
 
   @override
@@ -87,12 +93,17 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
+  Future<List<User>> getMiembrosEquipo(int idequipo) async {
+    return await clubConnectDataSource.getMiembrosEquipo(idequipo);
+  }
+
+  @override
   Future<List<Solicitud>> getSolicitudes(int idclub) async {
     return await clubConnectDataSource.getSolicitudes(idclub);
   }
 
   @override
-  Future<List<User>> getMiembros(int idclub) async {
+  Future<List<UserTeam>> getMiembros(int idclub) async {
     return await clubConnectDataSource.getMiembros(idclub);
   }
 
@@ -101,6 +112,16 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
       List<dynamic> equipos, int idusuario, String rol, int idclub) async {
     return clubConnectDataSource.acceptSolicitud(
         equipos, idusuario, rol, idclub);
+  }
+
+  @override
+  Future<bool> addMiembro(int idusuario, int idequipo, String rol) async {
+    return await clubConnectDataSource.addMiembro(idusuario, idequipo, rol);
+  }
+
+  @override
+  Future<bool> deleteMiembro(int idusuario, int idequipo) async {
+    return await clubConnectDataSource.deleteMiembro(idusuario, idequipo);
   }
 
   @override

@@ -92,4 +92,22 @@ module.exports = (app) => {
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
+
+  app.delete("/club/deletemiembro", async (req, res) => {
+    const { id_club, id_usuario } = req.body;
+    try {
+      const response = await clubController.expulsarMiembros(
+        id_club,
+        id_usuario
+      );
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({ message: response.message });
+    } catch (error) {
+      console.log("Error: ", error);
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
 };

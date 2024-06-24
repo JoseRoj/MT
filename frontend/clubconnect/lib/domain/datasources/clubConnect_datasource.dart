@@ -1,7 +1,9 @@
 import 'package:clubconnect/insfrastructure/models.dart';
+import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 
 abstract class ClubConnectDataSource {
+  //* --------------- CLUBS  ----------- *//
   Future<List<Club>> getClubs(List<int> deportes);
   Future<ClubEspecifico> getClub(int id);
   Future<List<Deporte>> getDeportes();
@@ -9,19 +11,21 @@ abstract class ClubConnectDataSource {
   Future<List<Tipo>> getTipos();
   Future<bool> addClub(
       Club club, List<dynamic> categorias, List<dynamic> tipos, int id_user);
+  Future<bool> deleteMiembroClub(int idusuario, int idclub);
 
   //* --------------- AUTH  ----------- *//
   Future<Data?> validar(String email, String contrasena);
   Future<bool> updateToken(int idusuario, String tokenfb);
   Future<User> getUsuario(int id);
-  Future<List<User>> getMiembros(int idclub);
+  Future<List<UserTeam>> getMiembros(int idclub);
 
   //* ------ EQUIPOS USUARIO ------- *//
   Future<List<Equipo>> getEquipos(int idclub);
   Future<bool> addEquipo(Equipo equipo);
   Future<List<Equipo>> getEquiposUser(int idusuario, int idclub);
+  Future<List<User>> getMiembrosEquipo(int idequipo);
 
-  Future<String> getRole(int idusuario, int idclub);
+  Future<String> getRole(int idusuario, int idclub, int? idequipo);
   Future<List<Club>> getClubsUser(int idusuario);
   Future<bool> sendSolicitud(int idusuario, int idclub);
   Future<bool?> createUser(User usuario);
@@ -34,6 +38,8 @@ abstract class ClubConnectDataSource {
   //* --------------- MIEMBROS ----------- *//
   Future<bool> acceptSolicitud(
       List<dynamic> equipos, int idusuario, String rol, int idclub);
+  Future<bool> addMiembro(int idusuario, int idequipo, String rol);
+  Future<bool> deleteMiembro(int idusuario, int idequipo);
 
   //* --------------- EVENTOS ----------------*//
   Future<List<EventoFull>?> getEventos(int idequipo, String estado);

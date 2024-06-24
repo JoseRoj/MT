@@ -8,6 +8,8 @@ import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import '../models/userTeam.dart';
+
 class SupabdDatasource extends ClubConnectDataSource {
   @override
   Future<List<Club>> getClubs(List<int> deportes) async {
@@ -84,11 +86,34 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
+  Future<bool> deleteMiembroClub(int idusuario, int idclub) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.delete(
+        '${dotenv.env["API_URL"]}/club/deletemiembro',
+        data: jsonEncode(
+          <String, dynamic>{
+            "id_usuario": idusuario,
+            "id_club": idclub,
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
   Future<Data?> validar(String email, String contrasena) async {
     try {
       final dio = Dio(BaseOptions(headers: {}));
 
-      final response = await dio.post('http://10.0.2.2:3002/login',
+      final response = await dio.post('${dotenv.env["API_URL"]}/login',
           data: jsonEncode(
               <String, String>{"email": email, "contrasena": contrasena}));
       if (response.statusCode == 200) {
@@ -150,11 +175,15 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
-  Future<String> getRole(int idusuario, int idclub) async {
+  Future<String> getRole(int idusuario, int idclub, int? idequipo) async {
     final dio = Dio(BaseOptions(headers: {}));
     final response = await dio.get(
       '${dotenv.env["API_URL"]}/usuarios/rol',
-      queryParameters: {'id_usuario': idusuario, 'id_club': idclub},
+      queryParameters: {
+        'id_usuario': idusuario,
+        'id_club': idclub,
+        'id_equipo': idequipo
+      },
     );
     return response.data["data"];
   }
@@ -225,6 +254,24 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
+  Future<List<User>> getMiembrosEquipo(int idequipo) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.get(
+        '${dotenv.env["API_URL"]}/equipo/miembros',
+        queryParameters: {'id_equipo': idequipo},
+      );
+      if (response.statusCode != 200) return [];
+      List<User> users = response.data["data"].map<User>((user) {
+        return User.fromJson(user);
+      }).toList();
+      return users;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  @override
   Future<List<Solicitud>> getSolicitudes(int idclub) async {
     try {
       final dio = Dio(BaseOptions(headers: {}));
@@ -268,20 +315,68 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
-  Future<List<User>> getMiembros(int idclub) async {
+  Future<bool> addMiembro(int idusuario, int idequipo, String rol) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.post(
+        '${dotenv.env["API_URL"]}/miembro/addMiembroEquipo',
+        data: jsonEncode(
+          <String, dynamic>{
+            "id_usuario": idusuario,
+            "id_equipo": idequipo,
+            "rol": rol,
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteMiembro(int idusuario, int idequipo) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.delete(
+        '${dotenv.env["API_URL"]}/miembro/deleteMiembroEquipo',
+        data: jsonEncode(
+          <String, dynamic>{
+            "id_usuario": idusuario,
+            "id_equipo": idequipo,
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<List<UserTeam>> getMiembros(int idclub) async {
     try {
       final dio = Dio(BaseOptions(headers: {}));
       final response = await dio.get(
         '${dotenv.env["API_URL"]}/club/getmiembros',
         queryParameters: {'id_club': idclub},
       );
-      List<User> users = response.data["data"].map<User>((user) {
-        return User.fromJson(user);
+      List<UserTeam> users = response.data["data"].map<UserTeam>((user) {
+        return UserTeam.fromJson(user);
       }).toList();
-      print("respuesta de miembros: $users");
 
       return users;
     } catch (e) {
+      print("Error: $e");
+
       return [];
     }
   }

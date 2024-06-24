@@ -65,13 +65,18 @@ module.exports = (app) => {
         ? res.status(500).send({ message: response.message })
         : res.status(201).send({ message: response.message });
     } catch (error) {
+      console.log("error: ", error);
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
   app.get("/usuarios/rol", async (req, res) => {
     try {
-      const { id_usuario, id_club } = req.query;
-      const response = await usuarioController.getRolClub(id_usuario, id_club);
+      const { id_usuario, id_club, id_equipo } = req.query;
+      const response = await usuarioController.getRolClub(
+        id_usuario,
+        id_club,
+        id_equipo
+      );
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -82,7 +87,6 @@ module.exports = (app) => {
           });
     } catch (error) {
       console.log("error: ", error);
-
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
