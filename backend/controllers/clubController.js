@@ -3,7 +3,13 @@ module.exports = {
   /*
    * Obtener todos los clubes
    */
-  async getClubs(deportes) {
+  async getClubs(
+    deportes,
+    northeastLat,
+    northeastLng,
+    southwestLat,
+    southwestLng
+  ) {
     console.log("Deportes: ", deportes);
     const placeholders = deportes.map((_, index) => `$${index + 1}`).join(", ");
     console.log("Placeholders: ", placeholders);
@@ -16,8 +22,20 @@ module.exports = {
           message: "No se han seleccionado deportes",
         };
       }
-      let query = `SELECT * FROM public."Club" WHERE id_deporte IN (${placeholders})`;
-      const response = await connectionPostgres.query(query, deportes);
+      let query = `SELECT * FROM public."Club" WHERE id_deporte IN (${placeholders})
+              AND latitud <= $${deportes.length + 1} 
+              AND latitud >= $${deportes.length + 2} 
+              AND longitud <= $${deportes.length + 3} 
+              AND longitud >= $${deportes.length + 4}`;
+      console.log("Query: ", query);
+      const response = await connectionPostgres.query(query, [
+        ...deportes,
+        northeastLat,
+        southwestLat,
+        northeastLng,
+        southwestLng,
+      ]);
+      console.log("Response: ", response.rows);
       return { statusCode: 200, data: response.rows, message: "" };
     } catch (e) {
       console.log("Error: ", e);

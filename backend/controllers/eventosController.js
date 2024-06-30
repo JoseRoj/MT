@@ -1,11 +1,24 @@
 const connectionPostgres = require("../database/db");
+const moment = require("moment-timezone");
+
 const estados = {
   activo: "Activo",
   finalizado: "Finalizado",
   todos: "Todos",
 };
 module.exports = {
-  async getEventos(id_equipo, estado) {
+  async getEventos(id_equipo, estado, initialDate, endDate) {
+    /* Trnasformar initialDate */
+    const timeInit = moment(initialDate, "YYYY-MM-DD HH:mm:ss.SSSSSS");
+    const timeEnd = moment(endDate, "YYYY-MM-DD HH:mm:ss.SSSSSS");
+
+    // Configura la zona horaria a Chile/Continental
+    timeInit.tz("America/Santiago");
+    timeEnd.tz("America/Santiago");
+
+    const formattedTimeInitString = timeInit.toDate().toISOString();
+    const formattedTimeEndString = timeEnd.toDate().toISOString();
+
     try {
       const data = [];
       const result = {
@@ -18,13 +31,26 @@ module.exports = {
       if (estado == "Todos") {
         /* Obtener Todos los eventos */
         query = `SELECT "Evento".* FROM public."Evento" 
-              WHERE "Evento".id_equipo = $1 ORDER BY "Evento".fecha ASC`;
-        response = await connectionPostgres.query(query, [id_equipo]);
+              WHERE "Evento".id_equipo = $1
+              AND "Evento".fecha BETWEEN $2 AND $3
+              ORDER BY "Evento".fecha ASC`;
+        response = await connectionPostgres.query(query, [
+          id_equipo,
+          formattedTimeInitString,
+          formattedTimeEndString,
+        ]);
       } else {
         /* Obtener Todos los eventos */
         query = `SELECT "Evento".* FROM public."Evento" 
-              WHERE "Evento".id_equipo = $1 AND "Evento".estado = $2 ORDER BY "Evento".fecha ASC`;
-        response = await connectionPostgres.query(query, [id_equipo, estado]);
+              WHERE "Evento".id_equipo = $1 AND "Evento".estado = $2
+              AND "Evento".fecha BETWEEN $3 AND $4
+              ORDER BY "Evento".fecha ASC`;
+        response = await connectionPostgres.query(query, [
+          id_equipo,
+          estado,
+          formattedTimeInitString,
+          formattedTimeEndString,
+        ]);
       }
 
       for (var equipo of response.rows) {

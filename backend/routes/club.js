@@ -4,7 +4,27 @@ const express = require("express");
 module.exports = (app) => {
   app.get("/club/getclubs", async (req, res) => {
     try {
-      const response = await clubController.getClubs(req.body.deportes);
+      const {
+        deportes,
+        northeastLat,
+        northeastLng,
+        southwestLat,
+        southwestLng,
+      } = req.body;
+      console.log(
+        deportes,
+        northeastLat,
+        northeastLng,
+        southwestLat,
+        southwestLng
+      );
+      const response = await clubController.getClubs(
+        deportes,
+        northeastLat,
+        northeastLng,
+        southwestLat,
+        southwestLng
+      );
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500

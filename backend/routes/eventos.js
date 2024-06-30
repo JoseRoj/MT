@@ -6,8 +6,13 @@ const { getMessaging } = require("firebase-admin/messaging");
 module.exports = (app) => {
   app.get("/eventos", async (req, res) => {
     try {
-      const { id_equipo, estado } = req.query;
-      const response = await EventosController.getEventos(id_equipo, estado);
+      const { id_equipo, estado, initialDate, endDate } = req.query;
+      const response = await EventosController.getEventos(
+        id_equipo,
+        estado,
+        initialDate,
+        endDate
+      );
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
