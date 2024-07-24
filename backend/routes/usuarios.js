@@ -107,4 +107,39 @@ module.exports = (app) => {
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
+
+  app.patch("/usuarios/updateImage", async (req, res) => {
+    const { id, imagen } = req.body;
+    try {
+      const response = await usuarioController.updateImage(id, imagen);
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({ message: response.message });
+    } catch (error) {
+      console.log("error: ", error);
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
+
+  app.get("/usuarios/stadictic", async (req, res) => {
+    try {
+      const { id_usuario, id_equipo } = req.query;
+      const response = await usuarioController.getStadistic(
+        id_usuario,
+        id_equipo
+      );
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({
+            data: response.data,
+          });
+    } catch (error) {
+      console.log("error: ", error);
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
 };

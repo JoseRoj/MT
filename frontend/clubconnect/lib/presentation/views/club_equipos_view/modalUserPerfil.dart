@@ -6,6 +6,7 @@ import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'package:clubconnect/insfrastructure/models/evento.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
+import 'package:clubconnect/presentation/screens/club_equipos_screen.dart';
 import 'package:clubconnect/presentation/views/clubEquipos/Clubequipos.dart';
 import 'package:clubconnect/presentation/views/miembros.dart';
 import 'package:flutter/material.dart';
@@ -60,16 +61,14 @@ void modalUserPerfil(BuildContext context, dynamic miembro, Club? club,
                           ),
                         ]),
                   ),
-                  Container(
-                    child: Column(
-                      children: [
-                        textAlert("Fecha de Nacimiento: ",
-                            DateToString(miembro.fechaNacimiento)),
-                        textAlert("Genero: ", miembro.genero),
-                        textAlert("Correo: ", miembro.email),
-                        textAlert("Teléfono: ", miembro.telefono),
-                      ],
-                    ),
+                  Column(
+                    children: [
+                      textAlert("Fecha de Nacimiento: ",
+                          DateToString(miembro.fechaNacimiento)),
+                      textAlert("Genero: ", miembro.genero),
+                      textAlert("Correo: ", miembro.email),
+                      textAlert("Teléfono: ", miembro.telefono),
+                    ],
                   ),
                   club == null
                       ? Container()

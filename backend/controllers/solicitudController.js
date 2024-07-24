@@ -12,7 +12,9 @@ module.exports = {
   */
   async sendSolicitud(id_usuario, id_club) {
     try {
-      let query = `INSERT INTO public."Solicitud" (id_usuario, id_club, estado) VALUES ($1, $2, $3)`;
+      let query = `INSERT INTO public."Solicitud" (id_usuario, id_club, estado) VALUES ($1, $2, $3)
+          ON CONFLICT (id_usuario, id_club) 
+          DO UPDATE SET estado = EXCLUDED.estado`;
       const response = await connectionPostgres.query(query, [
         id_usuario,
         id_club,
@@ -84,6 +86,26 @@ module.exports = {
         id_usuario,
         id_club,
         estado,
+      ]);
+      return { statusCode: 200, data: response.rows, message: "" };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
+  /*
+    * Actualizar de estado la solicitud de unión a un Club
+    ? @param id_usuario - id del usuario que envía la solicitud
+    ? @param id_club - id del club al que se envía la solicitud
+  */
+
+  async deleteSolicitud(id_usuario, id_club) {
+    try {
+      let query = `DELETE FROM public."Solicitud" WHERE id_usuario = $1 AND id_club = $2;`;
+      const response = await connectionPostgres.query(query, [
+        id_usuario,
+        id_club,
       ]);
       return { statusCode: 200, data: response.rows, message: "" };
     } catch (e) {

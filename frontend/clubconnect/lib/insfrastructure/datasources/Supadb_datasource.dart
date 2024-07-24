@@ -12,10 +12,17 @@ import '../models/userTeam.dart';
 
 class SupabdDatasource extends ClubConnectDataSource {
   @override
-  Future<List<Club>> getClubs(List<int> deportes) async {
+  Future<List<Club>> getClubs(List<int> deportes, double northeastLat,
+      double northeastLng, double southwestLat, double southwestLng) async {
     final dio = Dio(BaseOptions(headers: {}));
     final response = await dio.get('${dotenv.env["API_URL"]}/club/getclubs',
-        data: jsonEncode(<String, dynamic>{"deportes": deportes}));
+        data: jsonEncode(<String, dynamic>{
+          "deportes": deportes,
+          "northeastLat": northeastLat,
+          "northeastLng": northeastLng,
+          "southwestLat": southwestLat,
+          "southwestLng": southwestLng,
+        }));
     if (response.statusCode != 200) return [];
     List<Club> clubs = response.data["data"].map<Club>((club) {
       return Club.fromJson(club);
@@ -172,6 +179,29 @@ class SupabdDatasource extends ClubConnectDataSource {
     );
     User user = User.fromJson(response.data["data"][0]);
     return user;
+  }
+
+  @override
+  Future<bool?> updateImageUser(String image, int usuario) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.patch(
+        '${dotenv.env["API_URL"]}/usuarios/updateImage',
+        data: jsonEncode(
+          <String, dynamic>{
+            "imagen": image,
+            "id": usuario,
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return null;
+    }
   }
 
   @override
@@ -438,11 +468,17 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
-  Future<List<EventoFull>?> getEventos(int idequipo, String estado) async {
+  Future<List<EventoFull>?> getEventos(int idequipo, String estado,
+      DateTime initialDate, DateTime endDate) async {
     final dio = Dio(BaseOptions(headers: {}));
     final response = await dio.get(
       '${dotenv.env["API_URL"]}/eventos',
-      queryParameters: {'id_equipo': idequipo, 'estado': estado},
+      queryParameters: {
+        'id_equipo': idequipo,
+        'estado': estado,
+        'initialDate': initialDate,
+        'endDate': endDate
+      },
     );
 
     List<EventoFull> eventos = response.data["data"].map<EventoFull>((evento) {

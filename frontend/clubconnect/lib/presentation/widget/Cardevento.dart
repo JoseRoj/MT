@@ -17,11 +17,13 @@ class CardEvento extends ConsumerStatefulWidget {
   List<EventoFull?>? eventos;
   String buttonText;
   int idequipo;
+  DateTime endDate;
   CardEvento({
     super.key,
     required this.eventos,
     required this.buttonText,
     required this.idequipo,
+    required this.endDate,
   });
 
   @override
@@ -40,6 +42,7 @@ class CardEventoState extends ConsumerState<CardEvento> {
           return GestureDetector(
             child: Container(
                 padding: EdgeInsets.symmetric(vertical: 5, horizontal: 35),
+                margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                 height: 80,
                 decoration: BoxDecoration(
                   color: Colors.white, // Background color
@@ -56,7 +59,6 @@ class CardEventoState extends ConsumerState<CardEvento> {
                     width: 1, // Border width
                   ),
                 ),
-                margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                 child: Column(
                   children: [
                     Row(
@@ -216,8 +218,11 @@ class CardEventoState extends ConsumerState<CardEvento> {
                                       widget.buttonText = "Asistir";
                                       widget.eventos = (await ref
                                           .read(clubConnectProvider)
-                                          .getEventos(widget.idequipo,
-                                              EstadosEventos.activo));
+                                          .getEventos(
+                                              widget.idequipo,
+                                              EstadosEventos.activo,
+                                              DateTime.now(),
+                                              widget.endDate));
                                       // ignore: use_build_context_synchronously
                                       customToast(
                                           "Asistencia cancelada con éxito",
@@ -243,8 +248,11 @@ class CardEventoState extends ConsumerState<CardEvento> {
                                       widget.buttonText = "Cancelar";
                                       widget.eventos = await ref
                                           .read(clubConnectProvider)
-                                          .getEventos(widget.idequipo,
-                                              EstadosEventos.activo);
+                                          .getEventos(
+                                              widget.idequipo,
+                                              EstadosEventos.activo,
+                                              DateTime.now(),
+                                              widget.endDate);
                                       setModalState(() {});
                                       setState(() {});
                                       // ignore: use_build_context_synchronously

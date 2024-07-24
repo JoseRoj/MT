@@ -17,8 +17,10 @@ class ClubesRegisterNotifier extends StateNotifier<List<Club>> {
   final SupaDBRepositoryImpl _supaDBRepositoryImpl;
   ClubesRegisterNotifier(this._supaDBRepositoryImpl) : super([]);
 
-  Future<void> getClubes(List<int> deportes) async {
-    final clubes = await _supaDBRepositoryImpl.getClubs(deportes);
+  Future<void> getClubes(List<int> deportes, double northeastLat,
+      double northeastLng, double southwestLat, double southwestLng) async {
+    final clubes = await _supaDBRepositoryImpl.getClubs(
+        deportes, northeastLat, northeastLng, southwestLat, southwestLng);
     state = clubes;
   }
 }

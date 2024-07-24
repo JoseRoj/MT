@@ -240,34 +240,34 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                       ),
                       onTap: () => {
                         showCupertinoModalPopup(
-                            context: context,
-                            builder: (context) => Container(
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(20),
-                                      topRight: Radius.circular(20),
-                                    ),
-                                  ),
-                                  height: 200,
-                                  child: CupertinoDatePicker(
-                                    mode: CupertinoDatePickerMode.date,
-                                    backgroundColor: Colors.white,
+                          context: context,
+                          builder: (context) => Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(20),
+                                topRight: Radius.circular(20),
+                              ),
+                            ),
+                            height: 200,
+                            child: CupertinoDatePicker(
+                              mode: CupertinoDatePickerMode.date,
+                              backgroundColor: Colors.white,
 
-                                    maximumDate: DateTime.now(),
-                                    initialDateTime: DateTime(2003, 3, 10),
-                                    //                                  initialDateTime: .now(),
-                                    onDateTimeChanged: (DateTime value) {
-                                      DateTime fecha =
-                                          DateTime.parse(value.toString());
-                                      String nuevaFecha =
-                                          DateFormat('MM/dd/yyyy')
-                                              .format(fecha);
+                              maximumDate: DateTime.now(),
+                              initialDateTime: DateTime(2003, 3, 10),
+                              //                                  initialDateTime: .now(),
+                              onDateTimeChanged: (DateTime value) {
+                                DateTime fecha =
+                                    DateTime.parse(value.toString());
+                                String nuevaFecha =
+                                    DateFormat('MM/dd/yyyy').format(fecha);
 
-                                      _dateController.text = nuevaFecha;
-                                    },
-                                  ),
-                                ))
+                                _dateController.text = nuevaFecha;
+                              },
+                            ),
+                          ),
+                        ),
                       },
                     ),
                   ),

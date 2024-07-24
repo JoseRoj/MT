@@ -1,10 +1,8 @@
 import 'package:clubconnect/presentation/providers.dart';
-import 'package:clubconnect/presentation/providers/usuario_provider.dart';
 import 'package:clubconnect/presentation/views/listclubs_view.dart';
 import 'package:clubconnect/presentation/views/home_view.dart';
-import 'package:clubconnect/presentation/views/perfil.dart';
+import 'package:clubconnect/presentation/screens/perfil_screen.dart';
 import 'package:clubconnect/presentation/widget.dart';
-import 'package:clubconnect/services/firebase.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,10 +27,12 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     //print(";");
     ref.read(categoriasProvider.notifier).getCategorias();
-    ref.read(deportesProvider.notifier).getDeportes().then((value) => ref
+    ref
+        .read(deportesProvider.notifier)
+        .getDeportes(); /*.then((value) => ref
         .read(clubesRegisterProvider.notifier)
         .getClubes(
-            ref.read(deportesProvider).map((e) => int.parse(e.id)).toList()));
+            ref.read(deportesProvider).map((e) => int.parse(e.id)).toList()));*/
 
     //      final deportes = ref.watch(deportesProvider);
 

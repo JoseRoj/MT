@@ -1,5 +1,4 @@
-import 'dart:math';
-import 'dart:ui';
+/*import 'dart:typed_data';
 
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/helpers/toast.dart';
@@ -9,14 +8,14 @@ import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
-import 'package:clubconnect/presentation/views/clubEquipos/modalUserPerfil.dart';
+import 'package:clubconnect/presentation/views/club_equipos_view/drawer_view/all_miembros_view.dart';
+import 'package:clubconnect/presentation/views/club_equipos_view/drawer_view/informacion_club_view.dart';
+import 'package:clubconnect/presentation/views/club_equipos_view/drawer_view/solicitudes_view.dart';
 import 'package:clubconnect/presentation/widget.dart';
-import 'package:clubconnect/presentation/widget/solicitud.dart';
-import 'package:clubconnect/services/firebase.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
 
 import '../../widget/modalCarga.dart';
@@ -33,24 +32,76 @@ class Equipos extends ConsumerStatefulWidget {
 enum Menu { eliminar, perfil }
 
 class EquiposState extends ConsumerState<Equipos> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final MultiSelectController controllerEquipo = MultiSelectController();
+  final styleText = AppTheme().getTheme().textTheme;
+  final controllername = TextEditingController();
+
   final _controllerTipo = MultiSelectController();
   final tipos = [
     (id: 1, nombre: "Deportista"),
     (id: 2, nombre: "Entrenador"),
   ];
-  int widgetIndex = 0;
+  final ValueNotifier<int> indexNotifier = ValueNotifier<int>(0);
   late Future<String?> _futurerole;
   String role = '';
-  late Future<Club> _futureclub;
-  late Club club;
+  late Future<ClubEspecifico> _futureclub;
+  late ClubEspecifico? club;
+
   late Future<List<Equipo>> _futureequipos;
   late List<Equipo> equipos;
+
   late Future<List<Solicitud>> _futuresolicitudes;
   late List<Solicitud> solicitudes;
+
   late Future<List<UserTeam>> _futuremiembros;
   late List<UserTeam> miembros;
 
-  Future<void> _expulsarmiembro(int idmiembro, int idclub, int index) async {
+  // * --- * INFORMACION CLUB * --- * //
+  Set<Marker> markers = {};
+  Uint8List? logoClub;
+
+  Future<ClubEspecifico> fetchClub() async {
+    final clubData = await ref.read(clubConnectProvider).getClub(widget.idclub);
+    logoClub = imagenFromBase64(clubData.club.logo);
+    return clubData;
+  }
+
+  @override
+  void initState() {
+    _futurerole = ref
+        .read(clubConnectProvider)
+        .getRole(ref.read(authProvider).id!, widget.idclub, null)
+        .then(
+      (value) {
+        role = value;
+        if (value == "Administrador") {
+          _futureequipos = ref
+              .read(clubConnectProvider)
+              .getEquipos(widget.idclub)
+              .then((value) => equipos = value);
+          _futuresolicitudes = ref
+              .read(clubConnectProvider)
+              .getSolicitudes(widget.idclub)
+              .then((value) => solicitudes = value);
+          _futuremiembros = ref
+              .read(clubConnectProvider)
+              .getMiembros(widget.idclub)
+              .then((value) => miembros = value);
+        } else {
+          _futureequipos = ref
+              .read(clubConnectProvider)
+              .getEquiposUser(ref.read(authProvider).id!, widget.idclub)
+              .then((value) => equipos = value);
+        }
+      },
+    );
+    _futureclub = fetchClub().then((value) => club = value);
+
+    super.initState();
+  }
+
+  Future<bool> _expulsarmiembro(int idmiembro, int idclub, int index) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -71,6 +122,7 @@ class EquiposState extends ConsumerState<Equipos> {
     } else {
       customToast("Error al eliminar del club", context, "isError");
     }
+    return result;
   }
 
   Widget equiposBuilder() {
@@ -107,383 +159,6 @@ class EquiposState extends ConsumerState<Equipos> {
         });
   }
 
-  Widget solicitudesBuilder(_controllerEquipo) {
-    return FutureBuilder(
-        future: Future.wait([_futuresolicitudes, _futureequipos]),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.waiting:
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            case ConnectionState.done:
-              return RefreshIndicator(
-                onRefresh: () async {
-                  await getSolicitud();
-                },
-                child: ListView.builder(
-                  itemCount: solicitudes.length,
-                  itemBuilder: (context, index) {
-                    if (solicitudes.isEmpty) {
-                      return Center(
-                        child: Text("No hay solicitudes pendientes"),
-                      );
-                    } else {
-                      print("Tamaño : ${solicitudes.length}");
-                      return GestureDetector(
-                        child: solicitud(solicitudes[index], context),
-                        onTap: () async {
-                          /*showInfoSolicitud(
-                            context,
-                            solicitudes[index],
-                            _controllerEquipo,
-                            equipos,
-                            ref,
-                            widget.idclub,
-                            solicitudes);*/
-                          final response = await showDialog<bool>(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                                child: StatefulBuilder(builder:
-                                    (BuildContext context,
-                                        StateSetter setState) {
-                                  return AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    content: Column(children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10.0),
-                                        child: Text(
-                                          "${solicitudes[index].nombre} ${solicitudes[index].apellido1} ${solicitudes[index].apellido2} ha enviado una solicitud de unión al Club el ${DateToString(solicitudes[index].fechaSolicitud) ?? ""}",
-                                          style: AppTheme()
-                                              .getTheme()
-                                              .textTheme
-                                              .bodyMedium,
-                                        ),
-                                      ),
-                                      textAlert(
-                                          "Fecha de Nacimiento: ",
-                                          DateToString(solicitudes[index]
-                                              .fechaNacimiento)),
-                                      textAlert("Genero: ",
-                                          solicitudes[index].genero),
-                                      textAlert(
-                                          "Correo: ", solicitudes[index].email),
-                                      textAlert("Teléfono: ",
-                                          solicitudes[index].telefono),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10),
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.86,
-                                        child: MultiSelectDropDown<dynamic>(
-                                          hint: "Selecciona las categorías",
-                                          inputDecoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: Colors.black54,
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(14),
-                                          ),
-                                          //showClearIcon: true,
-                                          controller: _controllerEquipo,
-                                          onOptionSelected: (options) {
-                                            //debugPrint(options.toString());
-                                          },
-                                          options: equipos
-                                              .map((Equipo item) => ValueItem(
-                                                  label: item.nombre.toString(),
-                                                  value: item.id.toString()))
-                                              .toList(),
-                                          selectionType: SelectionType.multi,
-                                          chipConfig: const ChipConfig(
-                                              wrapType: WrapType.scroll),
-                                          dropdownHeight: 300,
-                                          optionTextStyle:
-                                              const TextStyle(fontSize: 16),
-                                          selectedOptionIcon:
-                                              const Icon(Icons.check_circle),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10),
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.86,
-                                        child: MultiSelectDropDown(
-                                          hint: "Selecciona el rol",
-                                          inputDecoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: Colors.black54,
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(14),
-                                          ),
-                                          //showClearIcon: true,
-                                          controller: _controllerTipo,
-                                          onOptionSelected: (options) {
-                                            //debugPrint(options.toString());
-                                          },
-                                          options: tipos
-                                              .map((item) => ValueItem(
-                                                    label: item.nombre,
-                                                    value: item.id,
-                                                  ))
-                                              .toList(),
-
-                                          selectionType: SelectionType.single,
-                                          chipConfig: const ChipConfig(
-                                              wrapType: WrapType.scroll),
-                                          dropdownHeight: tipos.length * 50.0,
-                                          optionTextStyle:
-                                              const TextStyle(fontSize: 16),
-                                          selectedOptionIcon:
-                                              const Icon(Icons.check_circle),
-                                        ),
-                                      ),
-                                      Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            FilledButton(
-                                              style: ButtonStyle(
-                                                  backgroundColor:
-                                                      MaterialStateProperty.all(
-                                                          Colors.green)),
-                                              onPressed: () async {
-                                                if (_controllerEquipo
-                                                        .selectedOptions
-                                                        .isEmpty ||
-                                                    _controllerTipo
-                                                        .selectedOptions
-                                                        .isEmpty) {
-                                                  print(
-                                                      "No se ha seleccionado un equipo o un rol");
-                                                } else {
-                                                  final response = await ref
-                                                      .read(clubConnectProvider)
-                                                      .acceptSolicitud(
-                                                          _controllerEquipo
-                                                              .selectedOptions
-                                                              .map((e) =>
-                                                                  e.value)
-                                                              .toList(),
-                                                          int.parse(
-                                                              solicitudes[index]
-                                                                  .id),
-                                                          _controllerTipo
-                                                              .selectedOptions[
-                                                                  0]
-                                                              .label,
-                                                          widget.idclub);
-                                                  if (response == true) {
-                                                    solicitudes = solicitudes
-                                                        .where((element) =>
-                                                            element.id !=
-                                                            solicitudes[index]
-                                                                .id)
-                                                        .toList();
-                                                    //setState(() {});
-                                                    return Navigator.of(context)
-                                                        .pop(true);
-                                                  }
-                                                }
-                                                // Acción cuando se presiona el botón
-                                              },
-                                              child: Text('Aceptar',
-                                                  style: AppTheme()
-                                                      .getTheme()
-                                                      .textTheme
-                                                      .bodyMedium),
-                                            ),
-                                            FilledButton(
-                                              style: ButtonStyle(
-                                                backgroundColor:
-                                                    MaterialStateProperty.all(
-                                                        const Color.fromARGB(
-                                                            255, 204, 78, 69)),
-                                              ),
-                                              onPressed: () async {
-                                                await ref
-                                                    .read(clubConnectProvider)
-                                                    .updateSolicitud(
-                                                        int.parse(
-                                                            solicitudes[index]
-                                                                .id),
-                                                        widget.idclub,
-                                                        "Cancelada");
-                                                Navigator.of(context).pop();
-
-                                                // Acción cuando se presiona el botón
-                                              },
-                                              child: Text('Rechazar',
-                                                  style: AppTheme()
-                                                      .getTheme()
-                                                      .textTheme
-                                                      .bodyMedium),
-                                            ),
-                                          ]),
-                                    ]),
-                                  );
-                                }),
-                              );
-                            },
-                          );
-                          print("Resp ${response}");
-                          if (response == true) {
-                            print("Se aceptó la solicitud");
-                            setState(() {});
-                          }
-                          // Acción cuando se presiona el ListTile
-                        },
-                      );
-                    }
-                  },
-                ),
-              );
-            case ConnectionState.none:
-              return Text('none');
-            case ConnectionState.active:
-              return Text('active');
-          }
-        });
-  }
-
-  Widget miembrosBuilder() {
-    return FutureBuilder(
-      future: _futuremiembros,
-      builder: (context, snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.waiting:
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          case ConnectionState.done:
-            print(" miembros: " + miembros.toString());
-            return RefreshIndicator(
-              onRefresh: () async {
-                await getMiembros();
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3, // Número de columnas
-                      childAspectRatio: MediaQuery.of(context).size.width /
-                          (MediaQuery.of(context).size.height /
-                              2), // Proporción de aspecto,
-                      mainAxisSpacing: 2,
-                      crossAxisSpacing: 3),
-                  itemCount: miembros.length,
-                  itemBuilder: (context, index) {
-                    return Stack(
-                      children: [
-                        Card(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              miembros[index].imagen == "" ||
-                                      miembros[index].imagen == null
-                                  ? ClipOval(
-                                      child: Image.asset(
-                                        'assets/nofoto.jpeg',
-                                        fit: BoxFit.cover,
-                                        width: 60,
-                                        height: 60,
-                                      ),
-                                    )
-                                  : ClipOval(
-                                      child: Image.memory(
-                                        imagenFromBase64(club.logo),
-                                        fit: BoxFit.cover,
-                                        width: 60,
-                                        height: 60,
-                                      ),
-                                    ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                child: Text(
-                                  "${miembros[index].nombre} ${miembros[index].apellido1} ${miembros[index].apellido2}",
-                                  style: AppTheme()
-                                      .getTheme()
-                                      .textTheme
-                                      .labelMedium,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Positioned(
-                            top: 0,
-                            right: -10,
-                            child: PopupMenuButton<Menu>(
-                              //popUpAnimationStyle: _animationStyle,
-                              icon: const Icon(Icons.more_vert),
-                              onSelected: (Menu item) {},
-                              itemBuilder: (BuildContext context) =>
-                                  <PopupMenuEntry<Menu>>[
-                                PopupMenuItem<Menu>(
-                                  value: Menu.perfil,
-                                  child: ListTile(
-                                    dense: true,
-                                    leading: const Icon(
-                                      Icons.person_remove_alt_1,
-                                      color: Colors.red,
-                                    ),
-                                    title: const Text('Expulsar'),
-                                    onTap: () async {
-                                      Navigator.of(context).pop();
-                                      await _expulsarmiembro(
-                                          int.parse(miembros[index].id),
-                                          widget.idclub,
-                                          index);
-                                    },
-                                  ),
-                                ),
-                                PopupMenuItem<Menu>(
-                                  value: Menu.eliminar,
-                                  child: ListTile(
-                                    dense: true,
-                                    leading: const Icon(Icons.info,
-                                        color: Colors.black),
-                                    title: const Text('Perfil'),
-                                    onTap: () async {
-                                      Navigator.of(context).pop();
-                                      await Future.delayed(
-                                          const Duration(milliseconds: 500));
-                                      // ignore: use_build_context_synchronously
-                                      modalUserPerfil(context, miembros[index],
-                                          club, equipos, ref);
-                                      // ignore: use_build_context_synchronously
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ))
-                      ],
-                    );
-                  },
-                ),
-              ),
-            );
-          case ConnectionState.none:
-            return Text('none');
-          case ConnectionState.active:
-            return Text('active');
-        }
-      },
-    );
-  }
-
   Future<void> getEquipos() async {
     final response = await ref.read(clubConnectProvider).getEquipos(
         widget.idclub); // Simula un proceso de carga o actualización de datos
@@ -509,76 +184,173 @@ class EquiposState extends ConsumerState<Equipos> {
     // Simula un proceso de carga o actualización de datos
   }
 
-  Future<void> getSolicitud() async {
+  Future<List<Solicitud>> getSolicitud() async {
     final response = await ref.read(clubConnectProvider).getSolicitudes(
         widget.idclub); // Simula un proceso de carga o actualización de datos
     setState(() {
       solicitudes = response;
     });
+    return response;
   }
 
-  Future<void> getMiembros() async {
+  Future<List<UserTeam>> getMiembros() async {
     final response = await ref.read(clubConnectProvider).getMiembros(
         widget.idclub); // Simula un proceso de carga o actualización de datos
-    print("Miembros : ${response.map((e) => e).toList()}");
-
-    setState(() {
-      miembros = response;
-    });
+    miembros = response;
+    return response;
   }
 
-  @override
-  void initState() {
-    _futurerole = ref
-        .read(clubConnectProvider)
-        .getRole(ref.read(authProvider).id!, widget.idclub, null)
-        .then(
-      (value) {
-        role = value;
-        if (value == "Administrador") {
-          _futureequipos = ref
-              .read(clubConnectProvider)
-              .getEquipos(widget.idclub)
-              .then((value) => equipos = value);
-          _futuresolicitudes = ref
-              .read(clubConnectProvider)
-              .getSolicitudes(widget.idclub)
-              .then((value) => solicitudes = value);
-          _futuremiembros = ref
-              .read(clubConnectProvider)
-              .getMiembros(widget.idclub)
-              .then((value) => miembros = value);
-        } else {
-          _futureequipos = ref
-              .read(clubConnectProvider)
-              .getEquiposUser(ref.read(authProvider).id!, widget.idclub)
-              .then((value) => equipos = value);
-        }
-      },
+  Widget? drawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          DrawerHeader(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            decoration: const BoxDecoration(
+              color: Colors.blue,
+            ),
+            child: Column(
+              children: [
+                logoClub == "" || logoClub == null
+                    ? ClipOval(
+                        child: Image.asset(
+                          'assets/nofoto.jpeg',
+                          fit: BoxFit.cover,
+                          width: 80,
+                          height: 80,
+                        ),
+                      )
+                    : ClipOval(
+                        child: Image.memory(
+                          logoClub!,
+                          fit: BoxFit.cover,
+                          width: 80,
+                          height: 80,
+                        ),
+                      ),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Text(
+                    club!.club.nombre,
+                    style: styleText.titleSmall,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.group_add),
+            title: Text('Crear Equipo', style: styleText.bodyMedium),
+            onTap: () {
+              _scaffoldKey.currentState!.closeDrawer();
+              _showCreateTeamModal(context, controllername,
+                  (value) => emptyOrNull(value, "nombre"), addEquipo);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.list),
+            title: Text(
+              'Todos los equipos',
+              style: styleText.bodyMedium,
+            ),
+            onTap: () {
+              _scaffoldKey.currentState!.closeDrawer();
+              setState(() {
+                indexNotifier.value = 0;
+              });
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.groups_3),
+            title: Text(
+              'Todos los Miembros',
+              style: styleText.bodyMedium,
+            ),
+            onTap: () {
+              _scaffoldKey.currentState!.closeDrawer();
+              setState(() {
+                indexNotifier.value = 1;
+              });
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.notification_add),
+            title: Text('Solicitudes',
+                style: AppTheme().getTheme().textTheme.bodyMedium),
+            onTap: () {
+              _scaffoldKey.currentState!.closeDrawer();
+              setState(() {
+                indexNotifier.value = 2;
+              });
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.info),
+            title: Text(
+              'Información del Club',
+              style: styleText.bodyMedium,
+            ),
+            onTap: () {
+              _scaffoldKey.currentState!.closeDrawer();
+              setState(() {
+                /*markers.add(Marker(
+                  markerId: MarkerId('1'),
+                  position: locationSelected ?? LatLng(0, 0),
+                ));*/
+                indexNotifier.value = 3;
+              });
+            },
+          ),
+        ],
+      ),
     );
-    _futureclub = ref
-        .read(clubConnectProvider)
-        .getClub(widget.idclub)
-        .then((value) => club = value.club);
+  }
 
-    super.initState();
+  Widget _getBody(value) {
+    switch (value) {
+      case 0:
+        return equiposBuilder();
+      case 1:
+        return AllMiembrosWidget(
+          idclub: widget.idclub,
+          club: club!.club,
+          miembros: miembros,
+          futuremiembros: _futuremiembros,
+          equipos: equipos,
+          futurerole: _futurerole,
+          role: role,
+          indexNotifier: indexNotifier,
+          expulsarmiembro: _expulsarmiembro,
+          getmiembrosCallBack: () => getMiembros(),
+        );
+      case 2:
+        return SolicitudesWidget(
+            idclub: widget.idclub,
+            futuresolicitudes: _futuresolicitudes,
+            solicitudes: solicitudes,
+            equipos: equipos,
+            futureequipos: _futureequipos,
+            solicitudesCallBack: () => getSolicitud());
+      case 3:
+        return InformacionClubWidget(futureclub: _futureclub, club: club);
+      default:
+        return equiposBuilder();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    print("TK : ${ref.read(authProvider).tokenDispositivo}");
-    final String title = widgetIndex == 0
+    final String title = indexNotifier.value == 0
         ? 'Equipos'
-        : widgetIndex == 1
+        : indexNotifier.value == 1
             ? 'Miembros'
-            : widgetIndex == 2
+            : indexNotifier.value == 2
                 ? 'Solicitudes'
                 : 'Información del Club';
-    final controllername = TextEditingController();
-    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-    final MultiSelectController controllerEquipo = MultiSelectController();
 
-    final styleText = AppTheme().getTheme().textTheme;
     final pages = <Widget>[
       //EquiposBuilder(),
       Text('Page 2'),
@@ -588,195 +360,100 @@ class EquiposState extends ConsumerState<Equipos> {
     /*if (role.isEmpty) {
       return CircularProgressIndicator();
     }*/
-    return FutureBuilder(
-      future: Future.wait<dynamic?>([_futurerole, _futureclub]),
-      builder: (context, snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.waiting:
-            return Scaffold(
-              key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
-              appBar: AppBar(
-                title: Text(title),
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () {
-                    GoRouter.of(context).go('/home/0');
-                  },
-                ),
-                actions: role == "Administrador"
-                    ? <Widget>[
-                        IconButton(
-                          icon: Icon(Icons.menu),
-                          onPressed: () {
-                            _scaffoldKey.currentState!.openDrawer();
-                          },
-                        ),
-                      ]
-                    : null,
-              ),
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          case ConnectionState.done:
-            if (snapshot.hasError) {
-              return Text('Error');
-            } else {
+    if (role != "") {
+      return Scaffold(
+          key: _scaffoldKey,
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                indexNotifier.value == 0
+                    ? context.go('/home/0')
+                    : setState(() {
+                        indexNotifier.value = 0;
+                      });
+              },
+            ),
+            actions: role == "Administrador"
+                ? <Widget>[
+                    IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () {
+                        _scaffoldKey.currentState!.openDrawer();
+                      },
+                    ),
+                  ]
+                : null,
+            title: Text(title),
+          ),
+          drawer: drawer(),
+          body: ValueListenableBuilder(
+              valueListenable: indexNotifier,
+              builder: (BuildContext context, int value, Widget? child) =>
+                  _getBody(value)));
+    } else {
+      return FutureBuilder(
+        future: Future.wait<dynamic>([_futurerole, _futureclub]),
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.waiting:
               return Scaffold(
                 key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
                 appBar: AppBar(
-                  title: widgetIndex == 0
-                      ? const Text('Equipos')
-                      : widgetIndex == 1
-                          ? const Text('Miembros')
-                          : widgetIndex == 2
-                              ? const Text('Solicitudes')
-                              : const Text('Información del Club'),
+                  title: Text(title),
                   leading: IconButton(
-                    icon: Icon(Icons.arrow_back),
+                    icon: const Icon(Icons.arrow_back),
                     onPressed: () {
-                      GoRouter.of(context).go('/home/0');
+                      context.pop();
                     },
                   ),
-                  actions: role == "Administrador"
-                      ? <Widget>[
-                          IconButton(
-                            icon: Icon(Icons.menu),
-                            onPressed: () {
-                              _scaffoldKey.currentState!.openDrawer();
-                            },
-                          ),
-                        ]
-                      : null,
                 ),
-                drawer: role == "Administrador"
-                    ? Drawer(
-                        child: ListView(
-                          padding: EdgeInsets.zero,
-                          children: <Widget>[
-                            DrawerHeader(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 10),
-                              decoration: const BoxDecoration(
-                                color: Colors.blue,
-                              ),
-                              child: Column(
-                                children: [
-                                  club.logo == "" || club.logo == null
-                                      ? ClipOval(
-                                          child: Image.asset(
-                                            'assets/nofoto.jpeg',
-                                            fit: BoxFit.cover,
-                                            width: 80,
-                                            height: 80,
-                                          ),
-                                        )
-                                      : ClipOval(
-                                          child: Image.memory(
-                                            imagenFromBase64(club.logo),
-                                            fit: BoxFit.cover,
-                                            width: 80,
-                                            height: 80,
-                                          ),
-                                        ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10),
-                                    child: Text(
-                                      club.nombre,
-                                      style: styleText.titleSmall,
-                                      maxLines: 1,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            ListTile(
-                              leading: Icon(Icons.group_add),
-                              title: Text('Crear Equipo',
-                                  style: styleText.bodyMedium),
-                              onTap: () {
-                                _scaffoldKey.currentState!.closeDrawer();
-                                _showCreateTeamModal(
-                                    context,
-                                    controllername,
-                                    (value) => emptyOrNull(value, "nombre"),
-                                    addEquipo);
-
-                                // Acción cuando se presiona la opción 1 del Drawer
-                              },
-                            ),
-                            ListTile(
-                              leading: Icon(Icons.list),
-                              title: Text(
-                                'Todos los equipos',
-                                style: styleText.bodyMedium,
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  widgetIndex = 0;
-                                });
-                                // Acción cuando se presiona la opción 2 del Drawer
-                              },
-                            ),
-                            ListTile(
-                              leading: Icon(Icons.groups_3),
-                              title: Text(
-                                'Todos los Miembros',
-                                style: styleText.bodyMedium,
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  widgetIndex = 1;
-                                });
-                                // Acción cuando se presiona la opción 2 del Drawer
-                              },
-                            ),
-                            ListTile(
-                              leading: Icon(Icons.notification_add),
-                              title: Text('Solicitudes',
-                                  style: AppTheme()
-                                      .getTheme()
-                                      .textTheme
-                                      .bodyMedium),
-                              onTap: () {
-                                setState(() {
-                                  widgetIndex = 2;
-                                });
-                                // Acción cuando se presiona la opción 2 del Drawer
-                              },
-                            ),
-                            ListTile(
-                              leading: Icon(Icons.info),
-                              title: Text(
-                                'Información del Club',
-                                style: styleText.bodyMedium,
-                              ),
-                              onTap: () {
-                                // Acción cuando se presiona la opción 2 del Drawer
-                              },
-                            ),
-                            // Agrega más ListTile según sea necesario
-                          ],
-                        ),
-                      )
-                    : null,
-                body: widgetIndex == 0
-                    ? equiposBuilder()
-                    : widgetIndex == 1
-                        ? miembrosBuilder()
-                        : solicitudesBuilder(controllerEquipo),
+                body: const Center(
+                  child: CircularProgressIndicator(),
+                ),
               );
-              //pages[widgetIndex],
-            }
-          case ConnectionState.none:
-            return Text('none');
-          case ConnectionState.active:
-            return Text('active');
-        }
-      },
-    );
+            case ConnectionState.done:
+              return Scaffold(
+                key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
+                appBar: AppBar(
+                  title: Text(title),
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      indexNotifier.value == 0
+                          ? context.go('/home/0')
+                          : setState(
+                              () {
+                                indexNotifier.value = 0;
+                              },
+                            );
+                    },
+                  ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () {
+                        _scaffoldKey.currentState!.openDrawer();
+                      },
+                    ),
+                  ],
+                ),
+                drawer: drawer(),
+                body: ValueListenableBuilder(
+                  valueListenable: indexNotifier,
+                  builder: (context, int value, Widget? child) {
+                    return _getBody(value);
+                  },
+                ),
+              );
+            case ConnectionState.none:
+              return const Text('none');
+            case ConnectionState.active:
+              return const Text('active');
+          }
+        },
+      );
+    }
   }
 }
 
@@ -825,21 +502,6 @@ void _showCreateTeamModal(
   );
 }
 
-void showInfoSolicitud(
-    BuildContext context,
-    Solicitud solicitud,
-    MultiSelectController _controllerEquipo,
-    List<Equipo> equipos,
-    WidgetRef ref,
-    int idClub,
-    List<Solicitud> solicitudes) {
-  final _controllerTipo = MultiSelectController();
-  final tipos = [
-    (id: 1, nombre: "Deportista"),
-    (id: 2, nombre: "Entrenador"),
-  ];
-}
-
 Widget textAlert(String label, String value) {
   return Row(
     children: [
@@ -851,3 +513,4 @@ Widget textAlert(String label, String value) {
     ],
   );
 }
+*/

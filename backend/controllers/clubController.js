@@ -1,4 +1,5 @@
 const connectionPostgres = require("../database/db");
+const { deleteSolicitud } = require("./solicitudController");
 module.exports = {
   /*
    * Obtener todos los clubes
@@ -312,6 +313,7 @@ module.exports = {
           id_usuario,
           equipo.id,
         ]);
+        await deleteSolicitud(id_usuario, id_club);
       });
 
       return { statusCode: 200, message: "Usuario expulsado con éxito" };

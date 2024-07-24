@@ -11,8 +11,10 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   SupaDBRepositoryImpl({required this.clubConnectDataSource});
 
   @override
-  Future<List<Club>> getClubs(List<int> deportes) async {
-    return await clubConnectDataSource.getClubs(deportes);
+  Future<List<Club>> getClubs(List<int> deportes, double northeastLat,
+      double northeastLng, double southwestLat, double southwestLng) async {
+    return await clubConnectDataSource.getClubs(
+        deportes, northeastLat, northeastLng, southwestLat, southwestLng);
   }
 
   @override
@@ -60,6 +62,11 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   @override
   Future<bool?> createUser(User usuario) async {
     return await clubConnectDataSource.createUser(usuario);
+  }
+
+  @override
+  Future<bool?> updateImageUser(String image, int usuario) async {
+    return await clubConnectDataSource.updateImageUser(image, usuario);
   }
 
   @override
@@ -141,8 +148,10 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
-  Future<List<EventoFull>?> getEventos(int idequipo, String estado) async {
-    return await clubConnectDataSource.getEventos(idequipo, estado);
+  Future<List<EventoFull>?> getEventos(int idequipo, String estado,
+      DateTime initialDate, DateTime endDate) async {
+    return await clubConnectDataSource.getEventos(
+        idequipo, estado, initialDate, endDate);
   }
 
   @override

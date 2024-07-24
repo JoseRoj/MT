@@ -1,10 +1,13 @@
-import 'package:clubconnect/insfrastructure/models/evento.dart';
+import 'package:clubconnect/insfrastructure/models/equipo.dart';
+import 'package:clubconnect/insfrastructure/models/solicitud.dart';
+import 'package:clubconnect/insfrastructure/models/user.dart';
+import 'package:clubconnect/presentation/screens/club_equipos_screen.dart';
+import 'package:clubconnect/presentation/screens/equipo_screen.dart';
 import 'package:clubconnect/presentation/screens/home_screen.dart';
 import 'package:clubconnect/presentation/screens/login_screen.dart';
 import 'package:clubconnect/presentation/screens/registration_screen.dart';
-import 'package:clubconnect/presentation/views/clubEquipos/Clubequipos.dart';
 import 'package:clubconnect/presentation/views/club.dart';
-import 'package:clubconnect/presentation/views/equipo.dart';
+import 'package:clubconnect/presentation/views/miembros/miembroStadistic_view.dart';
 import 'package:clubconnect/presentation/views/newClub/newClub.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +25,55 @@ final appRouter =
       },
       routes: [
         GoRoute(
+          path: 'club/:id/:pageDrawer', //:id',
+          name: ClubEquipos.name,
+          builder: (context, state) {
+            final clubId = state.pathParameters['id'] ?? 'no-id';
+            final pageIndex =
+                int.parse(state.pathParameters['pageDrawer'] ?? '0');
+            return ClubEquipos(idclub: int.parse(clubId), pageIndex: pageIndex);
+          },
+          routes: [
+            GoRoute(
+                path: ':idequipo', //:id',
+                name: EquipoSpecific.name,
+                builder: (context, state) {
+                  final clubId = state.pathParameters['id'] ?? 'no-id';
+                  final equipoId = state.pathParameters['idequipo'] ?? 'no-id';
+                  final Map<String, dynamic>? extras =
+                      state.extra as Map<String, dynamic>?;
+
+                  return EquipoSpecific(
+                    idclub: int.parse(clubId),
+                    idequipo: int.parse(equipoId),
+                    team: extras!['team'] as Equipo,
+                    //usuario: usuario
+                  );
+                },
+                routes: [
+                  GoRoute(
+                    path: ':iduser', //:id',
+                    name: UserStadistic.name,
+                    builder: (context, state) {
+                      final clubId =
+                          int.parse(state.pathParameters['id'] ?? '0');
+                      final equipoId =
+                          int.parse(state.pathParameters['idequipo'] ?? '0');
+                      final userId = state.pathParameters['iduser'] ?? 'no-id';
+                      final Map<String, dynamic>? extras =
+                          state.extra as Map<String, dynamic>?;
+
+                      return UserStadistic(
+                          idclub: clubId,
+                          idequipo: equipoId,
+                          iduser: int.parse(userId),
+                          usuario: extras!['usuario']);
+                    },
+                  ),
+                ]),
+          ],
+        ),
+        GoRoute(
           path: 'club/:id', //:id',
           name: ClubView.name,
           builder: (context, state) {
@@ -30,32 +82,10 @@ final appRouter =
           },
         ),
         GoRoute(
-          path: 'club/:id/equipos', //:id',
-          name: Equipos.name,
-          builder: (context, state) {
-            final clubId = state.pathParameters['id'] ?? 'no-id';
-            return Equipos(idclub: int.parse(clubId));
-          },
-          routes: [
-            GoRoute(
-              path: ':idequipo', //:id',
-              name: Equipo.name,
-              builder: (context, state) {
-                final clubId = state.pathParameters['id'] ?? 'no-id';
-                final equipoId = state.pathParameters['idequipo'] ?? 'no-id';
-
-                return Equipo(
-                    idclub: int.parse(clubId), idequipo: int.parse(equipoId));
-              },
-            ),
-          ],
-        ),
-        GoRoute(
           path: 'newClub', //:id',
           name: CreateClub.name,
           builder: (context, state) {
             //final movieId = state.params['id'] ?? 'no-id';
-
             return CreateClub();
           },
         ),

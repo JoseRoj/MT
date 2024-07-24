@@ -187,4 +187,82 @@ module.exports = {
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },
+
+  async updateImage(id, imagen) {
+    try {
+      let query = `UPDATE public."Usuarios" SET imagen = $1 WHERE id = $2`;
+      const response = await connectionPostgres.query(query, [imagen, id]);
+      console.log("response: ", imagen);
+      if (response.rowCount === 0) {
+        return { statusCode: 400, message: "Usuario no encontrado" };
+      }
+      return { statusCode: 200, message: "Imagen actualizada" };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
+  async getStadistic(id_usuario, id_equipo) {
+    try {
+      let query = `
+        SELECT CountEventos.año,
+          CASE CountEventos.mes
+            WHEN 1 THEN 'Enero'
+            WHEN 2 THEN 'Febrero'
+            WHEN 3 THEN 'Marzo'
+            WHEN 4 THEN 'Abril'
+            WHEN 5 THEN 'Mayo'
+            WHEN 6 THEN 'Junio'
+            WHEN 7 THEN 'Julio'
+            WHEN 8 THEN 'Agosto'
+            WHEN 9 THEN 'Septiembre'
+            WHEN 10 THEN 'Octubre'
+            WHEN 11 THEN 'Noviembre'
+            WHEN 12 THEN 'Diciembre'
+          END AS mes,
+          COALESCE(countParticipacion.cantidad_participacion, 0) AS cantidad_participacion,
+          CountEventos.cantidad_total_eventos
+        FROM 
+          (SELECT 
+            EXTRACT(YEAR FROM fecha) AS año,
+            EXTRACT(MONTH FROM fecha) AS mes,
+            COUNT(*) AS cantidad_total_eventos
+          FROM 
+            "Evento"
+          WHERE fecha >= (CURRENT_DATE - INTERVAL '5 months')
+          GROUP BY 
+            EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha)
+          ) countEventos
+        LEFT JOIN 
+          (SELECT 
+            EXTRACT(YEAR FROM fecha) AS año,
+            EXTRACT(MONTH FROM fecha) AS mes,
+            COUNT(*) AS cantidad_participacion
+          FROM 
+            "Asistencia"
+          INNER JOIN "Usuarios" ON "Asistencia".id_usuario = "Usuarios".id
+          INNER JOIN "Evento" ON "Evento".id = "Asistencia".id_evento
+          WHERE "Asistencia".id_usuario = $1
+            AND "Evento".id_equipo = $2
+            AND "Evento".fecha >= (CURRENT_DATE - INTERVAL '5 months')
+          GROUP BY 
+            EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha)
+          ) countParticipacion
+        ON CountEventos.año = countParticipacion.año AND CountEventos.mes = countParticipacion.mes
+        ORDER BY 
+          CountEventos.año, CountEventos.mes`;
+      const response = await connectionPostgres.query(query, [
+        id_usuario,
+        id_equipo,
+      ]);
+      if (response.rowCount === 0) {
+        return { statusCode: 400, message: "Estadísticas no encontradas" };
+      }
+      return { statusCode: 200, data: response.rows, message: "" };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
 };

@@ -42,6 +42,8 @@ class CreateClubState extends ConsumerState<CreateClub> {
   final TextEditingController _correoController = TextEditingController();
   final TextEditingController _fonoController = TextEditingController();
   final MultiSelectController _controller = MultiSelectController();
+  final TextEditingController controllerInstagram = TextEditingController();
+  final TextEditingController controllerFacebook = TextEditingController();
   final MultiSelectController _controllerTipo = MultiSelectController();
   final MultiSelectController _controllerDeporte = MultiSelectController();
   File? imagen;
@@ -90,6 +92,7 @@ class CreateClubState extends ConsumerState<CreateClub> {
     id_user = ref.watch(authProvider).id!;
 
     categorias = ref.watch(categoriasProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -222,6 +225,20 @@ class CreateClubState extends ConsumerState<CreateClub> {
                   ),
                 ),
                 SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: formInput(
+                      label: "Instragram",
+                      controller: controllerInstagram,
+                      validator: (value) => emptyOrNull(value, "Instragram")),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: formInput(
+                      label: "Facebook",
+                      controller: controllerFacebook,
+                      validator: (value) => emptyOrNull(value, "Instragram")),
+                ),
+                SizedBox(
                   width: MediaQuery.of(context).size.width * 0.86,
                   child: MultiSelectDropDown(
                     hint: "Selecciona las categorías",
@@ -232,6 +249,10 @@ class CreateClubState extends ConsumerState<CreateClub> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     //showClearIcon: true,
+                    selectedOptions: categorias
+                        .where((element) => categorias.contains(element.nombre))
+                        .map((e) => ValueItem(label: e.nombre, value: e.id))
+                        .toList(),
                     controller: _controller,
                     onOptionSelected: (options) {
                       //debugPrint(options.toString());
@@ -251,6 +272,9 @@ class CreateClubState extends ConsumerState<CreateClub> {
                     optionTextStyle: const TextStyle(fontSize: 16),
                     selectedOptionIcon: const Icon(Icons.check_circle),
                   ),
+                ),
+                const SizedBox(
+                  height: 5,
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.86,
@@ -282,6 +306,7 @@ class CreateClubState extends ConsumerState<CreateClub> {
                     selectedOptionIcon: const Icon(Icons.check_circle),
                   ),
                 ),
+
                 Center(
                   child: ElevatedButton.icon(
                       label: Text('Seleccionar ubicación',

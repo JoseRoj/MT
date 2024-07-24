@@ -130,10 +130,12 @@ class LoginScreenState extends ConsumerState<LoginScreen> {
                           //* Save user data in the provider
                           final id = ref.read(authProvider).id;
                           final tokenfb =
-                              ref.read(authProvider).tokenDispositivo;
-                          ref
+                              await ref.read(authProvider).tokenDispositivo;
+
+                          await ref
                               .read(clubConnectProvider)
-                              .updateToken(id!, tokenfb!);
+                              .updateToken(id!, "tokenfb");
+                          print("tokenfb: $tokenfb");
                           context.go('/home/1');
                           //ref.watch(UsuarioProvider(responde.id as int));
                         } else {

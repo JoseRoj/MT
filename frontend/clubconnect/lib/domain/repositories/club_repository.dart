@@ -5,7 +5,8 @@ import '../../presentation/providers/auth_provider.dart';
 
 abstract class ClubConnectRepository {
   //* --------------- CLUBS  ----------- *//
-  Future<List<Club>> getClubs(List<int> deportes);
+  Future<List<Club>> getClubs(List<int> deportes, double northeastLat,
+      double northeastLng, double southwestLat, double southwestLng);
   Future<ClubEspecifico> getClub(int id);
   Future<List<Deporte>> getDeportes();
   Future<List<Categoria>> getCategorias();
@@ -28,8 +29,10 @@ abstract class ClubConnectRepository {
   Future<Data?> validar(String email, String contrasena);
   Future<bool> updateToken(int idusuario, String tokenfb);
 
+  //* --------------- USUARIOS  ----------- *//
   Future<bool?> createUser(User usuario);
   Future<User> getUsuario(int id);
+  Future<bool?> updateImageUser(String image, int usuario);
 
   //* --------------- SOLICITUDES  ----------- *//
   Future<bool> sendSolicitud(int idusuario, int idclub);
@@ -44,7 +47,8 @@ abstract class ClubConnectRepository {
   Future<bool> deleteMiembro(int idusuario, int idequipo);
 
   //* --------------- EVENTOS ----------------*//
-  Future<List<EventoFull>?> getEventos(int idequipo, String estado);
+  Future<List<EventoFull>?> getEventos(
+      int idequipo, String estado, DateTime initialDate, DateTime endDate);
   Future<bool> createEvento(
       List<String> fechas,
       String horaInicio,

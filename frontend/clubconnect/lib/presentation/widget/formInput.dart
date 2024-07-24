@@ -4,12 +4,14 @@ Widget formInput({
   required String label,
   String? hint,
   int? maxLines,
+  bool readOnly = false,
   required TextEditingController controller,
   required String? Function(String?)? validator,
 }) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
     child: TextFormField(
+        readOnly: readOnly,
         maxLines: maxLines ?? 1,
         controller: controller,
         decoration: InputDecoration(

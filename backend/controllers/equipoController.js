@@ -61,7 +61,7 @@ module.exports = {
 
   async miembrosEquipo(id_equipo) {
     try {
-      let query = `SELECT "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".apellido2, "Usuarios".fecha_nacimiento,"Usuarios".email, "Usuarios".telefono, "Usuarios".genero,"Usuarios".imagen
+      let query = `SELECT "Usuarios".id, "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".apellido2, "Usuarios".fecha_nacimiento,"Usuarios".email, "Usuarios".telefono, "Usuarios".genero,"Usuarios".imagen
        FROM public."Usuarios" WHERE id IN (SELECT id_usuario FROM public."Miembros" WHERE id_equipo = $1)`;
       const response = await connectionPostgres.query(query, [id_equipo]);
       return { statusCode: 200, data: response.rows, message: "" };

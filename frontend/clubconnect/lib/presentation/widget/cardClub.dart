@@ -14,17 +14,17 @@ class CardClub extends StatelessWidget {
     TextTheme StyleText = AppTheme().getTheme().textTheme;
     return GestureDetector(
       onTap: () {
-        context.go('/home/0/club/${club.id}/equipos');
+        context.go('/home/0/club/${club.id}/0');
       },
       child: Container(
-        margin: EdgeInsets.only(left: 20, right: 20, top: 10),
+        margin: const EdgeInsets.only(left: 20, right: 20, top: 10),
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withOpacity(0.5),
               spreadRadius: 1,
               blurRadius: 10,
-              offset: Offset(0, 4), // changes position of shadow
+              offset: const Offset(0, 4), // changes position of shadow
             ),
           ],
           borderRadius: BorderRadius.circular(15),
@@ -40,13 +40,13 @@ class CardClub extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              margin: EdgeInsets.all(10),
+              margin: const EdgeInsets.all(10),
               width: 64,
               height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Color.fromARGB(255, 0, 0, 0), // Color del borde
+                  color: const Color.fromARGB(255, 0, 0, 0), // Color del borde
                   width: 2, // Ancho del borde
                 ),
               ),
@@ -76,8 +76,8 @@ class CardClub extends StatelessWidget {
                   Text("${club.nombre}", style: StyleText.titleSmall),
                   Text(
                     '${club.deporte}',
-                    style: TextStyle(
-                        color: const Color.fromARGB(255, 188, 78, 78)),
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 188, 78, 78)),
                   ),
                 ],
               ),
