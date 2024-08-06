@@ -68,6 +68,9 @@ module.exports = (app) => {
       telefono,
       categorias,
       tipos,
+      facebook,
+      instagram,
+      tiktok,
       id_usuario,
     } = req.body;
     try {
@@ -83,7 +86,10 @@ module.exports = (app) => {
         telefono,
         categorias,
         tipos,
-        id_usuario
+        id_usuario,
+        facebook,
+        instagram,
+        tiktok
       );
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
@@ -120,6 +126,66 @@ module.exports = (app) => {
         id_club,
         id_usuario
       );
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({ message: response.message });
+    } catch (error) {
+      console.log("Error: ", error);
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
+
+  app.put("/club/editclub", async (req, res) => {
+    const {
+      id,
+      nombre,
+      descripcion,
+      latitud,
+      longitud,
+      id_deporte,
+      logo,
+      correo,
+      telefono,
+      categorias,
+      tipos,
+      facebook,
+      instagram,
+      tiktok,
+    } = req.body;
+    try {
+      const response = await clubController.editClub(
+        id,
+        nombre,
+        descripcion,
+        latitud,
+        longitud,
+        id_deporte,
+        logo,
+        correo,
+        telefono,
+        categorias,
+        tipos,
+        facebook,
+        instagram,
+        tiktok
+      );
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({ message: response.message });
+    } catch (error) {
+      console.log("Error: ", error);
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
+
+  app.patch("/club/updateImage", async (req, res) => {
+    const { id, imagen } = req.body;
+    try {
+      const response = await clubController.editImagenClub(id, imagen);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500

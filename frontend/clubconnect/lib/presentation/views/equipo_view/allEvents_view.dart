@@ -3,6 +3,7 @@ import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/insfrastructure/models/evento.dart';
+import 'package:clubconnect/insfrastructure/models/user.dart';
 import 'package:clubconnect/presentation/views/equipo_view/editEvent_vies.dart';
 import 'package:clubconnect/presentation/widget/cuppertioDate.dart';
 import 'package:clubconnect/presentation/widget/modalCarga.dart';
@@ -20,6 +21,7 @@ class AllEventsWidget extends ConsumerStatefulWidget {
   final int idclub;
   final int idequipo;
   final String role;
+  final List<User> miembros;
   final List<EventoFull>? eventos;
   final ValueNotifier<int> indexNotifier;
   final Function(DateTime? initDateSelected, DateTime? endDateSelected)
@@ -36,6 +38,7 @@ class AllEventsWidget extends ConsumerStatefulWidget {
     required this.eventos,
     required this.role,
     required this.idclub,
+    required this.miembros,
     required this.idequipo,
     required this.updateDate,
     required this.getEventosCallback,
@@ -51,7 +54,6 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  late Future<List<EventoFull>?> _futureEventos;
   List<EventoFull>? eventos = [];
   final styleText = AppTheme().getTheme().textTheme;
   DateTime? initfechaSeleccionada = DateTime.now();
@@ -68,10 +70,10 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
   String? descripcionEdit;
   String? lugarEdit;
   List<Asistente>? asistentes;
-  List<int> asistentesId = [];
   //* ------------------------------------------------------
   @override
   void initState() {
+    print("object");
     super.initState();
     eventos = widget.eventos;
     initfechaSeleccionada = widget.initfechaSeleccionada;
@@ -83,15 +85,15 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     super.dispose();
   }
 
-  Future<List<EventoFull>?> getEventos(String estado, bool? pullRefresh,
-      DateTime? initDate, DateTime? endDate) async {
+  Future<List<EventoFull>?> getEventos(
+      String estado, bool? pullRefresh, DateTime? endDate) async {
     List<EventoFull>? eventsResponse;
     if (pullRefresh != null && pullRefresh) {
       loading = true;
       setState(() {});
     }
-    eventos = await widget.getEventosCallback(estado, pullRefresh, initDate!,
-        endDate!); //await widget.getEventosCallback(estado, pullRefresh);
+    eventos = await widget.getEventosCallback(
+        estado, pullRefresh, initfechaSeleccionada!, endDate!);
 
     if (pullRefresh != null && pullRefresh) {
       loading = false;
@@ -105,7 +107,8 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
       case 0:
         return builderAllEvents();
       case 1:
-        return EditEventWidget(
+        return Container();
+      /*EditEventWidget(
             fechaEdit: fechaEdit!,
             horaInicio: horaInicio!,
             horaFin: horaFin!,
@@ -115,12 +118,11 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
             asistentes: asistentes,
             asistentesId: asistentesId,
             eventId: eventId,
-            ref: ref,
             idequipo: widget.idequipo,
             styleText: styleText,
             indexNotifier: indexWidget,
-            getEventosCallback: (estado, pullRefresh, initDate, endDate) =>
-                getEventos(estado, pullRefresh, initDate, endDate));
+            getEventosCallback: (estado, pullRefresh, endDate) =>
+                getEventos(estado, pullRefresh, endDate));*/
       default:
         return const Center(
             child: Text("No tienes permisos para ver los eventos"));
@@ -132,29 +134,12 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     return Scaffold(
       key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
       appBar: AppBar(
-        title: ValueListenableBuilder(
-          valueListenable: indexWidget,
-          builder: (BuildContext context, dynamic value, Widget? child) {
-            switch (value) {
-              case 0:
-                return const Text("Todos los Eventos");
-              case 1:
-                return const Text("Editar Evento");
-              default:
-                return const Text("Todos los Eventos");
-            }
-          },
-        ),
+        title: Text("Todos los Eventos"),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (indexWidget.value == 1) {
-              indexWidget.value = 0;
-            } else if (indexWidget.value == 0) {
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
               widget.indexNotifier.value = 0;
-            }
-          },
-        ),
+            }),
         actions: widget.role == "Administrador" || widget.role == "Entrenador"
             ? <Widget>[
                 IconButton(
@@ -245,162 +230,134 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
               ),
             )
           : null,
-      body: ValueListenableBuilder(
-        valueListenable: indexWidget,
-        builder: (BuildContext context, dynamic value, Widget? child) {
-          return _getbody(value);
-        },
-      ),
+      body: builderAllEvents(),
     );
   }
 
   Widget builderAllEvents() {
-    return FutureBuilder(
-      future: _futureEventos,
-      builder: (context, snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.waiting:
-            return const Center(child: CircularProgressIndicator());
-          case ConnectionState.done:
-            if (snapshot.hasError) {
-              return const Center(
-                  child: Text('Ha ocurrido un error al cargar los eventos'));
-            } else {
-              return RefreshIndicator(
-                onRefresh: () async {
-                  eventos = await widget.getEventosCallback(
-                      EstadosEventos.todos,
-                      true,
-                      initfechaSeleccionada!,
-                      fechaSeleccionada!);
-                },
-                child: Stack(
-                  children: [
-                    Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            GestureDetector(
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(
-                                    vertical: 5, horizontal: 25),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    const Icon(Icons.calendar_today),
-                                    Text(
-                                      DateFormat('MM/dd/yyyy')
-                                          .format(initfechaSeleccionada!),
-                                      style: styleText.labelMedium,
-                                      textAlign: TextAlign.end,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              onTap: () async {
-                                var selectedDate = await cuppertinoModal(
-                                  context,
-                                  initfechaSeleccionada,
-                                  DateTime(DateTime.now().year,
-                                      DateTime.now().month, DateTime.now().day),
-                                  fechaSeleccionada,
-                                );
-                                if (selectedDate != null) {
-                                  setState(() {
-                                    loading = true;
-                                  });
-                                  initfechaSeleccionada = selectedDate;
-                                  eventos = await widget.getEventosCallback(
-                                      EstadosEventos.todos,
-                                      true,
-                                      initfechaSeleccionada!,
-                                      fechaSeleccionada!);
-                                  widget.updateDate(
-                                      initfechaSeleccionada, null);
-
-                                  setState(() {
-                                    loading = false;
-                                  });
-                                }
-                              },
-                            ),
-                            const SizedBox(child: Text(" - ")),
-                            GestureDetector(
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(
-                                    vertical: 5, horizontal: 25),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    const Icon(Icons.calendar_today),
-                                    Text(
-                                      DateFormat('MM/dd/yyyy')
-                                          .format(fechaSeleccionada!),
-                                      style: styleText.labelMedium,
-                                      textAlign: TextAlign.end,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              onTap: () async {
-                                var selectedDate = await cuppertinoModal(
-                                  context,
-                                  fechaSeleccionada,
-                                  initfechaSeleccionada,
-                                  null,
-                                );
-                                if (selectedDate != null) {
-                                  setState(() {
-                                    loading = true;
-                                  });
-                                  fechaSeleccionada = selectedDate;
-                                  widget.updateDate(null, fechaSeleccionada);
-                                  eventos = await widget.getEventosCallback(
-                                      EstadosEventos.todos,
-                                      true,
-                                      initfechaSeleccionada!,
-                                      fechaSeleccionada!);
-                                  setState(() {
-                                    loading = false;
-                                  });
-                                }
-
-                                /*DateFormat('dd / MM / yyyy')
-                                                .format(fechaSeleccionada);*/
-                                /*await getEventos(EstadosEventos.activo, true);*/
-                              },
-                            ),
-                          ],
-                        ),
-                        // Your date selection widgets here
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: eventos!.length,
-                            itemBuilder: (context, index) {
-                              return buildEventCard(index);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    loading
-                        ? Positioned(
-                            top: 20,
-                            right: MediaQuery.of(context).size.width / 2 - 15,
-                            child: const CircularProgressIndicator(
-                              backgroundColor: Colors.white,
-                            ),
-                          )
-                        : Container(),
-                  ],
-                ),
-              );
-            }
-          default:
-            return Center(child: Text('Error de conexión'));
-        }
+    return RefreshIndicator(
+      onRefresh: () async {
+        eventos = await widget.getEventosCallback(EstadosEventos.todos, true,
+            initfechaSeleccionada!, fechaSeleccionada!);
       },
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 5, horizontal: 25),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const Icon(Icons.calendar_today),
+                          Text(
+                            DateFormat('MM/dd/yyyy')
+                                .format(initfechaSeleccionada!),
+                            style: styleText.labelMedium,
+                            textAlign: TextAlign.end,
+                          ),
+                        ],
+                      ),
+                    ),
+                    onTap: () async {
+                      var selectedDate = await cuppertinoModal(
+                        context,
+                        initfechaSeleccionada,
+                        DateTime(2021, 1, 1),
+                        fechaSeleccionada,
+                      );
+                      if (selectedDate != null) {
+                        setState(() {
+                          loading = true;
+                        });
+                        initfechaSeleccionada = selectedDate;
+                        eventos = await widget.getEventosCallback(
+                            EstadosEventos.todos,
+                            true,
+                            initfechaSeleccionada!,
+                            fechaSeleccionada!);
+                        widget.updateDate(initfechaSeleccionada, null);
+
+                        setState(() {
+                          loading = false;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(child: Text(" - ")),
+                  GestureDetector(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 5, horizontal: 25),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const Icon(Icons.calendar_today),
+                          Text(
+                            DateFormat('MM/dd/yyyy').format(fechaSeleccionada!),
+                            style: styleText.labelMedium,
+                            textAlign: TextAlign.end,
+                          ),
+                        ],
+                      ),
+                    ),
+                    onTap: () async {
+                      var selectedDate = await cuppertinoModal(
+                        context,
+                        fechaSeleccionada,
+                        initfechaSeleccionada,
+                        null,
+                      );
+                      if (selectedDate != null) {
+                        setState(() {
+                          loading = true;
+                        });
+                        fechaSeleccionada = selectedDate;
+                        widget.updateDate(null, fechaSeleccionada);
+                        eventos = await widget.getEventosCallback(
+                            EstadosEventos.todos,
+                            true,
+                            initfechaSeleccionada!,
+                            fechaSeleccionada!);
+                        setState(() {
+                          loading = false;
+                        });
+                      }
+
+                      /*DateFormat('dd / MM / yyyy')
+                                                .format(fechaSeleccionada);*/
+                      /*await getEventos(EstadosEventos.activo, true);*/
+                    },
+                  ),
+                ],
+              ),
+              // Your date selection widgets here
+              Expanded(
+                child: ListView.builder(
+                  itemCount: eventos!.length,
+                  itemBuilder: (context, index) {
+                    return buildEventCard(index);
+                  },
+                ),
+              ),
+            ],
+          ),
+          loading
+              ? Positioned(
+                  top: 20,
+                  right: MediaQuery.of(context).size.width / 2 - 15,
+                  child: const CircularProgressIndicator(
+                    backgroundColor: Colors.white,
+                  ),
+                )
+              : Container(),
+        ],
+      ),
     );
   }
 
@@ -495,7 +452,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                   title: const Text('Editar'),
                   onTap: () {
                     Navigator.of(context).pop();
-                    indexWidget.value = 1;
+                    //indexWidget.value = 1;
                     setState(() {
                       eventId = int.parse(eventos![index]
                           .evento
@@ -513,6 +470,24 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                           eventos![index].asistentes.map((e) => e).toList();
                       widget.indexNotifier.value = 3;
                     });
+                    MaterialPageRoute route = MaterialPageRoute(
+                        builder: (context) => EditEventWidget(
+                            fechaEdit: fechaEdit!,
+                            horaInicio: horaInicio!,
+                            horaFin: horaFin!,
+                            tituloEdit: tituloEdit,
+                            descripcionEdit: descripcionEdit,
+                            lugarEdit: lugarEdit,
+                            asistentes: asistentes,
+                            eventId: eventId,
+                            idequipo: widget.idequipo,
+                            miembros: widget.miembros,
+                            styleText: styleText,
+                            indexNotifier: indexWidget,
+                            getEventosCallback:
+                                (estado, pullRefresh, endDate) =>
+                                    getEventos(estado, pullRefresh, endDate)));
+                    Navigator.of(context).push(route);
                   },
                 ),
               ),

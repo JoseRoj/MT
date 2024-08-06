@@ -4,6 +4,7 @@ import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
+import 'package:clubconnect/presentation/widget/OvalImage.dart';
 import 'package:flutter/material.dart';
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/presentation/widget.dart';
@@ -143,14 +144,7 @@ class ClubViewState extends ConsumerState<ClubView>
                   width: 2, // Ancho del borde
                 ),
               ),
-              child: ClipOval(
-                child: Image.memory(
-                  logoClub!,
-                  fit: BoxFit.cover,
-                  width: 80,
-                  height: 80,
-                ),
-              ),
+              child: ImageOval(club!.club.logo, logoClub, 80, 80),
             ),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 30, vertical: 0),

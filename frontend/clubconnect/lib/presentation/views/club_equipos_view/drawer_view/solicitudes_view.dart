@@ -86,8 +86,11 @@ class _SolicitudesWidgetState extends ConsumerState<SolicitudesWidget> {
       },
       child: solicitudes.isEmpty
           ? ListView(
-              children: const [
-                Center(
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                ),
+                const Center(
                   child: Text("No hay solicitudes pendientes"),
                 ),
               ],

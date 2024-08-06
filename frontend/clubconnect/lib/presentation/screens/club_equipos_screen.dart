@@ -139,6 +139,10 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
     // Simula un proceso de carga o actualización de datos
   }
 
+  void updateClub() async {
+    club = await fetchClub();
+  }
+
   //* DRAWER
   Widget? drawer() {
     return Drawer(
@@ -255,7 +259,8 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
             return Scaffold(
               key: _scaffoldKey,
               appBar: AppBar(
-                title: Text(title),
+                title: Text(title,
+                    style: AppTheme().getTheme().textTheme.titleSmall),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () {
@@ -271,7 +276,9 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
             return Scaffold(
               key: _scaffoldKey,
               appBar: AppBar(
-                title: Text(title),
+                centerTitle: false,
+                title: Text(title,
+                    style: AppTheme().getTheme().textTheme.titleSmall),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () {

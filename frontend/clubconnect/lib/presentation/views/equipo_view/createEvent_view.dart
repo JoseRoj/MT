@@ -8,29 +8,28 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CreateEventWidget extends StatefulWidget {
+class CreateEventWidget extends ConsumerStatefulWidget {
   final ValueNotifier<int> indexNotifier;
   final int idequipo;
   final int idclub;
   final dynamic styleText;
-  final WidgetRef ref;
   final Future<void> Function(String estado, bool? pullRefresh)
       getEventosCallback;
 
   CreateEventWidget({
+    super.key,
     required this.indexNotifier,
     required this.idequipo,
     required this.idclub,
     required this.styleText,
-    required this.ref,
     required this.getEventosCallback,
   });
 
   @override
-  _CreateEventWidgetState createState() => _CreateEventWidgetState();
+  CreateEventWidgetState createState() => CreateEventWidgetState();
 }
 
-class _CreateEventWidgetState extends State<CreateEventWidget> {
+class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController controllerName = TextEditingController();
   final TextEditingController controllerDes = TextEditingController();
@@ -258,7 +257,7 @@ class _CreateEventWidgetState extends State<CreateEventWidget> {
                   final fechas =
                       _dates.map((e) => e!.toIso8601String()).toList();
 
-                  final response = await widget.ref
+                  final response = await ref
                       .read(clubConnectProvider)
                       .createEvento(
                           fechas,

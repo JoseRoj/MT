@@ -64,17 +64,14 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
   //* ALL EVENTS */
   DateTime? initfechaSeleccionada = DateTime.now();
   DateTime? endFechaSeleccionada = DateTime.now().add(const Duration(days: 30));
-  late Future<List<EventoFull>?> _futureEventos; // Futuro de eventos
   List<EventoFull>? eventos = []; // Lista de eventos
 
   //* ACTIVE EVENTS */
   DateTime? fechaSeleccionada = DateTime.now().add(const Duration(days: 30));
   bool loading = false; // Indica si se está cargando información
-  late Future<List<EventoFull>?> _futureEventosActivos;
   List<EventoFull>? eventosActivos = [];
 
   final styleText = AppTheme().getTheme().textTheme; // Estilo de texto
-  late Future<List<User>> _futuremiembros;
   late List<User> miembros;
 
   @override
@@ -107,6 +104,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
             EstadosEventos.todos,
             DateTime.now(),
             fechaSeleccionada!);
+        print("Eventos: ${eventosValue!.length}");
         setState(() {
           eventosActivos = eventosActivosValue;
           role = roleValue;
@@ -218,7 +216,6 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
           idequipo: widget.idequipo,
           idclub: widget.idclub,
           styleText: styleText,
-          ref: ref,
           getEventosCallback: (estado, pullRefresh) => getEventos(
               estado, pullRefresh, DateTime.now(), fechaSeleccionada!),
         ); /*buildCreateEvents();*/
@@ -231,6 +228,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
             eventos: eventos,
             idclub: widget.idclub,
             idequipo: widget.idequipo,
+            miembros: miembros,
             updateDate: (initDateSelected, endDateSelected) =>
                 updateFechas(initDateSelected, endDateSelected),
             getEventosCallback: (estado, pullRefresh, initDate, endDate) =>

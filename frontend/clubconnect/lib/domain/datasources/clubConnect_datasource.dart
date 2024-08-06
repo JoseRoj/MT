@@ -1,4 +1,5 @@
 import 'package:clubconnect/insfrastructure/models.dart';
+import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 
@@ -13,6 +14,9 @@ abstract class ClubConnectDataSource {
   Future<bool> addClub(
       Club club, List<dynamic> categorias, List<dynamic> tipos, int id_user);
   Future<bool> deleteMiembroClub(int idusuario, int idclub);
+  Future<dynamic> editClub(
+      Club club, List<dynamic> categorias, List<dynamic> tipos);
+  Future<dynamic> updateImagenClub(String image, int idclub);
 
   //* --------------- AUTH  ----------- *//
   Future<Data?> validar(String email, String contrasena);
@@ -24,7 +28,11 @@ abstract class ClubConnectDataSource {
   Future<List<Equipo>> getEquipos(int idclub);
   Future<bool> addEquipo(Equipo equipo);
   Future<List<Equipo>> getEquiposUser(int idusuario, int idclub);
-  Future<List<User>> getMiembrosEquipo(int idequipo);
+  Future<List<User>> getMiembrosEquipo(
+    int idequipo,
+  );
+  Future<List<MonthStadisticUser>> getMonthStadisticUser(
+      int idusuario, int idequipo);
 
   //* --------------- USUARIOS  ----------- *//
   Future<String> getRole(int idusuario, int idclub, int? idequipo);

@@ -4,14 +4,13 @@ import 'dart:io';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/presentation/widget.dart';
+import 'package:clubconnect/presentation/widget/redSocial.dart';
 import 'package:flutter/material.dart';
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/presentation/providers.dart';
 import 'package:clubconnect/presentation/views/newClub/modalMaps.dart';
-import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
@@ -26,10 +25,19 @@ class CreateClub extends ConsumerStatefulWidget {
   CreateClubState createState() => CreateClubState();
 }
 
+class RedSocial {
+  String nombre;
+  String? url;
+  RedSocial({required this.nombre, this.url});
+}
+
 class CreateClubState extends ConsumerState<CreateClub> {
   final textTheme = AppTheme().getTheme().textTheme;
   late List<Deporte> items;
   late List<Tipo> tipos;
+
+  List<RedSocial?> redesSocialesSelected = [];
+
   late List<Categoria> categorias;
   late int id_user;
   late final deportes;
@@ -85,12 +93,15 @@ class CreateClubState extends ConsumerState<CreateClub> {
     Navigator.of(context).pop();
   }
 
+  void addNewRedSocial(String name, String perfil) {
+    redesSocialesSelected.add(RedSocial(nombre: name, url: perfil));
+  }
+
   @override
   Widget build(BuildContext context) {
     tipos = ref.watch(tiposProvider);
     items = ref.watch(deportesProvider);
     id_user = ref.watch(authProvider).id!;
-
     categorias = ref.watch(categoriasProvider);
 
     return Scaffold(
@@ -224,20 +235,7 @@ class CreateClubState extends ConsumerState<CreateClub> {
                     validator: (value) => emptyOrNullPhone(value),
                   ),
                 ),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  child: formInput(
-                      label: "Instragram",
-                      controller: controllerInstagram,
-                      validator: (value) => emptyOrNull(value, "Instragram")),
-                ),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  child: formInput(
-                      label: "Facebook",
-                      controller: controllerFacebook,
-                      validator: (value) => emptyOrNull(value, "Instragram")),
-                ),
+
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.86,
                   child: MultiSelectDropDown(
@@ -302,11 +300,53 @@ class CreateClubState extends ConsumerState<CreateClub> {
                     selectionType: SelectionType.multi,
                     chipConfig: const ChipConfig(wrapType: WrapType.scroll),
                     dropdownHeight: 150,
-                    optionTextStyle: const TextStyle(fontSize: 16),
+                    optionTextStyle: const TextStyle(fontSize: 14),
                     selectedOptionIcon: const Icon(Icons.check_circle),
                   ),
                 ),
-
+                Column(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Row(children: [
+                        Text(
+                          "Redes Sociales",
+                          style: textTheme.labelMedium,
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(left: 20),
+                          child: IconButton.filled(
+                            iconSize: 20,
+                            padding: EdgeInsets
+                                .zero, // Ajusta el padding para reducir el tamaño total
+                            onPressed: () async {
+                              var response = await addRedSocialModalBottom(
+                                  context, addNewRedSocial);
+                              setState(() {});
+                            },
+                            icon: Icon(
+                              Icons.add,
+                            ),
+                          ),
+                        ),
+                      ]),
+                    ),
+                    Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 0),
+                        width: MediaQuery.of(context).size.width * 0.86,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.black54,
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Column(children: [
+                          for (var red in redesSocialesSelected)
+                            containerRedSocial(red!.nombre, red.url!)
+                        ])),
+                  ],
+                ),
                 Center(
                   child: ElevatedButton.icon(
                       label: Text('Seleccionar ubicación',
@@ -372,6 +412,9 @@ class CreateClubState extends ConsumerState<CreateClub> {
                   child: ElevatedButton(
                     onPressed: () async {
                       setState(() {});
+                      bool red = redesSocialesSelected
+                          .any((element) => element!.nombre == "Instagram");
+                      print("x $red");
                       if (_formKey.currentState!.validate()) {
                         // All fields are valid, submit the form
                         // Here you can process the form data
@@ -399,7 +442,29 @@ class CreateClubState extends ConsumerState<CreateClub> {
                           logo: base64Image,
                           correo: _correoController.text,
                           telefono: _fonoController.text,
+                          facebook: redesSocialesSelected.any(
+                                  (element) => element!.nombre == "Facebook")
+                              ? redesSocialesSelected
+                                  .firstWhere((element) =>
+                                      element!.nombre == "Facebook")!
+                                  .url
+                              : null,
+                          instagram: redesSocialesSelected.any(
+                                  (element) => element!.nombre == "Instagram")
+                              ? redesSocialesSelected
+                                  .firstWhere((element) =>
+                                      element!.nombre == "Instagram")!
+                                  .url
+                              : null,
+                          tiktok: redesSocialesSelected
+                                  .any((element) => element!.nombre == "Tiktok")
+                              ? redesSocialesSelected
+                                  .firstWhere(
+                                      (element) => element!.nombre == "Tiktok")!
+                                  .url
+                              : null,
                         );
+
                         // Do something with the data, like saving it to a database
                         final resp = await ref
                             .read(clubConnectProvider)

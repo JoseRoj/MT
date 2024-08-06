@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class MiembrosEquipoWidget extends StatefulWidget {
+class MiembrosEquipoWidget extends ConsumerStatefulWidget {
   final int idClub;
   final Equipo equipo;
   final int idEquipo;
@@ -29,21 +29,10 @@ class MiembrosEquipoWidget extends StatefulWidget {
       required this.idEquipo});
 
   @override
-  State<MiembrosEquipoWidget> createState() => _MiembrosEquipoWidgetState();
+  MiembrosEquipoWidgetState createState() => MiembrosEquipoWidgetState();
 }
 
-Widget body(value) {
-  switch (value) {
-    case 0:
-      return Container();
-    case 1:
-      return Center();
-    default:
-      return Container();
-  }
-}
-
-class _MiembrosEquipoWidgetState extends State<MiembrosEquipoWidget> {
+class MiembrosEquipoWidgetState extends ConsumerState<MiembrosEquipoWidget> {
   final styleText = AppTheme().getTheme().textTheme;
   late final Future<List<User>> _futuremiembros;
   List<User>? miembros = [];

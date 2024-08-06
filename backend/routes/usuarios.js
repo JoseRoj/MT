@@ -123,7 +123,7 @@ module.exports = (app) => {
     }
   });
 
-  app.get("/usuarios/stadictic", async (req, res) => {
+  app.get("/usuarios/stadistic", async (req, res) => {
     try {
       const { id_usuario, id_equipo } = req.query;
       const response = await usuarioController.getStadistic(

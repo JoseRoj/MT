@@ -6,6 +6,7 @@ import 'package:clubconnect/helpers/image_to_byte.dart';
 import 'package:clubconnect/presentation/providers.dart';
 import 'package:clubconnect/presentation/providers/usuario_provider.dart';
 import 'package:clubconnect/presentation/widget/clubsmaps.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,8 +26,10 @@ class HomeViewState extends ConsumerState<HomeView> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
   late List<Deporte> deportes;
-  late Future<LatLng> locationFuture;
+  late Future<void> _locationFuture;
   late LatLng location;
+  late String address;
+
   Set<Marker> markers = {};
   late List<Club> clubs;
   final _icons = Completer<BitmapDescriptor>();
@@ -34,11 +37,7 @@ class HomeViewState extends ConsumerState<HomeView> {
   @override
   void initState() {
     super.initState();
-    ref.read(locationProvider).then((value) {
-      location = value;
-    });
-
-    deportes = ref.read(deportesProvider);
+    _locationFuture = initData();
     assetToBytes('assets/marker.png').then((value) {
       final bitmap = BitmapDescriptor.fromBytes(value);
       _icons.complete(bitmap);
@@ -46,6 +45,7 @@ class HomeViewState extends ConsumerState<HomeView> {
     _icons.future.then((value) {
       icon = value;
     });
+
     //print(ref.watch(clubesRegisterProvider));
     /*markers = ref
         .watch(clubesRegisterProvider)
@@ -61,6 +61,7 @@ class HomeViewState extends ConsumerState<HomeView> {
         .toSet();*/
     //ref.watch(locationProvider);
   }
+
   /*static final CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
@@ -70,6 +71,19 @@ class HomeViewState extends ConsumerState<HomeView> {
       target: LatLng(37.43296265331129, -122.08832357078792),
       tilt: 59.440717697143555,
       zoom: 19.151926040649414);*/
+  Future<void> initData() async {
+    try {
+      var longlat = await ref.read(locationProvider);
+      var direction = await Dio().get(
+          'https://maps.googleapis.com/maps/api/geocode/json?latlng=${longlat.latitude},${longlat.longitude}&result_type=locality&key=AIzaSyAaWHr_2pbyEG1u-JWxokZUzHjObyZMUO4');
+      setState(() {
+        location = longlat;
+        address = direction.data['results'][0]['formatted_address'];
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +94,7 @@ class HomeViewState extends ConsumerState<HomeView> {
 
     TextTheme StyleText = AppTheme().getTheme().textTheme;
     // Obtener el valor actual del proveedor locationProvider
-    final locationFuture = ref.watch(locationProvider);
+    //print("location" + locationFuture.toString());
     var decoration = BoxDecoration(
       color: AppTheme().getTheme().colorScheme.onPrimary,
       borderRadius: BorderRadius.circular(10),
@@ -94,7 +108,7 @@ class HomeViewState extends ConsumerState<HomeView> {
       ],
     );
     return FutureBuilder(
-      future: locationFuture,
+      future: _locationFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Mientras se carga la ubicación, puedes mostrar un indicador de carga
@@ -107,7 +121,10 @@ class HomeViewState extends ConsumerState<HomeView> {
             child: Text('Error al obtener la ubicación: ${snapshot.error}'),
           );
         } else {
-          location = snapshot.data as LatLng;
+          print("dsfjlsdnfs");
+          //initData();
+//          location = snapshot.data[0] as LatLng;
+          //location = snapshot.data as LatLng;
           // Cuando se ha obtenido la ubicación, puedes mostrar el mapa
           return Column(children: [
             Container(
@@ -125,7 +142,7 @@ class HomeViewState extends ConsumerState<HomeView> {
                                 color:
                                     AppTheme().getTheme().colorScheme.secondary,
                                 size: 20),
-                            Text('Angol, IX Región',
+                            Text(address,
                                 style: Theme.of(context).textTheme.labelSmall),
                           ],
                         )

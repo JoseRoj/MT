@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 Widget formInput({
@@ -5,7 +7,7 @@ Widget formInput({
   String? hint,
   int? maxLines,
   bool readOnly = false,
-  required TextEditingController controller,
+  TextEditingController? controller,
   required String? Function(String?)? validator,
 }) {
   return Padding(
@@ -19,14 +21,13 @@ Widget formInput({
           border: OutlineInputBorder(
               borderRadius:
                   BorderRadius.circular(14)), // Bordes del campo de entrada
-          //hintText: hint,
           labelStyle:
-              const TextStyle(fontSize: 16), // Tamaño del texto de la etiqueta
+              const TextStyle(fontSize: 14), // Tamaño del texto de la etiqueta
           contentPadding: const EdgeInsets.symmetric(
               vertical: 10, horizontal: 10), // Altura del campo de entrada
         ),
         style: const TextStyle(
-            fontSize: 15), // Tamaño del texto dentro del campo de entrada
+            fontSize: 14), // Tamaño del texto dentro del campo de entrada
         validator: validator),
   );
 }

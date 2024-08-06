@@ -48,16 +48,19 @@ class _ModalMapState extends State<ModalMap> {
                   // Aquí puedes inicializar el controlador del mapa
                 },
                 onTap: (LatLng latLng) async {
+                  print("lat" + latLng.toString());
                   final icon = await BitmapDescriptor.fromBytes(
                     await assetToBytes('assets/marker.png'),
                   );
-                  widget.markers.clear();
-                  widget.markers.add(Marker(
-                    markerId: MarkerId('1'),
-                    icon: icon,
-                    position: latLng,
-                  ));
-                  widget.onLocationSelected(latLng);
+                  setState(() {
+                    widget.markers.clear();
+                    widget.markers.add(Marker(
+                      markerId: MarkerId('1'),
+                      icon: icon,
+                      position: latLng,
+                    ));
+                    widget.onLocationSelected(latLng);
+                  });
 
                   setState(() {});
 

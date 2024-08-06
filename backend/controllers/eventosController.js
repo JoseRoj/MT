@@ -132,7 +132,7 @@ module.exports = {
     horaFin,
     titulo,
     lugar,
-    asistentesDelete
+    asistentes
   ) {
     try {
       //* Actualizar Información del Evento **/
@@ -148,11 +148,14 @@ module.exports = {
       ]);
       if (response.rowCount === 0)
         return { statusCode: 400, message: "No se encontró el evento" };
-      console.log("Asistentes :" + asistentesDelete);
       //*Actualizar asistentes a los eventos //*
-      if (asistentesDelete.length > 0) {
-        query = `DELETE FROM public."Asistencia" WHERE id_evento = $1 AND id_usuario = $2`;
-        for (var asistente of asistentesDelete) {
+      if (asistentes.length > 0) {
+        //* Eliminar todas las asistencia de los asistentes */
+        query = `DELETE FROM "Asistencia" WHERE id_evento = $1`;
+        await connectionPostgres.query(query, [id_evento]);
+
+        query = `INSERT INTO "Asistencia" (id_evento, id_usuario) VALUES ($1, $2)`;
+        for (var asistente of asistentes) {
           await connectionPostgres.query(query, [id_evento, asistente]);
         }
       }

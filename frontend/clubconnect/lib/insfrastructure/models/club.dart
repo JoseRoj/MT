@@ -41,6 +41,9 @@ class Club {
   String correo;
   String telefono;
   String? deporte;
+  String? facebook;
+  String? instagram;
+  String? tiktok;
 
   Club({
     this.id,
@@ -53,6 +56,9 @@ class Club {
     required this.logo,
     required this.correo,
     required this.telefono,
+    this.facebook,
+    this.instagram,
+    this.tiktok,
     this.deporte,
   });
 
@@ -72,6 +78,9 @@ class Club {
         correo: json["correo"],
         telefono: json["telefono"],
         deporte: json["deporte"] ?? "",
+        instagram: json["instagram"] ?? "",
+        facebook: json["facebook"] ?? "",
+        tiktok: json["tiktok"] ?? "",
       );
 
   Map<String, dynamic> toJson() => {
@@ -85,6 +94,9 @@ class Club {
         "logo": logo,
         "correo": correo,
         "telefono": telefono,
+        "instagram": instagram,
+        "facebook": facebook,
+        "tiktok": tiktok,
         "deporte": deporte,
       };
 }

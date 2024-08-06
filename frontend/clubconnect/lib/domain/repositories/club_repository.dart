@@ -1,3 +1,4 @@
+import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 
 import '../../insfrastructure/models.dart';
@@ -14,6 +15,9 @@ abstract class ClubConnectRepository {
   Future<bool> addClub(
       Club club, List<dynamic> categorias, List<dynamic> tipos, int id_user);
   Future<bool> deleteMiembroClub(int idusuario, int idclub);
+  Future<dynamic> editClub(
+      Club club, List<dynamic> categorias, List<dynamic> tipos);
+  Future<dynamic> updateImagenClub(String image, int idclub);
 
   Future<List<Club>> getClubsUser(int idusuario);
   Future<String> getRole(int idusuario, int idclub, int? idequipo);
@@ -24,6 +28,8 @@ abstract class ClubConnectRepository {
   Future<bool> addEquipo(Equipo equipo);
   Future<List<Equipo>> getEquiposUser(int idusuario, int idclub);
   Future<List<User>> getMiembrosEquipo(int idequipo);
+  Future<List<MonthStadisticUser>> getMonthStadisticUser(
+      int idusuario, int idequipo);
 
   //* --------------- AUTH  ----------- *//
   Future<Data?> validar(String email, String contrasena);

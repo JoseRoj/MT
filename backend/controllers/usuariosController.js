@@ -205,57 +205,66 @@ module.exports = {
 
   async getStadistic(id_usuario, id_equipo) {
     try {
-      let query = `
-        SELECT CountEventos.año,
-          CASE CountEventos.mes
-            WHEN 1 THEN 'Enero'
-            WHEN 2 THEN 'Febrero'
-            WHEN 3 THEN 'Marzo'
-            WHEN 4 THEN 'Abril'
-            WHEN 5 THEN 'Mayo'
-            WHEN 6 THEN 'Junio'
-            WHEN 7 THEN 'Julio'
-            WHEN 8 THEN 'Agosto'
-            WHEN 9 THEN 'Septiembre'
-            WHEN 10 THEN 'Octubre'
-            WHEN 11 THEN 'Noviembre'
-            WHEN 12 THEN 'Diciembre'
-          END AS mes,
-          COALESCE(countParticipacion.cantidad_participacion, 0) AS cantidad_participacion,
-          CountEventos.cantidad_total_eventos
-        FROM 
-          (SELECT 
-            EXTRACT(YEAR FROM fecha) AS año,
-            EXTRACT(MONTH FROM fecha) AS mes,
-            COUNT(*) AS cantidad_total_eventos
-          FROM 
-            "Evento"
-          WHERE fecha >= (CURRENT_DATE - INTERVAL '5 months')
-          GROUP BY 
-            EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha)
-          ) countEventos
-        LEFT JOIN 
-          (SELECT 
-            EXTRACT(YEAR FROM fecha) AS año,
-            EXTRACT(MONTH FROM fecha) AS mes,
-            COUNT(*) AS cantidad_participacion
-          FROM 
-            "Asistencia"
-          INNER JOIN "Usuarios" ON "Asistencia".id_usuario = "Usuarios".id
-          INNER JOIN "Evento" ON "Evento".id = "Asistencia".id_evento
-          WHERE "Asistencia".id_usuario = $1
-            AND "Evento".id_equipo = $2
-            AND "Evento".fecha >= (CURRENT_DATE - INTERVAL '5 months')
-          GROUP BY 
-            EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha)
-          ) countParticipacion
-        ON CountEventos.año = countParticipacion.año AND CountEventos.mes = countParticipacion.mes
-        ORDER BY 
-          CountEventos.año, CountEventos.mes`;
+      let query = `SELECT *
+FROM(
+SELECT 
+    CountEventos.year,
+    CASE CountEventos.mes
+        WHEN 1 THEN 'Enero'
+        WHEN 2 THEN 'Febrero'
+        WHEN 3 THEN 'Marzo'
+        WHEN 4 THEN 'Abril'
+        WHEN 5 THEN 'Mayo'
+        WHEN 6 THEN 'Junio'
+        WHEN 7 THEN 'Julio'
+        WHEN 8 THEN 'Agosto'
+        WHEN 9 THEN 'Septiembre'
+        WHEN 10 THEN 'Octubre'
+        WHEN 11 THEN 'Noviembre'
+        WHEN 12 THEN 'Diciembre'
+    END AS mes,
+      CAST(COALESCE(countParticipacion.cantidad_participacion, 0) AS INTEGER) AS participation,
+    CAST(CountEventos.total_eventos AS INTEGER) AS total_eventos,
+            PERCENT_RANK() OVER (ORDER BY cantidad_participacion) * 100 AS percentile,
+    CAST(COALESCE(CountParticipacion.id_usuario,0) AS INTEGER) AS id_usuario
+
+FROM 
+    (SELECT 
+        EXTRACT(YEAR FROM fecha) AS year,
+        EXTRACT(MONTH FROM fecha) AS mes,
+        COUNT(*) AS total_eventos
+     FROM 
+        "Evento"
+     WHERE fecha >= (CURRENT_DATE - INTERVAL '5 months')
+     GROUP BY 
+        EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha)
+    ) countEventos
+INNER JOIN 
+    (SELECT 
+        EXTRACT(YEAR FROM fecha) AS year,
+        EXTRACT(MONTH FROM fecha) AS mes,
+        COUNT(*) AS cantidad_participacion,
+        "Asistencia".id_usuario
+
+     FROM 
+        "Asistencia"
+     JOIN "Miembros" ON "Asistencia".id_usuario = "Miembros".id_usuario
+     INNER JOIN "Evento" ON "Evento".id = "Asistencia".id_evento
+     WHERE "Evento".id_equipo = $2 
+       AND "Evento".fecha >= (CURRENT_DATE - INTERVAL '5 months')
+     GROUP BY 
+        EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha), "Asistencia".id_usuario
+    ) countParticipacion
+ON CountEventos.year = countParticipacion.year AND CountEventos.mes = countParticipacion.mes
+ORDER BY 
+    CountEventos.year, CountEventos.mes
+) AS dataParticipation
+WHERE id_usuario = $1`;
       const response = await connectionPostgres.query(query, [
         id_usuario,
         id_equipo,
       ]);
+      console.log("response: ", response.rows);
       if (response.rowCount === 0) {
         return { statusCode: 400, message: "Estadísticas no encontradas" };
       }

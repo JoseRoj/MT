@@ -2,6 +2,7 @@ import 'package:clubconnect/domain/datasources/clubConnect_datasource.dart';
 import 'package:clubconnect/domain/repositories/club_repository.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/categoria.dart';
+import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 
@@ -20,6 +21,12 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   @override
   Future<ClubEspecifico> getClub(int id) async {
     return await clubConnectDataSource.getClub(id);
+  }
+
+  @override
+  Future<dynamic> editClub(
+      Club club, List<dynamic> categorias, List<dynamic> tipos) async {
+    return await clubConnectDataSource.editClub(club, categorias, tipos);
   }
 
   @override
@@ -77,6 +84,13 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   @override
   Future<User> getUsuario(int id) async {
     return await clubConnectDataSource.getUsuario(id);
+  }
+
+  @override
+  Future<List<MonthStadisticUser>> getMonthStadisticUser(
+      int idusuario, int idequipo) async {
+    return await clubConnectDataSource.getMonthStadisticUser(
+        idusuario, idequipo);
   }
 
   @override
@@ -205,5 +219,10 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   @override
   Future<bool> deleteAsistencia(int idevento, int idusuario) async {
     return await clubConnectDataSource.deleteAsistencia(idevento, idusuario);
+  }
+
+  @override
+  Future updateImagenClub(String image, int idclub) async {
+    return await clubConnectDataSource.updateImagenClub(image, idclub);
   }
 }

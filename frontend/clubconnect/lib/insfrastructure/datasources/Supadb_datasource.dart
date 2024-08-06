@@ -4,6 +4,7 @@ import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/categoria.dart';
 import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'package:clubconnect/insfrastructure/models/deporte.dart';
+import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -42,6 +43,46 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
+  Future<dynamic> editClub(Club club, List categorias, List tipos) async {
+    final dio = Dio(BaseOptions(headers: {}));
+    try {
+      final response = await dio.put('${dotenv.env["API_URL"]}/club/editclub',
+          data: jsonEncode(<String, dynamic>{
+            "latitud": club.latitud,
+            "longitud": club.longitud,
+            "nombre": club.nombre,
+            "descripcion": club.descripcion,
+            "id_deporte": club.idDeporte,
+            "logo": club.logo,
+            "correo": club.correo,
+            "telefono": club.telefono,
+            "categorias": categorias,
+            "tipos": tipos,
+            "id": club.id,
+            "facebook": club.facebook,
+            "instagram": club.instagram,
+            "tiktok": club.tiktok
+          }));
+      return response;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<dynamic> updateImagenClub(String image, int idclub) async {
+    final dio = Dio(BaseOptions(headers: {}));
+    try {
+      final response = await dio.patch(
+          '${dotenv.env["API_URL"]}/club/updateImage',
+          data: jsonEncode(<String, dynamic>{"imagen": image, "id": idclub}));
+      return response;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
   Future<List<Deporte>> getDeportes() async {
     final dio = Dio(BaseOptions(headers: {}));
     final response = await dio.get('${dotenv.env["API_URL"]}/getDeportes');
@@ -74,6 +115,7 @@ class SupabdDatasource extends ClubConnectDataSource {
       final dio = Dio(BaseOptions(headers: {}));
       final resp = await dio.post('${dotenv.env["API_URL"]}/club',
           data: jsonEncode(<String, dynamic>{
+            "id": club.id,
             "latitud": club.latitud,
             "longitud": club.longitud,
             "nombre": club.nombre,
@@ -85,6 +127,9 @@ class SupabdDatasource extends ClubConnectDataSource {
             "categorias": categorias,
             "tipos": tipos,
             "id_usuario": id_user,
+            "facebook": club.facebook,
+            "instagram": club.instagram,
+            "tiktok": club.tiktok
           }));
       return true;
     } catch (e) {
@@ -179,6 +224,22 @@ class SupabdDatasource extends ClubConnectDataSource {
     );
     User user = User.fromJson(response.data["data"][0]);
     return user;
+  }
+
+  @override
+  Future<List<MonthStadisticUser>> getMonthStadisticUser(
+      int idusuario, int idequipo) async {
+    final dio = Dio(BaseOptions(headers: {}));
+    final response = await dio.get(
+      '${dotenv.env["API_URL"]}/usuarios/stadistic',
+      queryParameters: {'id_usuario': idusuario, 'id_equipo': idequipo},
+    );
+
+    List<MonthStadisticUser> stadistics =
+        response.data["data"].map<MonthStadisticUser>((stadistic) {
+      return MonthStadisticUser.fromJson(stadistic);
+    }).toList();
+    return stadistics;
   }
 
   @override

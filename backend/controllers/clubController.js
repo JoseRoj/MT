@@ -117,7 +117,10 @@ module.exports = {
     telefono,
     categorias,
     tipos,
-    id_usuario
+    id_usuario,
+    facebook,
+    instagram,
+    tiktok
   ) {
     try {
       let query = `SELECT COUNT(*) 
@@ -133,7 +136,7 @@ module.exports = {
         return { statusCode: 400, message: "Nombre existente" };
       }
       if (id) {
-        query = `INSERT INTO public."Club" (id, nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono) VALUES ($9,$1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`;
+        query = `INSERT INTO public."Club" (id, nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono, facebook, instagram, tiktok) VALUES ($9,$1, $2, $3, $4, $5, $6, $7, $8, $10, $11, $12) RETURNING id`;
         response = await connectionPostgres.query(query, [
           nombre,
           latitud,
@@ -144,10 +147,13 @@ module.exports = {
           correo,
           telefono,
           id,
+          facebook,
+          instagram,
+          tiktok,
         ]);
       } else {
         //* Query para insertar el club
-        query = `INSERT INTO public."Club" (nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`;
+        query = `INSERT INTO public."Club" (nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono, facebook, instagram, tiktok) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`;
         response = await connectionPostgres.query(query, [
           nombre,
           latitud,
@@ -157,6 +163,9 @@ module.exports = {
           logo,
           correo,
           telefono,
+          facebook,
+          instagram,
+          tiktok,
         ]);
       }
 
@@ -317,6 +326,100 @@ module.exports = {
       });
 
       return { statusCode: 200, message: "Usuario expulsado con éxito" };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
+  async editClub(
+    id,
+    nombre,
+    descripcion,
+    latitud,
+    longitud,
+    id_deporte,
+    logo,
+    correo,
+    telefono,
+    categorias,
+    tipos,
+    facebook,
+    instagram,
+    tiktok
+  ) {
+    try {
+      let query = `SELECT COUNT(*)
+      FROM public."Club"
+      WHERE (nombre = $1 OR correo = $2) AND id != $3`;
+      let response = await connectionPostgres.query(query, [
+        nombre,
+        correo,
+        id,
+      ]);
+      if (response.rows[0].count > 0) {
+        return { statusCode: 400, message: "Nombre existente" };
+      }
+      console.log(
+        "datos: ",
+        id,
+        nombre,
+        descripcion,
+        latitud,
+        longitud,
+        id_deporte,
+        logo,
+        correo,
+        telefono,
+        facebook,
+        instagram,
+        tiktok
+      );
+      query = `UPDATE public."Club" SET nombre = $1, descripcion = $2, latitud = $3, longitud = $4, id_deporte = $5, logo = $6, correo = $7, telefono = $8, facebook = $9, instagram = $10, tiktok = $11 WHERE id = $12`;
+      response = await connectionPostgres.query(query, [
+        nombre,
+        descripcion,
+        latitud,
+        longitud,
+        id_deporte,
+        logo,
+        correo,
+        telefono,
+        facebook,
+        instagram,
+        tiktok,
+        id,
+      ]);
+
+      query = `DELETE FROM public."ClubCategoria" WHERE id_club = $1`;
+      response = await connectionPostgres.query(query, [id]);
+
+      query = `DELETE FROM public."ClubTipo" WHERE id_club = $1`;
+      response = await connectionPostgres.query(query, [id]);
+
+      query =
+        'INSERT INTO public."ClubCategoria" (id_club, id_categoria) VALUES ';
+      query += categorias
+        .map((categoria) => `(${id}, ${categoria})`)
+        .join(", ");
+      response = await connectionPostgres.query(query);
+
+      query = 'INSERT INTO public."ClubTipo" (id_club, id_tipo) VALUES ';
+      query += tipos.map((tipo) => `(${id}, ${tipo})`).join(", ");
+      response = await connectionPostgres.query(query);
+
+      return { statusCode: 200, message: "Club actualizado con éxito" };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
+  async editImagenClub(id, logo) {
+    try {
+      let query = `UPDATE public."Club" SET logo = $1 WHERE id = $2`;
+      const response = await connectionPostgres.query(query, [logo, id]);
+      return { statusCode: 200, message: "Imagen actualizada con éxito" };
     } catch (e) {
       console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };
