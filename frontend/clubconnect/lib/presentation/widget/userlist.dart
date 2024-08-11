@@ -1,3 +1,5 @@
+import 'package:clubconnect/helpers/transformation.dart';
+import 'package:clubconnect/presentation/widget/OvalImage.dart';
 import 'package:flutter/material.dart';
 
 Widget userList({
@@ -10,10 +12,11 @@ Widget userList({
     // Ajusta el ancho de los elementos según sea necesario
     child: Column(
       children: [
-        CircleAvatar(
-          radius: 30,
-          backgroundImage: NetworkImage(
-              "https://img.freepik.com/foto-gratis/chico-guapo-seguro-posando-contra-pared-blanca_176420-32936.jpg"),
+        ImageOval(
+          image!,
+          imagenFromBase64(image),
+          50,
+          50,
         ),
         Text(
           name,

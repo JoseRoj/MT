@@ -116,6 +116,7 @@ class CreateClubState extends ConsumerState<CreateClub> {
         ),
       ),
       body: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
         child: Padding(
           padding: EdgeInsets.all(15),
           child: Form(

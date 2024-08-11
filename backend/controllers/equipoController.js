@@ -59,6 +59,20 @@ module.exports = {
     }
   },
 
+  async deleteEquipo(id_equipo) {
+    try {
+      let query = `DELETE FROM public."Equipo" WHERE id = $1`;
+      const response = await connectionPostgres.query(query, [id_equipo]);
+      if (response.rowCount === 0) {
+        return { statusCode: 400, message: "Error al eliminar equipo" };
+      }
+      return { statusCode: 200, message: "Equipo eliminado correctamente" };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
   async miembrosEquipo(id_equipo) {
     try {
       let query = `SELECT "Usuarios".id, "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".apellido2, "Usuarios".fecha_nacimiento,"Usuarios".email, "Usuarios".telefono, "Usuarios".genero,"Usuarios".imagen

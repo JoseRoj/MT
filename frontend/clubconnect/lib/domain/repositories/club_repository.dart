@@ -28,6 +28,8 @@ abstract class ClubConnectRepository {
   Future<bool> addEquipo(Equipo equipo);
   Future<List<Equipo>> getEquiposUser(int idusuario, int idclub);
   Future<List<User>> getMiembrosEquipo(int idequipo);
+  Future<bool> deleteEquipo(int idequipo);
+
   Future<List<MonthStadisticUser>> getMonthStadisticUser(
       int idusuario, int idequipo);
 

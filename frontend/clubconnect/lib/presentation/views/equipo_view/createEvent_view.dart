@@ -2,6 +2,7 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/validator.dart';
+import 'package:clubconnect/insfrastructure/models/equipo.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/widget/formInput.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class CreateEventWidget extends ConsumerStatefulWidget {
   final ValueNotifier<int> indexNotifier;
   final int idequipo;
+  final Equipo equipo;
   final int idclub;
   final dynamic styleText;
   final Future<void> Function(String estado, bool? pullRefresh)
@@ -19,6 +21,7 @@ class CreateEventWidget extends ConsumerStatefulWidget {
   CreateEventWidget({
     super.key,
     required this.indexNotifier,
+    required this.equipo,
     required this.idequipo,
     required this.idclub,
     required this.styleText,

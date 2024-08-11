@@ -10,6 +10,7 @@ import 'package:clubconnect/presentation/providers/location_provider.dart';
 import 'package:clubconnect/presentation/providers/tipos_provider.dart';
 import 'package:clubconnect/presentation/views/newClub/modalMaps.dart';
 import 'package:clubconnect/presentation/widget.dart';
+import 'package:clubconnect/presentation/widget/OvalImage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -92,6 +93,7 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
     super.initState();
     print("Entre 2 ...");
     club = widget.club;
+
     logoClub = imagenFromBase64(club!.club.logo);
 
     descriptionController.text = club!.club.descripcion;
@@ -118,7 +120,12 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
       await ref
           .read(clubConnectProvider)
           .updateImagenClub(base64Image, int.parse(club!.club.id!));
-      setState(() {});
+      setState(() {
+        customToast(
+            "Foto de perfil cambiada con exito, actualiza tu lista de clubs, para verificar los cambios",
+            context,
+            "IsError");
+      });
     }
     Navigator.of(context).pop();
   }
@@ -264,27 +271,14 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
                   children: [
                     ClipOval(
                       child: InkWell(
-                        child: logoClub == ""
-                            ? ClipOval(
-                                child: Container(
-                                  color: Colors.black54,
-                                  width: 100,
-                                  height: 100,
-                                  child: const Icon(
-                                    Icons.add_a_photo,
-                                    size: 10,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              )
-                            : ClipOval(
-                                child: Image.memory(
-                                  imagenFromBase64(club!.club.logo),
-                                  fit: BoxFit.cover,
-                                  width: 100,
-                                  height: 100,
-                                ),
-                              ),
+                        child: ImageOval(
+                          club!.club.logo,
+                          base64Image != ''
+                              ? imagenFromBase64(base64Image)
+                              : imagenFromBase64(club!.club.logo),
+                          100,
+                          100,
+                        ),
                       ),
                     ),
                     Positioned(

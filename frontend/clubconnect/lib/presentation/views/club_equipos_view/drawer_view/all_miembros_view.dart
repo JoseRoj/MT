@@ -77,7 +77,8 @@ class _AllMiembrosWidgetState extends ConsumerState<AllMiembrosWidget> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: () async {
-        //miembros = await widget.getmiembrosCallBack();
+        miembros =
+            await ref.read(clubConnectProvider).getMiembros(widget.idclub);
         setState(() {});
       },
       child: Padding(

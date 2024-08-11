@@ -54,7 +54,7 @@ module.exports = {
       }
 
       for (var equipo of response.rows) {
-        query = `SELECT "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".id FROM public."Usuarios" 
+        query = `SELECT "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".id, "Usuarios".imagen FROM public."Usuarios" 
         JOIN public."Asistencia" ON "Usuarios".id = "Asistencia".id_usuario
         WHERE "Asistencia".id_evento = $1`;
         const response2 = await connectionPostgres.query(query, [equipo.id]);

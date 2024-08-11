@@ -214,6 +214,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
         return CreateEventWidget(
           indexNotifier: _indexNotifier,
           idequipo: widget.idequipo,
+          equipo: widget.team,
           idclub: widget.idclub,
           styleText: styleText,
           getEventosCallback: (estado, pullRefresh) => getEventos(
@@ -227,6 +228,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
             role: role,
             eventos: eventos,
             idclub: widget.idclub,
+            equipo: widget.team,
             idequipo: widget.idequipo,
             miembros: miembros,
             updateDate: (initDateSelected, endDateSelected) =>

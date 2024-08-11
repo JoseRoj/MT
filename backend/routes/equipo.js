@@ -78,6 +78,23 @@ module.exports = (app) => {
     }
   });
 
+  app.delete("/equipo/deleteEquipo", async (req, res) => {
+    const { id_equipo } = req.query;
+    try {
+      const response = await equipo.deleteEquipo(id_equipo);
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({
+            data: response.data,
+          });
+    } catch (error) {
+      console.log("Error: ", error);
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
+
   //TODO : TESTEAR
   app.get("/equipo/miembros", async (req, res) => {
     const { id_equipo } = req.query;

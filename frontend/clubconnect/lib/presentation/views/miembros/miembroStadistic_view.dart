@@ -28,6 +28,12 @@ class UserStadistic extends ConsumerStatefulWidget {
 }
 
 class UserStadisticState extends ConsumerState<UserStadistic> {
+  final FocusNode _focusNode1 = FocusNode();
+
+  void _unfocusAll(BuildContext context) {
+    FocusScope.of(context).unfocus();
+  }
+
   Uint8List? imageUser;
   TextTheme styleText = AppTheme().getTheme().textTheme;
   late List<PieData> data;
@@ -52,13 +58,14 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
           .read(clubConnectProvider)
           .getMonthStadisticUser(widget.iduser, widget.idequipo);
       print(stats);
-      data = <PieData>[
-        PieData(Colors.lightGreen, stats.first.participation, 'Asistido'),
+
+      /*data = <PieData>[
+        PieData(Colors.lightGreen, [], 'Asistido'),
         PieData(
             Colors.red,
             stats.first.totalEventos - stats.first.participation,
             'No Asistido'),
-      ];
+      ];*/
 
       setState(() {
         monthStadistic = stats;
@@ -84,200 +91,251 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Estadisticas'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+        appBar: AppBar(
+          title: const Text('Estadisticas'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
         ),
-      ),
-      body: FutureBuilder(
-        future: _futuremonthStadistic,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else {
-            return Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        child: ImageOval(
-                            widget.usuario.imagen, imageUser, 70, 70)),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            "${widget.usuario.nombre} ${widget.usuario.apellido1} ${widget.usuario.apellido2}",
-                            style: styleText.labelMedium),
-                        Text("Deportista ", style: styleText.labelMedium),
-                      ],
-                    ),
-                  ],
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  alignment: Alignment.topLeft,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        body: GestureDetector(
+          onTap: () {
+            _unfocusAll(context);
+          },
+          child: SingleChildScrollView(
+            child: FutureBuilder(
+              future: _futuremonthStadistic,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else {
+                  return Column(
                     children: [
-                      textAlert("Fecha Nacimiento : ",
-                          DateToString(widget.usuario.fechaNacimiento)),
-                      textAlert("Género : ", widget.usuario.genero),
-                      textAlert("Correo : ", widget.usuario.email),
-                      textAlert("Teléfono : ", widget.usuario.telefono),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: 300,
-                  height: 250,
-                  child: SfCartesianChart(
-                    primaryXAxis: const CategoryAxis(
-                      //title: AxisTitle(text: 'Mes'),
-                      majorGridLines: MajorGridLines(width: 0),
-                    ),
-                    primaryYAxis:
-                        const NumericAxis(title: AxisTitle(text: 'Evento')),
-                    // Chart title
-                    title: const ChartTitle(
-                        text: 'Asistencia Eventos Ultimos 6 meses',
-                        textStyle: TextStyle(fontSize: 10)),
-                    // Enable legend
-                    legend: const Legend(isVisible: true),
-                    // Enable tooltip
-                    tooltipBehavior: _tooltip,
-                    series: <CartesianSeries>[
-                      StackedColumnSeries<MonthStadisticUser, String>(
-                          name: 'Asistencias',
-                          dataLabelMapper: (datum, index) =>
-                              datum.participation.toString(),
-                          groupName: 'Participaciones',
-                          dataLabelSettings: const DataLabelSettings(
-                              isVisible: false, showCumulativeValues: true),
-                          dataSource: monthStadistic,
-                          xValueMapper: (MonthStadisticUser data, _) =>
-                              data.mes,
-                          yValueMapper: (MonthStadisticUser data, _) =>
-                              data.participation),
-                      StackedColumnSeries<MonthStadisticUser, String>(
-                          name: 'Eventos Totales',
-                          groupName: 'Total',
-                          dataLabelSettings: const DataLabelSettings(
-                              isVisible: true, showCumulativeValues: true),
-                          dataSource: monthStadistic,
-                          xValueMapper: (MonthStadisticUser data, _) =>
-                              data.mes,
-                          yValueMapper: (MonthStadisticUser data, _) =>
-                              data.totalEventos),
-                    ],
-                  ),
-                ),
-                DropdownMenu<MonthStadisticUser>(
-                  textStyle: styleText.labelSmall,
-                  initialSelection: monthStadistic[0],
-                  controller: mesController,
-                  inputDecorationTheme: InputDecorationTheme(
-                      fillColor: AppTheme().getTheme().colorScheme.onSecondary,
-                      labelStyle: styleText.labelSmall,
-                      filled: true,
-                      constraints: BoxConstraints(maxHeight: 40),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                              color:
-                                  AppTheme().getTheme().colorScheme.onSecondary,
-                              width: 1))),
-                  requestFocusOnTap: true,
-                  label: const Text('Mes'),
-                  onSelected: (MonthStadisticUser? color) {
-                    setState(() {
-                      updatePieChart();
-                    });
-                  },
-                  menuStyle: MenuStyle(
-                    backgroundColor: WidgetStateProperty.all(
-                        AppTheme().getTheme().colorScheme.surfaceContainerLow),
-                    padding: WidgetStateProperty.all(EdgeInsets.zero),
-                  ),
-                  dropdownMenuEntries: monthStadistic
-                      .map<DropdownMenuEntry<MonthStadisticUser>>(
-                          (MonthStadisticUser mes) {
-                    return DropdownMenuEntry<MonthStadisticUser>(
-                      value: mes,
-                      label: mes.mes,
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all(
-                            const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 0)),
-                        textStyle:
-                            WidgetStateProperty.all(styleText.labelSmall),
-                      ),
-
-                      //enabled: color.label != 'Grey',
-                    );
-                  }).toList(),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 150,
-                      height: 100,
-                      child: SfCircularChart(
-                        tooltipBehavior: _tooltip,
-                        series: <CircularSeries>[
-                          // Render pie chart
-
-                          PieSeries<PieData, String>(
-                            dataSource: data,
-                            pointColorMapper: (PieData data, _) => data.color,
-                            xValueMapper: (PieData data, _) => data.label,
-                            yValueMapper: (PieData data, _) => data.x,
-                            dataLabelSettings:
-                                DataLabelSettings(isVisible: true),
+                      Row(
+                        children: [
+                          Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: ImageOval(
+                                  widget.usuario.imagen, imageUser, 70, 70)),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  "${widget.usuario.nombre} ${widget.usuario.apellido1} ${widget.usuario.apellido2}",
+                                  style: styleText.labelMedium),
+                              Text("Deportista ", style: styleText.labelMedium),
+                            ],
                           ),
                         ],
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      width: MediaQuery.of(context).size.width * 0.45,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppTheme()
-                            .getTheme()
-                            .colorScheme
-                            .surfaceContainerHigh,
-                        border: Border.all(color: Colors.black, width: 1),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 5,
-                            blurRadius: 7,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        alignment: Alignment.topLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            textAlert("Fecha Nacimiento : ",
+                                DateToString(widget.usuario.fechaNacimiento)),
+                            textAlert("Género : ", widget.usuario.genero),
+                            textAlert("Correo : ", widget.usuario.email),
+                            textAlert("Teléfono : ", widget.usuario.telefono),
+                          ],
+                        ),
                       ),
-                      child: Text(
-                          'La asistencia ha sido mejor o igual al ${selected.percentile}%',
-                          style: styleText.labelSmall,
-                          overflow: TextOverflow.visible),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          }
-        },
-      ),
-    );
+                      monthStadistic.isEmpty
+                          ? Center(
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                child: const Text(
+                                    'No existen registros de asistencia en los últimos 6 meses',
+                                    textAlign: TextAlign.center),
+                              ),
+                            )
+                          : Column(
+                              children: [
+                                SizedBox(
+                                  width: 300,
+                                  height: 250,
+                                  child: SfCartesianChart(
+                                    primaryXAxis: const CategoryAxis(
+                                      //title: AxisTitle(text: 'Mes'),
+                                      majorGridLines: MajorGridLines(width: 0),
+                                    ),
+                                    primaryYAxis: const NumericAxis(
+                                        title: AxisTitle(text: 'Evento')),
+                                    // Chart title
+                                    title: const ChartTitle(
+                                        text:
+                                            'Asistencia Eventos Ultimos 6 meses',
+                                        textStyle: TextStyle(fontSize: 10)),
+                                    // Enable legend
+                                    legend: const Legend(isVisible: true),
+                                    // Enable tooltip
+                                    tooltipBehavior: _tooltip,
+                                    series: <CartesianSeries>[
+                                      StackedColumnSeries<MonthStadisticUser,
+                                              String>(
+                                          name: 'Asistencias',
+                                          dataLabelMapper: (datum, index) =>
+                                              datum.participation.toString(),
+                                          groupName: 'Participaciones',
+                                          dataLabelSettings:
+                                              const DataLabelSettings(
+                                                  isVisible: false,
+                                                  showCumulativeValues: true),
+                                          dataSource: monthStadistic,
+                                          xValueMapper:
+                                              (MonthStadisticUser data, _) =>
+                                                  data.mes,
+                                          yValueMapper:
+                                              (MonthStadisticUser data, _) =>
+                                                  data.participation),
+                                      StackedColumnSeries<MonthStadisticUser,
+                                              String>(
+                                          name: 'Eventos Totales',
+                                          groupName: 'Total',
+                                          dataLabelSettings:
+                                              const DataLabelSettings(
+                                                  isVisible: true,
+                                                  showCumulativeValues: true),
+                                          dataSource: monthStadistic,
+                                          xValueMapper:
+                                              (MonthStadisticUser data, _) =>
+                                                  data.mes,
+                                          yValueMapper:
+                                              (MonthStadisticUser data, _) =>
+                                                  data.totalEventos),
+                                    ],
+                                  ),
+                                ),
+                                DropdownMenu<MonthStadisticUser>(
+                                  textStyle: styleText.labelSmall,
+                                  initialSelection: monthStadistic[0],
+                                  controller: mesController,
+                                  inputDecorationTheme: InputDecorationTheme(
+                                      fillColor: AppTheme()
+                                          .getTheme()
+                                          .colorScheme
+                                          .onSecondary,
+                                      labelStyle: styleText.labelSmall,
+                                      filled: true,
+                                      constraints:
+                                          BoxConstraints(maxHeight: 40),
+                                      border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          borderSide: BorderSide(
+                                              color: AppTheme()
+                                                  .getTheme()
+                                                  .colorScheme
+                                                  .onSecondary,
+                                              width: 1))),
+                                  requestFocusOnTap: true,
+                                  label: const Text('Mes'),
+                                  onSelected: (MonthStadisticUser? color) {
+                                    setState(() {
+                                      updatePieChart();
+                                    });
+                                  },
+                                  menuStyle: MenuStyle(
+                                    backgroundColor: WidgetStateProperty.all(
+                                        AppTheme()
+                                            .getTheme()
+                                            .colorScheme
+                                            .surfaceContainerLow),
+                                    padding: WidgetStateProperty.all(
+                                        EdgeInsets.zero),
+                                  ),
+                                  dropdownMenuEntries: monthStadistic.map<
+                                          DropdownMenuEntry<
+                                              MonthStadisticUser>>(
+                                      (MonthStadisticUser mes) {
+                                    return DropdownMenuEntry<
+                                        MonthStadisticUser>(
+                                      value: mes,
+                                      label: mes.mes,
+                                      style: ButtonStyle(
+                                        padding: WidgetStateProperty.all(
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 10, vertical: 0)),
+                                        textStyle: WidgetStateProperty.all(
+                                            styleText.labelSmall),
+                                      ),
+
+                                      //enabled: color.label != 'Grey',
+                                    );
+                                  }).toList(),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 150,
+                                      height: 100,
+                                      child: SfCircularChart(
+                                        tooltipBehavior: _tooltip,
+                                        series: <CircularSeries>[
+                                          // Render pie chart
+
+                                          PieSeries<PieData, String>(
+                                            dataSource: data,
+                                            pointColorMapper:
+                                                (PieData data, _) => data.color,
+                                            xValueMapper: (PieData data, _) =>
+                                                data.label,
+                                            yValueMapper: (PieData data, _) =>
+                                                data.x,
+                                            dataLabelSettings:
+                                                DataLabelSettings(
+                                                    isVisible: true),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 10),
+                                      width: MediaQuery.of(context).size.width *
+                                          0.45,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme()
+                                            .getTheme()
+                                            .colorScheme
+                                            .surfaceContainerHigh,
+                                        border: Border.all(
+                                            color: Colors.black, width: 1),
+                                        borderRadius: BorderRadius.circular(10),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.5),
+                                            spreadRadius: 5,
+                                            blurRadius: 7,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                          'La asistencia ha sido mejor o igual al ${selected.percentile}%',
+                                          style: styleText.labelSmall,
+                                          overflow: TextOverflow.visible),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                    ],
+                  );
+                }
+              },
+            ),
+          ),
+        ));
   }
 }
 

@@ -152,6 +152,28 @@ void modalUserPerfil(BuildContext context, dynamic miembro, Club? club,
                                       ),
                                       IconButton(
                                         onPressed: () async {
+                                          if (miembro.equipos.length == 1) {
+                                            showDialog(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return AlertDialog(
+                                                    content: const Text(
+                                                        "El usuario pertenece a un solo equipo, no se puede eliminar. Si desea quitarlo de todos los equipos, expulselo del club."),
+                                                    actions: <Widget>[
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                        child:
+                                                            const Text('Salir'),
+                                                      ),
+                                                    ],
+                                                  );
+                                                });
+                                            return;
+                                          }
                                           final response = await ref
                                               .read(clubConnectProvider)
                                               .deleteMiembro(

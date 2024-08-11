@@ -83,7 +83,7 @@ class MiembrosEquipoWidgetState extends ConsumerState<MiembrosEquipoWidget> {
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           child: Text(
-                            "Equipo dsfsd",
+                            widget.equipo.nombre,
                             style: styleText.titleSmall,
                             maxLines: 1,
                             textAlign: TextAlign.center,
@@ -147,6 +147,7 @@ class MiembrosEquipoWidgetState extends ConsumerState<MiembrosEquipoWidget> {
           : null,
       body: RefreshIndicator(
         onRefresh: () async {
+          print("Refresh");
           miembros = await widget.getMiembros();
         },
         child: Padding(
@@ -163,6 +164,7 @@ class MiembrosEquipoWidgetState extends ConsumerState<MiembrosEquipoWidget> {
             itemBuilder: (context, index) {
               return GestureDetector(
                 onTap: () {
+                  print("Hoaldsfd");
                   context.go(
                       '/home/0/club/${widget.idClub}/0/${widget.idEquipo}/${miembros![index].id}',
                       extra: {

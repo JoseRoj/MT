@@ -325,6 +325,12 @@ module.exports = {
         await deleteSolicitud(id_usuario, id_club);
       });
 
+      //* Eliminar la solicitud del usuario //*
+      const queryDeleteSolicitud = `DELETE FROM public."Solicitud" WHERE id_usuario = $1 AND id_club = $2`;
+      await connectionPostgres.query(queryDeleteSolicitud, [
+        id_usuario,
+        id_club,
+      ]);
       return { statusCode: 200, message: "Usuario expulsado con éxito" };
     } catch (e) {
       console.log("Error: ", e);

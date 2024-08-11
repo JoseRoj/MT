@@ -114,6 +114,11 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
+  Future<bool> deleteEquipo(int idequipo) async {
+    return await clubConnectDataSource.deleteEquipo(idequipo);
+  }
+
+  @override
   Future<List<User>> getMiembrosEquipo(int idequipo) async {
     return await clubConnectDataSource.getMiembrosEquipo(idequipo);
   }

@@ -190,7 +190,8 @@ class CardEventoState extends ConsumerState<CardEvento> {
                                   return userList(
                                       name: widget.eventos![index]!
                                           .asistentes[index2].nombre,
-                                      image: null);
+                                      image: widget.eventos![index]!
+                                          .asistentes[index2].imagen);
                                 },
                               ),
                             ),

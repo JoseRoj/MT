@@ -2,6 +2,7 @@ import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/transformation.dart';
+import 'package:clubconnect/insfrastructure/models/equipo.dart';
 import 'package:clubconnect/insfrastructure/models/evento.dart';
 import 'package:clubconnect/insfrastructure/models/user.dart';
 import 'package:clubconnect/presentation/views/equipo_view/editEvent_vies.dart';
@@ -20,6 +21,7 @@ class AllEventsWidget extends ConsumerStatefulWidget {
   final DateTime? fechaSeleccionada;
   final int idclub;
   final int idequipo;
+  final Equipo equipo;
   final String role;
   final List<User> miembros;
   final List<EventoFull>? eventos;
@@ -38,6 +40,7 @@ class AllEventsWidget extends ConsumerStatefulWidget {
     required this.eventos,
     required this.role,
     required this.idclub,
+    required this.equipo,
     required this.miembros,
     required this.idequipo,
     required this.updateDate,
@@ -168,7 +171,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           child: Text(
-                            "Equipo dsfsd",
+                            widget.equipo.nombre,
                             style: styleText.titleSmall,
                             maxLines: 1,
                             textAlign: TextAlign.center,

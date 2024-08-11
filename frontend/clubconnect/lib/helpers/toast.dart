@@ -7,7 +7,7 @@ void customToast(String message, BuildContext context, String type) {
           context: context,
           animation: StyledToastAnimation.slideFromTopFade,
           position: StyledToastPosition.bottom,
-          animDuration: Duration(milliseconds: 200),
+          animDuration: Duration(milliseconds: 1000),
           curve: Curves.easeInOut,
           reverseCurve: Curves.easeInOut,
           backgroundColor: Color.fromARGB(255, 243, 54, 54),

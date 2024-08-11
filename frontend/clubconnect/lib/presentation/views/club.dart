@@ -37,9 +37,6 @@ var decoration = BoxDecoration(
 
 class ClubViewState extends ConsumerState<ClubView>
     with TickerProviderStateMixin {
-  final Uri uriInstagram =
-      Uri.parse("https://www.instagram.com/josepeperojas13/");
-
   late Future<String?> _futureEstado;
   String? estado;
   late Future<ClubEspecifico> _futureClub;
@@ -75,11 +72,11 @@ class ClubViewState extends ConsumerState<ClubView>
     });
   }
 
-  Future<void> launchUrlSiteBrowser() async {
-    if (await canLaunchUrl(uriInstagram)) {
-      await launchUrl(uriInstagram, mode: LaunchMode.externalApplication);
+  Future<void> launchUrlSiteBrowser(Uri redsocial) async {
+    if (await canLaunchUrl(redsocial)) {
+      await launchUrl(redsocial, mode: LaunchMode.externalApplication);
     } else {
-      throw 'Could not launch $uriInstagram';
+      throw 'Could not launch $redsocial';
     }
   }
 
@@ -94,6 +91,8 @@ class ClubViewState extends ConsumerState<ClubView>
         textButton = "Solicitud Enviada";
       case "Cancelada":
         textButton = "Solicitud Cancelada (Reenviar)";
+      case "Admin":
+        textButton = "Eres Administrador";
       default:
         textButton = "Enviar Solicitud";
     }
@@ -146,7 +145,7 @@ class ClubViewState extends ConsumerState<ClubView>
               ),
               child: ImageOval(club!.club.logo, logoClub, 80, 80),
             ),
-            Container(
+            /*Container(
               padding: EdgeInsets.symmetric(horizontal: 30, vertical: 0),
               decoration: decoration,
               child: Row(
@@ -161,7 +160,7 @@ class ClubViewState extends ConsumerState<ClubView>
                   Text("60", style: AppTheme().getTheme().textTheme.labelSmall)
                 ],
               ),
-            ),
+            ),*/
           ],
         ),
         TabBarWidget(tabController: _tabController),
@@ -218,29 +217,78 @@ class ClubViewState extends ConsumerState<ClubView>
                         ],
                       ),
                       divider,
-                      Column(
-                        children: [
-                          Text("Redes",
-                              style:
-                                  AppTheme().getTheme().textTheme.titleSmall),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                onPressed: () async {
-                                  await launchUrlSiteBrowser();
-                                },
-                                icon: Icon(
-                                  Icons.facebook,
-                                  color:
-                                      const Color.fromARGB(255, 145, 134, 39),
-                                  size: 30,
+                      club!.club.facebook == "" &&
+                              club!.club.instagram == "" &&
+                              club!.club.tiktok == ""
+                          ? Container()
+                          : Column(
+                              children: [
+                                Text("Redes",
+                                    style: AppTheme()
+                                        .getTheme()
+                                        .textTheme
+                                        .titleSmall),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    club!.club.facebook == ""
+                                        ? Container()
+                                        : IconButton(
+                                            onPressed: () async {
+                                              final Uri uriInstagram =
+                                                  Uri.parse(
+                                                      club!.club.instagram!);
+
+                                              await launchUrlSiteBrowser(
+                                                  uriInstagram);
+                                            },
+                                            icon: Icon(
+                                              Icons.facebook,
+                                              color: const Color.fromARGB(
+                                                  255, 145, 134, 39),
+                                              size: 30,
+                                            ),
+                                          ),
+                                    club!.club.instagram == ""
+                                        ? Container()
+                                        : IconButton(
+                                            onPressed: () async {
+                                              final Uri uriInstagram =
+                                                  Uri.parse(
+                                                      club!.club.instagram!);
+
+                                              await launchUrlSiteBrowser(
+                                                  uriInstagram);
+                                            },
+                                            icon: Icon(
+                                              Icons.tiktok,
+                                              color: const Color.fromARGB(
+                                                  255, 145, 134, 39),
+                                              size: 30,
+                                            ),
+                                          ),
+                                    club!.club.tiktok == ""
+                                        ? Container()
+                                        : IconButton(
+                                            onPressed: () async {
+                                              final Uri uriInstagram =
+                                                  Uri.parse(
+                                                      club!.club.instagram!);
+
+                                              await launchUrlSiteBrowser(
+                                                  uriInstagram);
+                                            },
+                                            icon: Icon(
+                                              Icons.tiktok,
+                                              color: const Color.fromARGB(
+                                                  255, 145, 134, 39),
+                                              size: 30,
+                                            ),
+                                          ),
+                                  ],
                                 ),
-                              )
-                            ],
-                          ),
-                        ],
-                      ),
+                              ],
+                            ),
                       textButtonSolicitud(),
                     ],
                   ),

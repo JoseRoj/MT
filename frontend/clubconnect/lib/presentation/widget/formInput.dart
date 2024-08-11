@@ -13,6 +13,7 @@ Widget formInput({
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
     child: TextFormField(
+        keyboardType: TextInputType.text,
         readOnly: readOnly,
         maxLines: maxLines ?? 1,
         controller: controller,

@@ -34,13 +34,24 @@ module.exports = {
   */
   async getEstadoSolicitud(id_usuario, id_club) {
     try {
-      let query = `SELECT "Solicitud".estado
-            FROM public."Solicitud"
-            WHERE "Solicitud".id_usuario = $1 AND "Solicitud".id_club = $2;`;
+      /** Comprobar si es el admin */
+      let query = `SELECT COUNT (*) FROM "Administra" WHERE id_usuario = $1 AND id_club = $2;`;
       const response = await connectionPostgres.query(query, [
         id_usuario,
         id_club,
       ]);
+      if (response.rows[0].count > 0) {
+        return {
+          statusCode: 200,
+          data: "Admin",
+          message: "Eres Administrador del club",
+        };
+      }
+
+      query = `SELECT "Solicitud".estado
+            FROM public."Solicitud"
+            WHERE "Solicitud".id_usuario = $1 AND "Solicitud".id_club = $2;`;
+      response = await connectionPostgres.query(query, [id_usuario, id_club]);
       if (response.rows.length === 0) {
         return { statusCode: 200, data: "", message: "" };
       } else {

@@ -27,75 +27,82 @@ Future<bool?> addRedSocialModalBottom(
   return showModalBottomSheet<bool>(
       context: context,
       builder: (BuildContext context) {
-        return Container(
-          height: 200,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Column(
-            children: [
-              Form(
-                key: _formKey,
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 140,
-                      child: MultiSelectDropDown(
-                        suffixIcon: const Icon(Icons.arrow_drop_down, size: 13),
-                        clearIcon: const Icon(Icons.clear, size: 10),
-                        hint: "Red Social",
-                        inputDecoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.black54,
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Container(
+            height: 500,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Column(
+              children: [
+                Form(
+                  key: _formKey,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 140,
+                        child: MultiSelectDropDown(
+                          suffixIcon:
+                              const Icon(Icons.arrow_drop_down, size: 13),
+                          clearIcon: const Icon(Icons.clear, size: 10),
+                          hint: "Red Social",
+                          inputDecoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.black54,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        //showClearIcon: true,
-                        controller: _perfilController,
-                        onOptionSelected: (options) {
-                          //debugPrint(options.toString());
-                        },
-                        options: redes
-                            .map((RedSocial item) => ValueItem(
-                                label: item.nombre.toString(),
-                                value: item.nombre.toString()))
-                            .toList(),
-                        /* disabledOptions: const [
-                                                                    ValueItem(label: 'Option 1', value: '1')
-                                                                  ],*/
-                        selectionType: SelectionType.single,
-                        chipConfig: const ChipConfig(wrapType: WrapType.scroll),
-                        dropdownHeight: 150,
-                        optionTextStyle: const TextStyle(fontSize: 12),
-                        selectedOptionIcon: const Icon(
-                          Icons.check_circle,
-                          size: 10,
+                          //showClearIcon: true,
+                          controller: _perfilController,
+                          onOptionSelected: (options) {
+                            //debugPrint(options.toString());
+                          },
+                          options: redes
+                              .map((RedSocial item) => ValueItem(
+                                  label: item.nombre.toString(),
+                                  value: item.nombre.toString()))
+                              .toList(),
+                          /* disabledOptions: const [
+                                                                      ValueItem(label: 'Option 1', value: '1')
+                                                                    ],*/
+                          selectionType: SelectionType.single,
+                          chipConfig:
+                              const ChipConfig(wrapType: WrapType.scroll),
+                          dropdownHeight: 150,
+                          optionTextStyle: const TextStyle(fontSize: 12),
+                          selectedOptionIcon: const Icon(
+                            Icons.check_circle,
+                            size: 10,
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: formInput(
-                        label: "URL Perfil Red Social",
-                        controller: controllerInstagram,
-                        validator: (value) => emptyOrNull(value, "URL Perfil"),
+                      Expanded(
+                        child: formInput(
+                          label: "URL Perfil Red Social",
+                          controller: controllerInstagram,
+                          validator: (value) =>
+                              emptyOrNull(value, "URL Perfil"),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      if (_perfilController.selectedOptions.isEmpty) {
-                        customToast(
-                            "Seleccione la red Social", context, "isError");
-                      } else {
-                        add(_perfilController.selectedOptions.first.value,
-                            controllerInstagram.text);
-                        Navigator.pop(context, true);
+                ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        if (_perfilController.selectedOptions.isEmpty) {
+                          customToast(
+                              "Seleccione la red Social", context, "isError");
+                        } else {
+                          add(_perfilController.selectedOptions.first.value,
+                              controllerInstagram.text);
+                          Navigator.pop(context, true);
+                        }
                       }
-                    }
-                  },
-                  child: const Text("Agregar", style: TextStyle(fontSize: 16))),
-            ],
+                    },
+                    child:
+                        const Text("Agregar", style: TextStyle(fontSize: 16))),
+              ],
+            ),
           ),
         );
       });
@@ -134,7 +141,7 @@ Widget containerRedSocial(String redSocial, String perfil) {
         ),
         Expanded(
             child: Container(
-          padding: const EdgeInsets.only(bottom: 29),
+          padding: const EdgeInsets.only(bottom: 20),
           child: TextFormField(
             textAlignVertical: TextAlignVertical.center,
             style: const TextStyle(fontSize: 14),

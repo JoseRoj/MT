@@ -234,7 +234,7 @@ class SupabdDatasource extends ClubConnectDataSource {
       '${dotenv.env["API_URL"]}/usuarios/stadistic',
       queryParameters: {'id_usuario': idusuario, 'id_equipo': idequipo},
     );
-
+    if (response.statusCode != 200) return [];
     List<MonthStadisticUser> stadistics =
         response.data["data"].map<MonthStadisticUser>((stadistic) {
       return MonthStadisticUser.fromJson(stadistic);
@@ -480,6 +480,8 @@ class SupabdDatasource extends ClubConnectDataSource {
         '${dotenv.env["API_URL"]}/solicitud/getEstado',
         queryParameters: {'id_usuario': idusuario, 'id_club': idclub},
       );
+      print(response.data["data"]);
+      if (response.data["data"] == "Admin") return "Admin";
       if (response.data["data"] == "") return "";
       return response.data["data"][0]["estado"];
     } catch (e) {
@@ -501,6 +503,26 @@ class SupabdDatasource extends ClubConnectDataSource {
       return equipos;
     } catch (e) {
       return [];
+    }
+  }
+
+  @override
+  Future<bool> deleteEquipo(int idequipo) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.delete(
+        '${dotenv.env["API_URL"]}/equipo/deleteEquipo',
+        queryParameters: {
+          'id_equipo': idequipo,
+        },
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
     }
   }
 

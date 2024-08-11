@@ -11,6 +11,7 @@ import 'package:clubconnect/presentation/views/club_equipos_view/drawer_view/all
 import 'package:clubconnect/presentation/views/club_equipos_view/drawer_view/informacion_club_view.dart';
 import 'package:clubconnect/presentation/views/club_equipos_view/drawer_view/solicitudes_view.dart';
 import 'package:clubconnect/presentation/widget.dart';
+import 'package:clubconnect/presentation/widget/OvalImage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -52,6 +53,7 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
   var viewRoutes = <Widget>[];
   @override
   void initState() {
+    print("JOJO");
     super.initState();
     _initializationFuture = _initializeData();
   }
@@ -83,6 +85,7 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
               idclub: widget.idclub,
               equipos: equipos,
               role: roleValue,
+              getEquipos: () => getEquipos(),
             ),
             AllMiembrosWidget(
               idclub: widget.idclub,
@@ -111,8 +114,9 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
               idclub: widget.idclub,
               equipos: equipos,
               role: roleValue,
+              getEquipos: () => getEquipos(),
             ),
-            Container(),
+            InformacionClubWidget(club: club)
           ];
         });
       }
@@ -120,6 +124,13 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
       // Maneja el error si ocurre
       print("Error: $error");
     }
+  }
+
+  Future<List<Equipo>> getEquipos() async {
+    final response =
+        await ref.read(clubConnectProvider).getEquipos(widget.idclub);
+    equipos = response;
+    return response;
   }
 
   Future<bool> addEquipo(String name) async {
@@ -156,23 +167,12 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
             ),
             child: Column(
               children: [
-                club!.club.logo == "" || club!.club.logo == null
-                    ? ClipOval(
-                        child: Image.asset(
-                          'assets/nofoto.jpeg',
-                          fit: BoxFit.cover,
-                          width: 80,
-                          height: 80,
-                        ),
-                      )
-                    : ClipOval(
-                        child: Image.memory(
-                          logoClub!,
-                          fit: BoxFit.cover,
-                          width: 80,
-                          height: 80,
-                        ),
-                      ),
+                ImageOval(
+                  club!.club.logo,
+                  imagenFromBase64(club!.club.logo),
+                  80,
+                  80,
+                ),
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Text(
@@ -276,28 +276,27 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
             return Scaffold(
               key: _scaffoldKey,
               appBar: AppBar(
-                centerTitle: false,
-                title: Text(title,
-                    style: AppTheme().getTheme().textTheme.titleSmall),
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () {
-                    widget.pageIndex == 0
-                        ? context.go('/home/0')
-                        : context.go('/home/0/club/${widget.idclub}/0');
-                  },
-                ),
-                actions: role == "Administrador"
-                    ? <Widget>[
-                        IconButton(
-                          icon: const Icon(Icons.menu),
-                          onPressed: () {
-                            _scaffoldKey.currentState!.openDrawer();
-                          },
-                        ),
-                      ]
-                    : null,
-              ),
+                  centerTitle: false,
+                  title: Text(title,
+                      style: AppTheme().getTheme().textTheme.titleSmall),
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      widget.pageIndex == 0
+                          ? context.go('/home/0')
+                          : context.go('/home/0/club/${widget.idclub}/0');
+                    },
+                  ),
+                  actions: role == "Administrador"
+                      ? <Widget>[
+                          IconButton(
+                            icon: const Icon(Icons.menu),
+                            onPressed: () {
+                              _scaffoldKey.currentState!.openDrawer();
+                            },
+                          ),
+                        ]
+                      : null),
               drawer: drawer(),
               body: IndexedStack(
                 index: widget.pageIndex,
@@ -325,35 +324,40 @@ void _showCreateTeamModal(
   showModalBottomSheet(
     context: context,
     builder: (BuildContext context) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(
-              'Crear Equipo',
-              style: appTheme.textTheme.bodyLarge,
+      return Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  'Crear Equipo',
+                  style: appTheme.textTheme.bodyLarge,
+                ),
+                Form(
+                  key: keyForm,
+                  child: formInput(
+                      label: "Nombre",
+                      controller: controllername,
+                      validator: validator),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (keyForm.currentState!.validate()) {
+                      addEquipo(controllername
+                          .text); // Acción cuando se presiona el botón
+                      Navigator.pop(context);
+                      controllername.clear();
+                    }
+                    // Acción cuando se presiona el botón
+                  },
+                  child: Text('Crear', style: appTheme.textTheme.bodyMedium),
+                ),
+              ],
             ),
-            Form(
-              key: keyForm,
-              child: formInput(
-                  label: "Nombre",
-                  controller: controllername,
-                  validator: validator),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (keyForm.currentState!.validate()) {
-                  addEquipo(controllername
-                      .text); // Acción cuando se presiona el botón
-                  Navigator.pop(context);
-                }
-                // Acción cuando se presiona el botón
-              },
-              child: Text('Crear', style: appTheme.textTheme.bodyMedium),
-            ),
-          ],
-        ),
+          ),
+        ],
       );
     },
   );

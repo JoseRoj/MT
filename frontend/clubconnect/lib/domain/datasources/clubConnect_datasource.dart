@@ -31,6 +31,8 @@ abstract class ClubConnectDataSource {
   Future<List<User>> getMiembrosEquipo(
     int idequipo,
   );
+  Future<bool> deleteEquipo(int idequipo);
+
   Future<List<MonthStadisticUser>> getMonthStadisticUser(
       int idusuario, int idequipo);
 

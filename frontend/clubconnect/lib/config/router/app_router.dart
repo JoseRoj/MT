@@ -59,14 +59,15 @@ final appRouter =
                           int.parse(state.pathParameters['id'] ?? '0');
                       final equipoId =
                           int.parse(state.pathParameters['idequipo'] ?? '0');
-                      final userId = state.pathParameters['iduser'] ?? 'no-id';
+                      final userId =
+                          int.parse(state.pathParameters['iduser'] ?? '33');
                       final Map<String, dynamic>? extras =
                           state.extra as Map<String, dynamic>?;
 
                       return UserStadistic(
                           idclub: clubId,
                           idequipo: equipoId,
-                          iduser: int.parse(userId),
+                          iduser: userId,
                           usuario: extras!['usuario']);
                     },
                   ),

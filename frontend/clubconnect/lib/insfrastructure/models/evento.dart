@@ -81,12 +81,14 @@ class EventoFull {
 class Asistente {
   String nombre;
   String apellido1;
+  String imagen;
   String id;
 
   Asistente({
     required this.nombre,
     required this.apellido1,
     required this.id,
+    required this.imagen,
   });
 
   factory Asistente.fromRawJson(String str) =>
@@ -97,6 +99,7 @@ class Asistente {
   factory Asistente.fromJson(Map<String, dynamic> json) => Asistente(
         nombre: json["nombre"],
         apellido1: json["apellido1"],
+        imagen: json["imagen"] ?? "",
         id: json["id"],
       );
 
@@ -104,5 +107,6 @@ class Asistente {
         "nombre": nombre,
         "apellido1": apellido1,
         "id": id,
+        "imagem": imagen,
       };
 }
