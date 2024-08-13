@@ -36,7 +36,7 @@ module.exports = {
     try {
       /** Comprobar si es el admin */
       let query = `SELECT COUNT (*) FROM "Administra" WHERE id_usuario = $1 AND id_club = $2;`;
-      const response = await connectionPostgres.query(query, [
+      var response = await connectionPostgres.query(query, [
         id_usuario,
         id_club,
       ]);

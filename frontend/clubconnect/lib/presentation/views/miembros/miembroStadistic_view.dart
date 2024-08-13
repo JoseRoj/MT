@@ -57,15 +57,15 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
       final stats = await ref
           .read(clubConnectProvider)
           .getMonthStadisticUser(widget.iduser, widget.idequipo);
-      print(stats);
+      print("Holanda" + stats.toString());
 
-      /*data = <PieData>[
-        PieData(Colors.lightGreen, [], 'Asistido'),
+      data = <PieData>[
+        PieData(Colors.lightGreen, stats.first.participation, 'Asistido'),
         PieData(
             Colors.red,
             stats.first.totalEventos - stats.first.participation,
             'No Asistido'),
-      ];*/
+      ];
 
       setState(() {
         monthStadistic = stats;

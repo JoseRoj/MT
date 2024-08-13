@@ -80,8 +80,9 @@ class PerfilState extends ConsumerState<Perfil> {
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
       imagen = File(pickedFile.path);
+      base64Image = await toBase64C(pickedFile.path);
+
       setState(() {
-        base64Image = toBase64C(pickedFile.path).toString();
         user!.imagen = base64Image;
       });
     }

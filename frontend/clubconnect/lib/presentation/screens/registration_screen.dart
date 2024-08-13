@@ -6,6 +6,7 @@ import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/widget/formInput.dart';
+import 'package:clubconnect/presentation/widget/modalCarga.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,6 +65,7 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       setState(() {
         imagen = File(pickedFile.path);
       });
+      base64Image = await toBase64C(pickedFile.path);
     }
     Navigator.of(context).pop();
   }
@@ -309,6 +311,16 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     FocusScope.of(context).unfocus();
+                    /*showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (BuildContext context) {
+                        return modalCarga(
+                            "Creando cuenta, espera un momento .... ");
+                      },
+                    );*/
+                    // Navigator.of(context).pop();
+
                     if (_formKey.currentState!.validate()) {
                       if (_passwordController.text !=
                           _reppasswordController.text) {
@@ -333,7 +345,18 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                           apellido2: _apellido2Controller.text,
                           imagen: base64Image,
                         );
+                        showDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          builder: (BuildContext context) {
+                            return modalCarga(
+                                "Creando cuenta, espera un momento .... ");
+                          },
+                        );
                         await ref.read(clubConnectProvider).createUser(user);
+                        Navigator.of(context).pop();
+                        //FocusScope.of(context).unfocus();
+
                         customToast(
                             "Registrado con éxito", context, "isSuccess");
                       }

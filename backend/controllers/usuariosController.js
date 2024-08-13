@@ -235,7 +235,7 @@ module.exports = {
                 COUNT(*) AS total_eventos
             FROM 
                 "Evento"
-            WHERE fecha >= (CURRENT_DATE - INTERVAL '5 months')
+            WHERE fecha >= (CURRENT_DATE - INTERVAL '5 months') AND id_equipo = $2
             GROUP BY 
                 EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha)
             ) countEventos

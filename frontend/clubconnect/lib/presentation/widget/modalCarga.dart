@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 Widget modalCarga(String text) {
   return AlertDialog(
     content: SizedBox(
-      height: 100,
       child: Column(
+        mainAxisSize:
+            MainAxisSize.min, // Ajusta el tamaño de la columna al contenido
+
         children: [
           const CircularProgressIndicator(),
           const SizedBox(height: 20),
-          Text(text),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     ),
