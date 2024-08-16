@@ -56,7 +56,7 @@ abstract class ClubConnectDataSource {
 
   //* --------------- EVENTOS ----------------*//
   Future<List<EventoFull>?> getEventos(
-      int idequipo, String estado, DateTime initialDate, DateTime endDate);
+      int idequipo, String estado, DateTime initialDate, int month, int year);
   Future<bool> createEvento(
       List<String> fechas,
       String horaInicio,

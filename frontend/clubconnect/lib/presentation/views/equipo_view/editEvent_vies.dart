@@ -1,6 +1,7 @@
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/helpers/toast.dart';
+import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/insfrastructure/models/evento.dart';
 import 'package:clubconnect/insfrastructure/models/user.dart';
@@ -17,6 +18,7 @@ import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
 class EditEventWidget extends ConsumerStatefulWidget {
+  final EventoFull evento;
   final DateTime fechaEdit;
   final TimeOfDay horaInicio;
   final TimeOfDay horaFin;
@@ -35,6 +37,7 @@ class EditEventWidget extends ConsumerStatefulWidget {
 
   EditEventWidget({
     super.key,
+    required this.evento,
     required this.fechaEdit,
     required this.horaInicio,
     required this.horaFin,
@@ -60,8 +63,8 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
   final TextEditingController controllerTitleEdit = TextEditingController();
   final TextEditingController controllerLugarEdit = TextEditingController();
   late DateTime _fechaEdit;
-  late TimeOfDay _horaInicio;
-  late TimeOfDay _horaFin;
+  late String _horaInicio;
+  late String _horaFin;
   late String descripcionEdit;
   late List<Asistente>? _asistentes;
   late List<int>? _asistentesId;
@@ -72,14 +75,14 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
   @override
   void initState() {
     super.initState();
-
-    _fechaEdit = widget.fechaEdit;
-    _horaInicio = widget.horaInicio;
-    _horaFin = widget.horaFin;
-    _asistentes = widget.asistentes;
-    controllerDescriptionEdit.text = widget.descripcionEdit ?? "";
-    controllerTitleEdit.text = widget.tituloEdit ?? "";
-    controllerLugarEdit.text = widget.lugarEdit ?? "";
+    print("Entre EditEventWidget");
+    _fechaEdit = widget.evento.evento.fecha;
+    _horaInicio = widget.evento.evento.horaInicio;
+    _horaFin = widget.evento.evento.horaFinal;
+    _asistentes = widget.evento.asistentes;
+    controllerDescriptionEdit.text = widget.evento.evento.descripcion ?? "";
+    controllerTitleEdit.text = widget.evento.evento.titulo ?? "";
+    controllerLugarEdit.text = widget.evento.evento.lugar ?? "";
     _employeeDataSource = DataSource(AsistentesData: _asistentes!);
     miembros = widget.miembros
         .where((element) =>
@@ -160,7 +163,7 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.4,
                   child: ElevatedButton.icon(
-                    label: Text("${_horaInicio.hour}:${_horaInicio.minute}:00",
+                    label: Text("${_horaInicio}",
                         style: widget.styleText.labelMedium,
                         textAlign: TextAlign.center),
                     icon: const Icon(Icons.access_time),
@@ -173,12 +176,13 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
                             2021,
                             1,
                             1,
-                            _horaInicio.hour,
-                            _horaInicio.minute,
+                            convertirStringATimeOfDay(_horaFin).hour,
+                            convertirStringATimeOfDay(_horaInicio).minute,
                           ),
                           onDateTimeChanged: (DateTime newDateTime) {
                             setState(() {
-                              _horaInicio = TimeOfDay.fromDateTime(newDateTime);
+                              _horaInicio = TimeOfDay.fromDateTime(newDateTime)
+                                  .format(context);
                             });
                           },
                         ),
@@ -190,7 +194,7 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.4,
                   child: ElevatedButton.icon(
-                    label: Text("${_horaFin.hour}:${_horaFin.minute}:00",
+                    label: Text("${_horaFin}",
                         style: widget.styleText.labelMedium,
                         textAlign: TextAlign.center),
                     icon: const Icon(Icons.access_time),
@@ -202,7 +206,9 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
                           initialDateTime: _fechaEdit,
                           onDateTimeChanged: (DateTime newDateTime) {
                             setState(() {
-                              _horaFin = TimeOfDay.fromDateTime(newDateTime);
+                              _horaFin = TimeOfDay.fromDateTime(newDateTime)
+                                  .format(context);
+                              print(_horaFin);
                             });
                           },
                         ),
@@ -318,9 +324,9 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
             print(_asistentesId);
             final response = await ref.read(clubConnectProvider).editEvento(
                 _fechaEdit.toIso8601String(),
-                _horaInicio.format(context),
+                _horaInicio,
                 controllerDescriptionEdit.text,
-                _horaFin.format(context),
+                _horaFin,
                 widget.eventId!,
                 controllerTitleEdit.text,
                 controllerLugarEdit.text,

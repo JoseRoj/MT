@@ -155,16 +155,14 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
   }
 
   //* DRAWER
-  Widget? drawer() {
+  Widget? drawer(Color color) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
           DrawerHeader(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            decoration: const BoxDecoration(
-              color: Colors.blue,
-            ),
+            decoration: BoxDecoration(color: color),
             child: Column(
               children: [
                 ImageOval(
@@ -297,7 +295,7 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
                           ),
                         ]
                       : null),
-              drawer: drawer(),
+              drawer: drawer(AppTheme().getTheme().primaryColor),
               body: IndexedStack(
                 index: widget.pageIndex,
                 children: viewRoutes,

@@ -75,8 +75,8 @@ class MiembrosEquipoWidgetState extends ConsumerState<MiembrosEquipoWidget> {
                   DrawerHeader(
                     padding: const EdgeInsets.symmetric(
                         vertical: 10, horizontal: 10),
-                    decoration: const BoxDecoration(
-                      color: Colors.blue,
+                    decoration: BoxDecoration(
+                      color: AppTheme().getTheme().primaryColor,
                     ),
                     child: Column(
                       children: [

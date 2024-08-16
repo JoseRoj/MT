@@ -15,8 +15,8 @@ class CreateEventWidget extends ConsumerStatefulWidget {
   final Equipo equipo;
   final int idclub;
   final dynamic styleText;
-  final Future<void> Function(String estado, bool? pullRefresh)
-      getEventosCallback;
+  final Future<void> Function(
+      String estado, bool? pullRefresh, int month, int year) getEventosCallback;
 
   CreateEventWidget({
     super.key,
@@ -275,7 +275,8 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
                   if (response == true) {
                     customToast(
                         "Evento Registrado con éxito", context, "isSuccess");
-                    await widget.getEventosCallback(EstadosEventos.todos, true);
+                    await widget.getEventosCallback(EstadosEventos.todos, true,
+                        DateTime.now().month, DateTime.now().year);
                   } else {
                     customToast(
                         "Error al registrar evento", context, "isError");

@@ -7,21 +7,25 @@ Widget userList({
   required String? image,
 }) {
   return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 2),
-    width: 50,
+    margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(10),
+    ),
+    width: 70,
     // Ajusta el ancho de los elementos según sea necesario
     child: Column(
       children: [
         ImageOval(
           image!,
           imagenFromBase64(image),
-          50,
-          50,
+          60,
+          60,
         ),
         Text(
           name,
           style: const TextStyle(fontSize: 12, overflow: TextOverflow.ellipsis),
           maxLines: 2,
+          textAlign: TextAlign.center,
         ),
       ],
     ),

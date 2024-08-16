@@ -1,34 +1,66 @@
 import 'package:clubconnect/config/theme/app_theme.dart';
+import 'package:clubconnect/domain/repositories/club_repository.dart';
 import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
+import 'package:clubconnect/insfrastructure/models/evento.dart';
+import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/widget/Cardevento.dart';
 import 'package:clubconnect/presentation/widget/cuppertioDate.dart';
 import 'package:flutter/material.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:go_router/go_router.dart';
+
 enum Menu { eliminar, editar, terminar }
+
+final List<Meses> Months = <Meses>[
+  Meses("Enero", 1),
+  Meses("Febrero", 2),
+  Meses("Marzo", 3),
+  Meses("Abril", 4),
+  Meses("Mayo", 5),
+  Meses("Junio", 6),
+  Meses("Julio", 7),
+  Meses("Agosto", 8),
+  Meses("Septiembre", 9),
+  Meses("Octubre", 10),
+  Meses("Noviembre", 11),
+  Meses("Diciembre", 12),
+];
+
+class Meses {
+  Meses(this.mes, this.value);
+  final String mes;
+  final int value;
+}
 
 class EventsActives extends ConsumerStatefulWidget {
   final int idequipo;
   final Equipo equipo;
   DateTime? fechaSeleccionada;
+  EventoFull? eventoSelected;
+  MonthYear dateSelected;
   ValueNotifier<int> indexNotifier;
   String role;
   List<EventoFull>? eventosActivos;
-  final Function(DateTime? fecha) updateFechaActivosCallback;
+  final Function(MonthYear? fecha) updateFechaActivosCallback;
+  final Function(EventoFull evento) updateEventoSelectedCallback;
   final Future<List<EventoFull>?> Function(String estado, bool? pullRefresh,
-      DateTime? initDate, DateTime? endDate) getEventosCallback;
+      DateTime? initDate, int month, int year) getEventosCallback;
 
   EventsActives(
       {super.key,
       required this.equipo,
       required this.idequipo,
+      required this.dateSelected,
+      this.eventoSelected,
       required this.fechaSeleccionada,
       required this.indexNotifier,
       required this.eventosActivos,
       required this.role,
+      required this.updateEventoSelectedCallback,
       required this.updateFechaActivosCallback,
       required this.getEventosCallback});
 
@@ -36,19 +68,49 @@ class EventsActives extends ConsumerStatefulWidget {
   EventsActivesState createState() => EventsActivesState();
 }
 
+List<MonthYear> obtenerProximosTresMeses() {
+  DateTime ahora = DateTime.now();
+  int mesActual = ahora.month;
+  int anoActual = ahora.year;
+
+  List<MonthYear> mesesFuturos = [];
+
+  // Añadir los próximos 3 meses
+  for (int i = 0; i < 6; i++) {
+    int mes = mesActual + i;
+    int ano = anoActual;
+
+    if (mes > 12) {
+      mes -= 12;
+      ano += 1;
+    }
+
+    String nombreMes = Months.firstWhere((m) => m.value == mes).mes;
+    mesesFuturos.add(MonthYear(mes, ano, nombreMes));
+  }
+
+  return mesesFuturos;
+}
+
 class EventsActivesState extends ConsumerState<EventsActives> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   DateTime? initfechaSeleccionada = DateTime.now();
+  TextEditingController mesController = TextEditingController(
+      text: Months.where((e) => e.value == DateTime.now().month).first.mes);
+
   final styleText = AppTheme().getTheme().textTheme; // Estilo de texto
-  List<EventoFull>? eventosActivos = [];
   var buttonText = "";
   bool loading = false;
+  List<EventoFull>? eventosActivos = [];
+  EventoFull? eventoSelected;
+
+  List<MonthYear> proximoTresMeses = obtenerProximosTresMeses();
 
   @override
   void initState() {
     super.initState();
-    print("initState Event");
     initfechaSeleccionada = widget.fechaSeleccionada;
+    eventoSelected = widget.eventoSelected;
     eventosActivos = widget.eventosActivos;
   }
 
@@ -66,6 +128,7 @@ class EventsActivesState extends ConsumerState<EventsActives> {
 
   @override
   Widget build(BuildContext context) {
+    print("Refresh 1o");
     return Scaffold(
       key: _scaffoldKey,
       // Asociar la GlobalKey al Scaffold
@@ -96,8 +159,8 @@ class EventsActivesState extends ConsumerState<EventsActives> {
                   DrawerHeader(
                     padding: const EdgeInsets.symmetric(
                         vertical: 10, horizontal: 10),
-                    decoration: const BoxDecoration(
-                      color: Colors.blue,
+                    decoration: BoxDecoration(
+                      color: AppTheme().getTheme().primaryColor,
                     ),
                     child: Column(
                       children: [
@@ -161,68 +224,130 @@ class EventsActivesState extends ConsumerState<EventsActives> {
                       // Acción cuando se presiona la opción 2 del Drawer
                     },
                   ),
+                  ListTile(
+                    leading: const Icon(Icons.event_repeat_rounded),
+                    title: Text(
+                      'Config Eventos Recurrentes',
+                      style: styleText.bodyMedium,
+                    ),
+                    onTap: () {
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                          '/login', (Route<dynamic> route) => false);
+                    },
+                  )
                 ],
               ),
             )
           : null,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          eventosActivos = await widget.getEventosCallback(
-              EstadosEventos.activo,
-              true,
-              DateTime.now(),
-              initfechaSeleccionada!);
-        },
-        child: Stack(
-          children: [
-            Column(
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  child: Container(
-                    margin:
-                        const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        const Icon(Icons.calendar_today),
-                        Text(
-                          "Hasta ${DateFormat('MM/dd/yyyy').format(initfechaSeleccionada!)}",
-                          style: styleText.labelMedium,
-                          textAlign: TextAlign.end,
-                        ),
-                      ],
-                    ),
-                  ),
-                  onTap: () async {
-                    initfechaSeleccionada = await cuppertinoModal(
-                        context, initfechaSeleccionada, DateTime.now(), null);
-                    if (initfechaSeleccionada != null) {
-                      /*setState(() {
-                                      loading = true;
-                                    });*/
-                      widget.updateFechaActivosCallback(initfechaSeleccionada);
-                      /*DateFormat('dd / MM / yyyy')
+                DropdownMenu<MonthYear>(
+                  textStyle: styleText.labelSmall,
+                  initialSelection: proximoTresMeses
+                      .where((e) => e.month == widget.dateSelected.month)
+                      .first,
+                  controller: mesController,
+                  inputDecorationTheme: InputDecorationTheme(
+                      fillColor: AppTheme().getTheme().colorScheme.onSecondary,
+                      labelStyle: styleText.labelSmall,
+                      filled: true,
+                      constraints: const BoxConstraints(maxHeight: 40),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                              color:
+                                  AppTheme().getTheme().colorScheme.onSecondary,
+                              width: 1))),
+                  requestFocusOnTap: true,
+                  label: const Text('Mes'),
+                  onSelected: (MonthYear? value) async {
+                    print("Value : $value");
+                    widget.updateFechaActivosCallback(value);
+                    /*DateFormat('dd / MM / yyyy')
                                             .format(fechaSeleccionada);*/
+                    widget.dateSelected = value!;
+                    widget.eventosActivos = await widget.getEventosCallback(
+                        EstadosEventos.activo,
+                        true,
+                        DateTime.now(),
+                        value!.month,
+                        value.year);
+                    setState(() {});
+                  },
+                  menuStyle: MenuStyle(
+                    backgroundColor: WidgetStateProperty.all(
+                        AppTheme().getTheme().colorScheme.surfaceContainerLow),
+                    padding: WidgetStateProperty.all(EdgeInsets.zero),
+                  ),
+                  dropdownMenuEntries: proximoTresMeses
+                      .map<DropdownMenuEntry<MonthYear>>((MonthYear mes) {
+                    return DropdownMenuEntry<MonthYear>(
+                      value: mes,
+                      label: mes.nameMonth,
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all(
+                            const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 0)),
+                        textStyle:
+                            WidgetStateProperty.all(styleText.labelSmall),
+                      ),
 
-                      await widget.getEventosCallback(EstadosEventos.activo,
-                          true, DateTime.now(), initfechaSeleccionada!);
-                      /*setState(() {
+                      //enabled: color.label != 'Grey',
+                    );
+                  }).toList(),
+                ),
+                GestureDetector(
+                  onTap: () async {
+                    widget.eventoSelected = null;
+
+                    /*widget.updateFechaActivosCallback(
+                              initfechaSeleccionada);*/
+                    /*DateFormat('dd / MM / yyyy')
+                                            .format(fechaSeleccionada);*/
+                    widget.eventosActivos = await widget.getEventosCallback(
+                        EstadosEventos.activo,
+                        true,
+                        DateTime.now(),
+                        widget.dateSelected.month,
+                        widget.dateSelected.year);
+
+                    setState(() {});
+                    /*setState(() {
                                       loading = false;
                                     });*/
-                    }
                   },
-                ),
-                Expanded(
-                  child: CardEvento(
-                    eventos: eventosActivos!,
-                    buttonText: buttonText,
-                    idequipo: widget.idequipo,
-                    endDate: initfechaSeleccionada!,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.refresh),
+                      Text(
+                        "Actualizar",
+                        style: styleText.labelMedium,
+                      ),
+                    ],
                   ),
-                ),
+                )
               ],
             ),
-            loading
+          ),
+          CardEvento(
+            eventos: widget.eventosActivos,
+            getEventosCallback: widget.getEventosCallback,
+            updateEventoSelectedCallback: widget.updateEventoSelectedCallback,
+            dateSelected: widget.dateSelected,
+            eventoSelected: widget.eventoSelected,
+            idequipo: widget.idequipo,
+            endDate: initfechaSeleccionada!,
+          ),
+        ],
+      ),
+      /*loading
                 ? Positioned(
                     top: 20,
                     right: MediaQuery.of(context).size.width / 2 - 15,
@@ -230,10 +355,7 @@ class EventsActivesState extends ConsumerState<EventsActives> {
                       backgroundColor: Colors.white,
                     ),
                   )
-                : Container(),
-          ],
-        ),
-      ),
+                : Container(),*/
     );
   }
 }

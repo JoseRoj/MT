@@ -7,17 +7,16 @@ const estados = {
   todos: "Todos",
 };
 module.exports = {
-  async getEventos(id_equipo, estado, initialDate, endDate) {
+  async getEventos(id_equipo, estado, initialDate, month, year) {
     /* Trnasformar initialDate */
     const timeInit = moment(initialDate, "YYYY-MM-DD HH:mm:ss.SSSSSS");
-    const timeEnd = moment(endDate, "YYYY-MM-DD HH:mm:ss.SSSSSS");
+    //const timeEnd = moment(endDate, "YYYY-MM-DD HH:mm:ss.SSSSSS");
 
     // Configura la zona horaria a Chile/Continental
     timeInit.tz("America/Santiago");
-    timeEnd.tz("America/Santiago");
 
     const formattedTimeInitString = timeInit.toDate().toISOString();
-    const formattedTimeEndString = timeEnd.toDate().toISOString();
+    //const formattedTimeEndString = timeEnd.toDate().toISOString();
 
     try {
       const data = [];
@@ -30,26 +29,33 @@ module.exports = {
       let response;
       if (estado == "Todos") {
         /* Obtener Todos los eventos */
-        query = `SELECT "Evento".* FROM public."Evento" 
-              WHERE "Evento".id_equipo = $1
-              AND "Evento".fecha BETWEEN $2 AND $3
-              ORDER BY "Evento".fecha ASC`;
+        query = `SELECT "Evento".*
+          FROM public."Evento"
+          WHERE "Evento".id_equipo = $1
+            AND "Evento".fecha >= $2
+            AND EXTRACT(MONTH FROM "Evento".fecha) = $3
+            AND EXTRACT(YEAR FROM "Evento".fecha) = $4
+          ORDER BY "Evento".fecha ASC;`;
         response = await connectionPostgres.query(query, [
           id_equipo,
           formattedTimeInitString,
-          formattedTimeEndString,
+          month,
+          year,
         ]);
       } else {
         /* Obtener Todos los eventos */
         query = `SELECT "Evento".* FROM public."Evento" 
               WHERE "Evento".id_equipo = $1 AND "Evento".estado = $2
-              AND "Evento".fecha BETWEEN $3 AND $4
+                AND "Evento".fecha >= $3
+                AND EXTRACT(MONTH FROM "Evento".fecha) = $4
+                AND EXTRACT(YEAR FROM "Evento".fecha) = $5
               ORDER BY "Evento".fecha ASC`;
         response = await connectionPostgres.query(query, [
           id_equipo,
           estado,
           formattedTimeInitString,
-          formattedTimeEndString,
+          month,
+          year,
         ]);
       }
 
@@ -76,6 +82,7 @@ module.exports = {
     titulo,
     lugar
   ) {
+    console.log("Horas" + horaInicio + " " + horaFin);
     try {
       let query = `INSERT INTO public."Evento" (fecha, id_equipo, descripcion, hora_inicio, hora_final, titulo, estado, Lugar ) VALUES `;
       const values = [];

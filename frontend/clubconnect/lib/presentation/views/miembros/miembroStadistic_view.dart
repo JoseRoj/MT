@@ -59,14 +59,15 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
           .getMonthStadisticUser(widget.iduser, widget.idequipo);
       print("Holanda" + stats.toString());
 
-      data = <PieData>[
-        PieData(Colors.lightGreen, stats.first.participation, 'Asistido'),
-        PieData(
-            Colors.red,
-            stats.first.totalEventos - stats.first.participation,
-            'No Asistido'),
-      ];
-
+      if (stats.length != 0) {
+        data = <PieData>[
+          PieData(Colors.lightGreen, stats.first.participation, 'Asistido'),
+          PieData(
+              Colors.red,
+              stats.first.totalEventos - stats.first.participation,
+              'No Asistido'),
+        ];
+      }
       setState(() {
         monthStadistic = stats;
         selected = stats.first;

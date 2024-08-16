@@ -552,7 +552,7 @@ class SupabdDatasource extends ClubConnectDataSource {
 
   @override
   Future<List<EventoFull>?> getEventos(int idequipo, String estado,
-      DateTime initialDate, DateTime endDate) async {
+      DateTime initialDate, int month, int year) async {
     final dio = Dio(BaseOptions(headers: {}));
     final response = await dio.get(
       '${dotenv.env["API_URL"]}/eventos',
@@ -560,7 +560,8 @@ class SupabdDatasource extends ClubConnectDataSource {
         'id_equipo': idequipo,
         'estado': estado,
         'initialDate': initialDate,
-        'endDate': endDate
+        'month': month,
+        'year': year
       },
     );
 

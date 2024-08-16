@@ -1,6 +1,7 @@
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
+import 'package:clubconnect/insfrastructure/models/evento.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/views/equipo_view/allEvents_view.dart';
@@ -11,6 +12,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum Menu { eliminar, editar, terminar }
+
+final List<Meses> Months = <Meses>[
+  Meses("Enero", 1),
+  Meses("Febrero", 2),
+  Meses("Marzo", 3),
+  Meses("Abril", 4),
+  Meses("Mayo", 5),
+  Meses("Junio", 6),
+  Meses("Julio", 7),
+  Meses("Agosto", 8),
+  Meses("Septiembre", 9),
+  Meses("Octubre", 10),
+  Meses("Noviembre", 11),
+  Meses("Diciembre", 12),
+];
 
 class EquipoSpecific extends ConsumerStatefulWidget {
   static const name = 'equipo';
@@ -31,6 +47,10 @@ class EquipoSpecific extends ConsumerStatefulWidget {
 class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
   //*  --- VARIABLES GENERALES PARA TODAS LAS OPCIONES --- */
   late Future<void> _initializationFuture;
+  MonthYear dateSelected = MonthYear(DateTime.now().month, DateTime.now().year,
+      Months[DateTime.now().month - 1].mes);
+  EventoFull? eventoSelected;
+
   String role = '';
   final ValueNotifier<int> _indexNotifier = ValueNotifier<int>(0);
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -62,6 +82,12 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
   //* --------------------------------------------------------
 
   //* ALL EVENTS */
+  MonthYear selectedMonthYear = MonthYear(
+    DateTime.now().month,
+    DateTime.now().year,
+    Months[DateTime.now().month - 1].mes,
+  );
+
   DateTime? initfechaSeleccionada = DateTime.now();
   DateTime? endFechaSeleccionada = DateTime.now().add(const Duration(days: 30));
   List<EventoFull>? eventos = []; // Lista de eventos
@@ -85,7 +111,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
       final eventosActivosValue = await ref
           .read(clubConnectProvider)
           .getEventos(widget.idequipo, EstadosEventos.activo, DateTime.now(),
-              fechaSeleccionada!);
+              DateTime.now().month, DateTime.now().year);
 
       final roleValue = await ref
           .read(clubConnectProvider)
@@ -103,7 +129,8 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
             widget.idequipo,
             EstadosEventos.todos,
             DateTime.now(),
-            fechaSeleccionada!);
+            DateTime.now().month,
+            DateTime.now().year);
         print("Eventos: ${eventosValue!.length}");
         setState(() {
           eventosActivos = eventosActivosValue;
@@ -128,9 +155,21 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
     }
   }
 
-  void updateFechaActivos(DateTime? fecha) {
+  void updateMonthYear(MonthYear? monthYear) {
+    if (monthYear != null) {
+      selectedMonthYear = monthYear;
+    }
+  }
+
+  void updateFechaActivos(MonthYear? fecha) {
     if (fecha != null) {
-      fechaSeleccionada = fecha;
+      dateSelected = fecha;
+    }
+  }
+
+  void updateEventoSelected(EventoFull? evento) {
+    if (evento != null) {
+      eventoSelected = evento;
     }
   }
 
@@ -140,46 +179,41 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
       * pullRefresh = true | false
   */
   Future<List<EventoFull>?> getEventos(String estado, bool? pullRefresh,
-      DateTime initDate, DateTime endDate) async {
-    print("Refresh 2");
-
+      DateTime initDate, int month, int year) async {
     List<EventoFull>? eventsResponse;
     if (pullRefresh != null && pullRefresh) {
       loading = true;
       //setState(() {});
     }
-    estado == EstadosEventos.todos
-        ? (
-            eventsResponse = await ref.read(clubConnectProvider).getEventos(
-                  widget.idequipo,
-                  estado,
-                  initDate,
-                  endDate,
-                ),
-            eventos = eventsResponse
-          )
-        : (
-            eventsResponse = await ref
-                .read(clubConnectProvider)
-                .getEventos(widget.idequipo, estado, initDate, endDate),
-            eventosActivos = eventsResponse
+    if (estado == EstadosEventos.todos) {
+      eventsResponse = await ref.read(clubConnectProvider).getEventos(
+            widget.idequipo,
+            estado,
+            initDate,
+            month,
+            year,
           );
+      eventos = eventsResponse;
+    } else {
+      eventsResponse = await ref
+          .read(clubConnectProvider)
+          .getEventos(widget.idequipo, estado, initDate, month, year);
+      eventosActivos = eventsResponse;
+    }
     if (estado == "updateFull") {
       eventos = await ref.read(clubConnectProvider).getEventos(
             widget.idequipo,
             EstadosEventos.todos,
             initDate,
-            endDate,
+            month,
+            year,
           );
       eventosActivos = await ref.read(clubConnectProvider).getEventos(
-          widget.idequipo, EstadosEventos.activo, DateTime.now(), endDate);
+          widget.idequipo, EstadosEventos.activo, DateTime.now(), month, year);
     }
     if (pullRefresh != null && pullRefresh) {
       loading = false;
     }
-    print("Eventos: ${eventos!.length}");
-    print("Eventos Activos: ${eventosActivos!.length}");
-    setState(() {});
     return eventsResponse;
   }
 
@@ -202,13 +236,17 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
         return EventsActives(
           equipo: widget.team,
           fechaSeleccionada: fechaSeleccionada,
+          dateSelected: dateSelected,
+          eventoSelected: eventoSelected,
           eventosActivos: eventosActivos,
           role: role,
           idequipo: widget.idequipo,
           indexNotifier: _indexNotifier,
+          updateEventoSelectedCallback: (evento) =>
+              updateEventoSelected(evento),
           updateFechaActivosCallback: (fecha) => updateFechaActivos(fecha),
-          getEventosCallback: (estado, pullRefresh, initDate, endDate) =>
-              getEventos(estado, pullRefresh, DateTime.now(), endDate!),
+          getEventosCallback: (estado, pullRefresh, initDate, month, year) =>
+              getEventos(estado, pullRefresh, DateTime.now(), month, year),
         );
       case 1:
         return CreateEventWidget(
@@ -217,8 +255,8 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
           equipo: widget.team,
           idclub: widget.idclub,
           styleText: styleText,
-          getEventosCallback: (estado, pullRefresh) => getEventos(
-              estado, pullRefresh, DateTime.now(), fechaSeleccionada!),
+          getEventosCallback: (estado, pullRefresh, int month, int year) =>
+              getEventos(estado, pullRefresh, DateTime.now(), month, year),
         ); /*buildCreateEvents();*/
       case 2 || 3:
         return AllEventsWidget(
@@ -226,15 +264,17 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
             initfechaSeleccionada: initfechaSeleccionada,
             fechaSeleccionada: endFechaSeleccionada,
             role: role,
+            selectedMonthYear: selectedMonthYear,
             eventos: eventos,
             idclub: widget.idclub,
             equipo: widget.team,
             idequipo: widget.idequipo,
             miembros: miembros,
+            updateMonthYear: (monthYear) => updateMonthYear(monthYear),
             updateDate: (initDateSelected, endDateSelected) =>
                 updateFechas(initDateSelected, endDateSelected),
-            getEventosCallback: (estado, pullRefresh, initDate, endDate) =>
-                getEventos(estado, pullRefresh, initDate, endDate));
+            getEventosCallback: (estado, pullRefresh, initDate, month, year) =>
+                getEventos(estado, pullRefresh, initDate, month, year));
       case 4:
         return MiembrosEquipoWidget(
             idClub: int.parse(widget.idclub.toString()),
@@ -254,7 +294,6 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
   Widget build(BuildContext context) {
     print("Refresh");
 
-    print("Index: ${fechaSeleccionada}");
     if (role != "") {
       return ValueListenableBuilder(
         valueListenable: _indexNotifier,
