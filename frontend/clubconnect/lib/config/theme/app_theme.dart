@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppTheme {
   ThemeData getTheme() => ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Color.fromARGB(255, 85, 237, 115),
+        colorSchemeSeed: Color.fromARGB(255, 91, 180, 174),
         textTheme: const TextTheme(
           bodyLarge: TextStyle(
             color: Colors.black,

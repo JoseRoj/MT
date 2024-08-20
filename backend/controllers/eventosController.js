@@ -32,13 +32,11 @@ module.exports = {
         query = `SELECT "Evento".*
           FROM public."Evento"
           WHERE "Evento".id_equipo = $1
-            AND "Evento".fecha >= $2
-            AND EXTRACT(MONTH FROM "Evento".fecha) = $3
-            AND EXTRACT(YEAR FROM "Evento".fecha) = $4
+            AND EXTRACT(MONTH FROM "Evento".fecha) = $2
+            AND EXTRACT(YEAR FROM "Evento".fecha) = $3
           ORDER BY "Evento".fecha ASC;`;
         response = await connectionPostgres.query(query, [
           id_equipo,
-          formattedTimeInitString,
           month,
           year,
         ]);

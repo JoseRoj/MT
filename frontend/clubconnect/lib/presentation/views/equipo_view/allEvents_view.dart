@@ -26,7 +26,7 @@ class AllEventsWidget extends ConsumerStatefulWidget {
   final Equipo equipo;
   final String role;
   final List<User> miembros;
-  final List<EventoFull>? eventos;
+  List<EventoFull>? eventos;
   final ValueNotifier<int> indexNotifier;
   final Function(MonthYear monthYear) updateMonthYear;
   final Function(DateTime? initDateSelected, DateTime? endDateSelected)
@@ -61,7 +61,6 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  List<EventoFull>? eventos = [];
   final styleText = AppTheme().getTheme().textTheme;
   DateTime? initfechaSeleccionada = DateTime.now();
   DateTime? fechaSeleccionada = DateTime.now().add(const Duration(days: 30));
@@ -81,8 +80,14 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
   @override
   void initState() {
     super.initState();
-    eventos = widget.eventos;
-    print("Entre");
+    widget
+        .getEventosCallback(EstadosEventos.todos, false, initfechaSeleccionada!,
+            widget.selectedMonthYear.month, widget.selectedMonthYear.year)
+        .then((value) {
+      widget.eventos = value;
+      setState(() {});
+    });
+    print("Entre 1 " + widget.eventos![0].asistentes.length.toString());
     initfechaSeleccionada = widget.initfechaSeleccionada;
     fechaSeleccionada = widget.fechaSeleccionada;
   }
@@ -101,7 +106,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
       loading = true;
       setState(() {});
     }
-    eventos = await widget.getEventosCallback(
+    widget.eventos = await widget.getEventosCallback(
         estado, pullRefresh, initfechaSeleccionada!, 8, 2024);
 
     if (pullRefresh != null && pullRefresh) {
@@ -140,6 +145,8 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    print("Refresh 20 " + widget.eventos![0].asistentes.length.toString());
+
     Color colorprimary = AppTheme().getTheme().colorScheme.primary;
     return Scaffold(
       key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
@@ -258,7 +265,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
   Widget builderAllEvents() {
     return RefreshIndicator(
       onRefresh: () async {
-        eventos = await widget.getEventosCallback(
+        widget.eventos = await widget.getEventosCallback(
             EstadosEventos.todos,
             true,
             initfechaSeleccionada!,
@@ -296,7 +303,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                     const SizedBox(width: 10),
                     IconButton.filled(
                       onPressed: () async {
-                        eventos = await widget.getEventosCallback(
+                        widget.eventos = await widget.getEventosCallback(
                             EstadosEventos.todos,
                             true,
                             initfechaSeleccionada!,
@@ -404,7 +411,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
               // Your date selection widgets here
               Expanded(
                 child: ListView.builder(
-                  itemCount: eventos!.length,
+                  itemCount: widget.eventos!.length,
                   itemBuilder: (context, index) {
                     return buildEventCard(index);
                   },
@@ -515,7 +522,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
   Widget buildEventCard(int index) {
     ThemeData theme = AppTheme().getTheme();
     return GestureDetector(
-      onTap: () => modalEventDetails(eventos![index]),
+      onTap: () => modalEventDetails(widget.eventos![index]),
       child: Stack(children: [
         Container(
             padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 35),
@@ -559,7 +566,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                           textAlign: TextAlign.center,
                           maxLines: 1),
                       Container(
-                        child: Text("${eventos![index].evento.titulo} ",
+                        child: Text("${widget.eventos![index].evento.titulo} ",
                             style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 18,
@@ -575,7 +582,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                           Icon(Icons.group),
                           const SizedBox(width: 10),
                           Text(
-                              "Asistentes: ${eventos![index].asistentes.length}",
+                              "Asistentes: ${widget.eventos![index].asistentes.length}",
                               style: styleText.labelSmall),
                           SizedBox(
                             width: 10,
@@ -583,14 +590,14 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                           Icon(
                             Icons.circle,
                             size: 15,
-                            color:
-                                eventos![index].evento.estado.toLowerCase() ==
-                                        "activo"
-                                    ? colorAsistir
-                                    : colorCancelar,
+                            color: widget.eventos![index].evento.estado
+                                        .toLowerCase() ==
+                                    "activo"
+                                ? colorAsistir
+                                : colorCancelar,
                           ),
                           const SizedBox(width: 5),
-                          Text(eventos![index].evento.estado,
+                          Text(widget.eventos![index].evento.estado,
                               style: styleText.labelSmall),
                         ],
                       ),
@@ -632,25 +639,26 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                       Navigator.of(context).pop();
                       //indexWidget.value = 1;
                       setState(() {
-                        eventId = int.parse(eventos![index]
-                            .evento
-                            .id!); // eventos![index].evento.id;
-                        fechaEdit = eventos![index].evento.fecha;
+                        eventId = int.parse(widget.eventos![index].evento
+                            .id!); // widget.eventos![index].evento.id;
+                        fechaEdit = widget.eventos![index].evento.fecha;
                         horaInicio = convertirStringATimeOfDay(
-                            eventos![index].evento.horaInicio);
+                            widget.eventos![index].evento.horaInicio);
                         horaFin = convertirStringATimeOfDay(
-                            eventos![index].evento.horaFinal);
-                        tituloEdit = eventos![index].evento.titulo;
-                        descripcionEdit = eventos![index].evento.descripcion;
-                        tituloEdit = eventos![index].evento.titulo;
-                        lugarEdit = eventos![index].evento.lugar;
-                        asistentes =
-                            eventos![index].asistentes.map((e) => e).toList();
+                            widget.eventos![index].evento.horaFinal);
+                        tituloEdit = widget.eventos![index].evento.titulo;
+                        descripcionEdit =
+                            widget.eventos![index].evento.descripcion;
+                        tituloEdit = widget.eventos![index].evento.titulo;
+                        lugarEdit = widget.eventos![index].evento.lugar;
+                        asistentes = widget.eventos![index].asistentes
+                            .map((e) => e)
+                            .toList();
                         widget.indexNotifier.value = 3;
                       });
                       MaterialPageRoute route = MaterialPageRoute(
                           builder: (context) => EditEventWidget(
-                              evento: eventos![index],
+                              evento: widget.eventos![index],
                               fechaEdit: fechaEdit!,
                               horaInicio: horaInicio!,
                               horaFin: horaFin!,
@@ -675,28 +683,29 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                   child: ListTile(
                     dense: true,
                     leading: const Icon(Icons.done),
-                    title:
-                        eventos![index].evento.estado == EstadosEventos.activo
-                            ? const Text('Terminar')
-                            : const Text('Activar'),
+                    title: widget.eventos![index].evento.estado ==
+                            EstadosEventos.activo
+                        ? const Text('Terminar')
+                        : const Text('Activar'),
                     onTap: () async {
                       Navigator.of(context).pop();
                       final response = await ref
                           .read(clubConnectProvider)
                           .updateEstadoEvento(
-                              int.parse(eventos![index].evento.id!),
-                              eventos![index].evento.estado ==
+                              int.parse(widget.eventos![index].evento.id!),
+                              widget.eventos![index].evento.estado ==
                                       EstadosEventos.activo
                                   ? EstadosEventos.terminado
                                   : EstadosEventos.activo);
                       if (response) {
-                        if (eventos![index].evento.estado ==
+                        if (widget.eventos![index].evento.estado ==
                             EstadosEventos.activo) {
-                          eventos![index].evento.estado =
+                          widget.eventos![index].evento.estado =
                               EstadosEventos.terminado;
                           customToast("Evento terminado", context, "isSuccess");
                         } else {
-                          eventos![index].evento.estado = EstadosEventos.activo;
+                          widget.eventos![index].evento.estado =
+                              EstadosEventos.activo;
                           customToast("Evento Activado", context, "isSuccess");
                         }
 
@@ -751,7 +760,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     // Realiza la operación asíncrona
     var result = await ref
         .read(clubConnectProvider)
-        .deleteEvento(int.parse(eventos![index].evento.id!));
+        .deleteEvento(int.parse(widget.eventos![index].evento.id!));
     // Cierra el diálogo de carga solo si está activo
     // ignore: use_build_context_synchronously
 
@@ -759,7 +768,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     if (result) {
       await widget.getEventosCallback(
           "updateFull", true, initfechaSeleccionada!, 8, 2024);
-      eventos?.removeAt(index);
+      widget.eventos?.removeAt(index);
 
       setState(() {});
     }

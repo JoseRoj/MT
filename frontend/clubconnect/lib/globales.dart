@@ -10,3 +10,13 @@ class MonthYear {
   final int month;
   final int year;
 }
+
+final List<String> daysOfWeek = [
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado',
+  'Domingo'
+];

@@ -102,7 +102,6 @@ class EventsActivesState extends ConsumerState<EventsActives> {
   var buttonText = "";
   bool loading = false;
   List<EventoFull>? eventosActivos = [];
-  EventoFull? eventoSelected;
 
   List<MonthYear> proximoTresMeses = obtenerProximosTresMeses();
 
@@ -110,8 +109,15 @@ class EventsActivesState extends ConsumerState<EventsActives> {
   void initState() {
     super.initState();
     initfechaSeleccionada = widget.fechaSeleccionada;
-    eventoSelected = widget.eventoSelected;
     eventosActivos = widget.eventosActivos;
+    widget
+        .getEventosCallback(EstadosEventos.activo, true, DateTime.now(),
+            widget.dateSelected.month, widget.dateSelected.year)
+        .then((value) {
+      widget.eventosActivos = value;
+      setState(() {});
+    });
+    widget.eventoSelected = null;
   }
 
   Duration duration = const Duration(hours: 1, minutes: 23);
@@ -231,8 +237,10 @@ class EventsActivesState extends ConsumerState<EventsActives> {
                       style: styleText.bodyMedium,
                     ),
                     onTap: () {
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                          '/login', (Route<dynamic> route) => false);
+                      _scaffoldKey.currentState!.closeDrawer();
+                      setState(() {
+                        widget.indexNotifier.value = 5;
+                      });
                     },
                   )
                 ],

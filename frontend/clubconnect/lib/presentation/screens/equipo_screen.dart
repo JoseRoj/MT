@@ -7,6 +7,7 @@ import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/views/equipo_view/allEvents_view.dart';
 import 'package:clubconnect/presentation/views/equipo_view/createEvent_view.dart';
 import 'package:clubconnect/presentation/views/equipo_view/eventActive_view.dart';
+import 'package:clubconnect/presentation/views/equipo_view/eventRecurrentes_view.dart';
 import 'package:clubconnect/presentation/views/miembros/miembros_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -214,6 +215,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
     if (pullRefresh != null && pullRefresh) {
       loading = false;
     }
+    setState(() {});
     return eventsResponse;
   }
 
@@ -231,6 +233,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
   }
 
   Widget _getBody(value) {
+    print("Refresh " + eventosActivos![0].asistentes.length.toString());
     switch (value) {
       case 0:
         return EventsActives(
@@ -285,6 +288,8 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
             role: role,
             indexNotifier: _indexNotifier,
             ref: ref);
+      case 5:
+        return EventRecurrentes();
       default:
         return Container();
     }
