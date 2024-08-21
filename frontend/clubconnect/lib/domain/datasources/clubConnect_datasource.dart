@@ -81,4 +81,8 @@ abstract class ClubConnectDataSource {
   //* --------------- ASISTENCIA ----------------*//
   Future<bool> addAsistencia(int idevento, int idusuario);
   Future<bool> deleteAsistencia(int idevento, int idusuario);
+  //* --------------- CONFIGURACION EVENTOS ----------------*//
+  Future<List<ConfigEventos>> getConfigEventos(int idequipo);
+  Future<dynamic> createConfigEvento(ConfigEventos configEvento);
+  Future<dynamic> deleteConfigEvento(int id);
 }

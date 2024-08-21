@@ -78,11 +78,12 @@ module.exports = {
     horaInicio,
     horaFin,
     titulo,
-    lugar
+    lugar,
+    id_config
   ) {
     console.log("Horas" + horaInicio + " " + horaFin);
     try {
-      let query = `INSERT INTO public."Evento" (fecha, id_equipo, descripcion, hora_inicio, hora_final, titulo, estado, Lugar ) VALUES `;
+      let query = `INSERT INTO public."Evento" (fecha, id_equipo, descripcion, hora_inicio, hora_final, titulo, estado, Lugar, id_config) VALUES `;
       const values = [];
       const valueInserts = fechas
         .map((fecha, index) => {
@@ -94,13 +95,14 @@ module.exports = {
             horaInicio,
             horaFin,
             titulo,
-            lugar
+            lugar,
+            id_config
           );
           return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${
             offset + 4
           }, $${offset + 5}, $${offset + 6}, '${estados.activo}' , $${
             offset + 7
-          })`;
+          },$${offset + 8})`;
         })
         .join(", ");
 

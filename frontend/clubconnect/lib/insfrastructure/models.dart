@@ -6,3 +6,4 @@ export "models/tipo.dart";
 export "models/equipo.dart";
 export 'models/solicitud.dart';
 export 'models/evento.dart';
+export 'models/configEvento.dart';

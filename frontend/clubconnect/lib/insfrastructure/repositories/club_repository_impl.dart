@@ -230,4 +230,21 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   Future updateImagenClub(String image, int idclub) async {
     return await clubConnectDataSource.updateImagenClub(image, idclub);
   }
+
+  //* --------------- CONFIGURACION EVENTOS ----------------*//
+  @override
+  Future<dynamic> createConfigEvento(ConfigEventos configEvento) async {
+    return await clubConnectDataSource.createConfigEvento(configEvento);
+  }
+
+  @override
+  Future<bool> deleteConfigEvento(int id) {
+    // TODO: implement deleteConfigEvento
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<ConfigEventos>> getConfigEventos(int idequipo) async {
+    return await clubConnectDataSource.getConfigEventos(idequipo);
+  }
 }

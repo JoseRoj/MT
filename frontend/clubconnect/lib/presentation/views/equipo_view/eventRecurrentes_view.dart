@@ -2,14 +2,31 @@ import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/validator.dart';
+import 'package:clubconnect/presentation/providers.dart';
+import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/widget/formInput.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../insfrastructure/models.dart';
+
 class EventRecurrentes extends ConsumerStatefulWidget {
-  const EventRecurrentes({super.key});
+  ValueNotifier<int> indexNotifier;
+  final int idEquipo;
+  final Equipo equipo;
+  final int idClub;
+  List<ConfigEventos>? settingEventosRecurrentes;
+
+  EventRecurrentes(
+      {super.key,
+      required this.idEquipo,
+      required this.equipo,
+      required this.idClub,
+      required this.indexNotifier,
+      this.settingEventosRecurrentes});
 
   @override
   EventRecurrentesState createState() => EventRecurrentesState();
@@ -27,35 +44,39 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
   String? selectedDay;
   DateTime? dateInitial;
   DateTime? dateEnd;
+
+  @override
+  void initState() {
+    super.initState();
+    print("Hola");
+  }
+
   @override
   Widget build(BuildContext context) {
+    print("Settigns : ${widget.settingEventosRecurrentes}");
     return Scaffold(
       appBar: AppBar(
         title: const Text('Eventos Recurrentes'),
       ),
-      body: Column(
-        children: [
-          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-            ElevatedButton.icon(
-              onPressed: () {
-                modalCreateRecurrentEvent();
-              },
-              label: Text('Crear Evento Recurrente',
-                  style: theme.textTheme.labelSmall),
-              icon: const Icon(Icons.add),
-            )
-          ]),
-          cardEventoRecurrente(),
-        ],
+      body: ListView.builder(
+        itemCount: widget.settingEventosRecurrentes!.length,
+        itemBuilder: (BuildContext context, int index) {
+          return cardEventoRecurrente(widget.settingEventosRecurrentes![index]);
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          modalCreateRecurrentEvent();
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
 
-  Widget cardEventoRecurrente() {
-    print("Holaaaa");
+  Widget cardEventoRecurrente(ConfigEventos? evento) {
     return Container(
       padding: EdgeInsets.all(10),
-      width: MediaQuery.of(context).size.width * 0.9,
+      margin: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary,
         gradient: LinearGradient(
@@ -66,25 +87,38 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(1),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            "Titulo",
+            evento!.titulo,
             style: TextStyle(
                 fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
             textAlign: TextAlign.center,
           ),
           Text(
-            "Descripción : ",
+            evento.descripcion,
             style: theme.textTheme.bodyMedium,
+            textAlign: TextAlign.center,
           ),
-          Text("Cada Martes desde las 10:00 hasta las 12:00"),
-          Text("Lugar : Gancha el rosario"),
-          Text("Fecha"),
+          evento.diaRepetible != 0
+              ? Text("Día : ${daysOfWeek[evento.diaRepetible - 1]}")
+              : Text("Día : ${daysOfWeek[evento.diaRepetible]}"),
+          Text("Horario : ${evento.horaInicio} - ${evento.horaFinal}"),
+          Text("Lugar : ${evento.lugar}"),
+          Text(
+              "Desde : ${DateFormat('dd/MM/yyyy').format(evento.fechaInicio)}  - Hasta ${DateFormat('dd/MM/yyyy').format(evento.fechaFinal)}"),
         ],
       ),
     );
@@ -155,7 +189,7 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
                                   mode: CupertinoDatePickerMode.date,
                                   backgroundColor: Colors.white,
                                   maximumDate: DateTime.now(),
-                                  initialDateTime: DateTime(2003, 3, 10),
+                                  initialDateTime: DateTime.now(),
                                   onDateTimeChanged: (DateTime value) {
                                     DateTime fecha =
                                         DateTime.parse(value.toString());
@@ -192,8 +226,7 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
                                     child: CupertinoDatePicker(
                                       mode: CupertinoDatePickerMode.date,
                                       backgroundColor: Colors.white,
-                                      maximumDate: DateTime.now(),
-                                      initialDateTime: DateTime(2003, 3, 10),
+                                      initialDateTime: DateTime.now(),
                                       onDateTimeChanged: (DateTime value) {
                                         dateInitial =
                                             DateTime.parse(value.toString());
@@ -238,8 +271,7 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
                                   child: CupertinoDatePicker(
                                     mode: CupertinoDatePickerMode.date,
                                     backgroundColor: Colors.white,
-                                    maximumDate: DateTime.now(),
-                                    initialDateTime: DateTime(2003, 3, 10),
+                                    initialDateTime: DateTime.now(),
                                     onDateTimeChanged: (DateTime value) {
                                       dateEnd =
                                           DateTime.parse(value.toString());
@@ -407,7 +439,7 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
                       ],
                     ),
                     ElevatedButton.icon(
-                        onPressed: () {
+                        onPressed: () async {
                           if (keyForm.currentState!.validate()) {
                             if (dateEnd == null || dateInitial == null) {
                               customToast(
@@ -425,15 +457,40 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
                               return;
                             }
 
-                            dateEnd = null;
-                            dateInitial = null;
-                            horaFin = null;
-                            horaInicio = null;
-                            selectedDay = null;
-                            controllerDescriptionEdit.clear();
-                            controllerTitleEdit.clear();
-                            controllerLugarEdit.clear();
+                            ConfigEventos configEvento = ConfigEventos(
+                              fechaInicio: dateInitial!,
+                              fechaFinal: dateEnd!,
+                              horaInicio: horaInicio!.format(context),
+                              horaFinal: horaFin!.format(context),
+                              idEquipo: widget.idEquipo.toString(),
+                              descripcion: controllerDescriptionEdit.text,
+                              lugar: controllerLugarEdit.text,
+                              diaRepetible:
+                                  daysOfWeek.indexOf(selectedDay!) + 1,
+                              titulo: controllerTitleEdit.text,
+                            );
 
+                            final response = await ref
+                                .watch(clubConnectProvider)
+                                .createConfigEvento(configEvento);
+                            print("Response : " +
+                                response.data["message"].toString());
+                            if (response.statusCode == 201) {
+                              dateEnd = null;
+                              dateInitial = null;
+                              horaFin = null;
+                              horaInicio = null;
+                              selectedDay = null;
+                              controllerDescriptionEdit.clear();
+                              controllerTitleEdit.clear();
+                              controllerLugarEdit.clear();
+                              customToast(response.data["message"].toString(),
+                                  context, "isSuccess");
+                              Navigator.pop(context);
+                            } else {
+                              customToast(
+                                  response["data"].message, context, "isError");
+                            }
                             setModalState(() {
                               dateEnd = dateEnd;
                               dateInitial = dateInitial;

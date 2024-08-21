@@ -101,6 +101,9 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
   final styleText = AppTheme().getTheme().textTheme; // Estilo de texto
   late List<User> miembros;
 
+  //* EVENTOS RECURRENTES */
+  List<ConfigEventos>? eventosRecurrentes = [];
+
   @override
   void initState() {
     super.initState();
@@ -132,8 +135,12 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
             DateTime.now(),
             DateTime.now().month,
             DateTime.now().year);
-        print("Eventos: ${eventosValue!.length}");
+
+        final eventosRecurrentesValue = await ref
+            .read(clubConnectProvider)
+            .getConfigEventos(widget.idequipo);
         setState(() {
+          eventosRecurrentes = eventosRecurrentesValue;
           eventosActivos = eventosActivosValue;
           role = roleValue;
           miembros = miembrosValue;
@@ -289,7 +296,16 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
             indexNotifier: _indexNotifier,
             ref: ref);
       case 5:
-        return EventRecurrentes();
+        return EventRecurrentes(
+          indexNotifier: _indexNotifier,
+          idEquipo: widget.idequipo,
+          equipo: widget.team,
+          idClub: widget.idclub,
+          settingEventosRecurrentes: eventosRecurrentes,
+          /*getEventosCallback: (estado, pullRefresh, int month, int year) =>
+              getEventos(estado, pullRefresh, DateTime.now(), month, year),
+       */
+        );
       default:
         return Container();
     }

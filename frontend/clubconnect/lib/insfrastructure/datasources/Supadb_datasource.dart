@@ -738,4 +738,35 @@ class SupabdDatasource extends ClubConnectDataSource {
       return false;
     }
   }
+
+  //* --------------- CONFIGURACION EVENTOS ----------------*//
+  @override
+  Future<List<ConfigEventos>> getConfigEventos(int idequipo) async {
+    final dio = Dio(BaseOptions(headers: {}));
+    final response = await dio.get(
+      '${dotenv.env["API_URL"]}/configEventos',
+      queryParameters: {'id_equipo': idequipo},
+    );
+    List<ConfigEventos> configEventos =
+        response.data["data"].map<ConfigEventos>((configEvento) {
+      return ConfigEventos.fromJson(configEvento);
+    }).toList();
+    return configEventos;
+  }
+
+  @override
+  Future<dynamic> createConfigEvento(ConfigEventos configEvento) async {
+    final dio = Dio(BaseOptions(headers: {}));
+    final response = await dio.post(
+      '${dotenv.env["API_URL"]}/configEvento',
+      data: jsonEncode(configEvento.toJson()),
+    );
+    return response;
+  }
+
+  @override
+  Future<bool> deleteConfigEvento(int id) {
+    // TODO: implement deleteConfigEvento
+    throw UnimplementedError();
+  }
 }
