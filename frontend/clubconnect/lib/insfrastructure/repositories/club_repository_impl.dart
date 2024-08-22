@@ -238,13 +238,17 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
-  Future<bool> deleteConfigEvento(int id) {
-    // TODO: implement deleteConfigEvento
-    throw UnimplementedError();
+  Future<dynamic> deleteConfigEvento(int idConfig) async {
+    return await clubConnectDataSource.deleteConfigEvento(idConfig);
   }
 
   @override
   Future<List<ConfigEventos>> getConfigEventos(int idequipo) async {
     return await clubConnectDataSource.getConfigEventos(idequipo);
+  }
+
+  @override
+  Future<dynamic> editConfigEvento(ConfigEventos configEvento) async {
+    return await clubConnectDataSource.editConfigEvento(configEvento);
   }
 }

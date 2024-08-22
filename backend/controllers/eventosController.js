@@ -1,12 +1,22 @@
 const connectionPostgres = require("../database/db");
 const moment = require("moment-timezone");
+const estados = require("../global");
 
-const estados = {
-  activo: "Activo",
-  finalizado: "Finalizado",
-  todos: "Todos",
-};
+console.log("Estados", estados);
 module.exports = {
+  async finishEvents() {
+    try {
+      const sql = `UPDATE public."Evento" SET estado = $1 WHERE fecha < now() AND estado = $2`;
+      const response = await connectionPostgres.query(sql, [
+        estados.finalizado,
+        estados.activo,
+      ]);
+      console.log("Eventos actualizados:", response.rowCount);
+    } catch (error) {
+      console.log("Error al finalizar eventos:", error);
+    }
+  },
+
   async getEventos(id_equipo, estado, initialDate, month, year) {
     /* Trnasformar initialDate */
     const timeInit = moment(initialDate, "YYYY-MM-DD HH:mm:ss.SSSSSS");

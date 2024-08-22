@@ -4,7 +4,7 @@ Future<bool> modalDelete(BuildContext context, String text) async {
   return await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          content: Text(text),
+          content: Text(text, textAlign: TextAlign.center),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),

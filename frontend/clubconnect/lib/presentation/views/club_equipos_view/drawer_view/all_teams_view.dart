@@ -56,42 +56,52 @@ class TeamsState extends ConsumerState<Teams> {
       child: ListView.builder(
         itemCount: equipos.length,
         itemBuilder: (context, index) {
-          return Dismissible(
-            key: Key(equipos[index].id.toString()),
-            direction: DismissDirection.endToStart,
-            confirmDismiss: (direction) async {
-              // Mostrar una acción de confirmación en lugar de eliminar
-              bool confirm =
-                  await modalDelete(context, "¿Desea eliminar el equipo?");
-              return confirm; // Retorna true si se debe eliminar, false para cancelar
-            },
-            onDismissed: (direction) async {
-              final response = await ref
-                  .read(clubConnectProvider)
-                  .deleteEquipo(int.parse(equipos[index].id!));
-              setState(() {
-                response == true ? equipos.removeAt(index) : null;
-              });
-            },
-            background: Container(
-              color: Colors.red,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: const Icon(
-                Icons.delete,
-                color: Colors.white,
-              ),
-            ),
-            child: ListTile(
-              title: Text(equipos[index].nombre),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-              onTap: () => {
-                context.go(
-                    '/home/0/club/${widget.idclub}/0/${equipos[index].id}',
-                    extra: {'team': equipos[index]}),
-              },
-            ),
-          );
+          return widget.role == "Administrador" || widget.role == "Entrenador"
+              ? Dismissible(
+                  key: Key(equipos[index].id.toString()),
+                  direction: DismissDirection.endToStart,
+                  confirmDismiss: (direction) async {
+                    // Mostrar una acción de confirmación en lugar de eliminar
+                    bool confirm = await modalDelete(
+                        context, "¿Desea eliminar el equipo?");
+                    return confirm; // Retorna true si se debe eliminar, false para cancelar
+                  },
+                  onDismissed: (direction) async {
+                    final response = await ref
+                        .read(clubConnectProvider)
+                        .deleteEquipo(int.parse(equipos[index].id!));
+                    setState(() {
+                      response == true ? equipos.removeAt(index) : null;
+                    });
+                  },
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: const Icon(
+                      Icons.delete,
+                      color: Colors.white,
+                    ),
+                  ),
+                  child: ListTile(
+                    title: Text(equipos[index].nombre),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                    onTap: () => {
+                      context.go(
+                          '/home/0/club/${widget.idclub}/0/${equipos[index].id}',
+                          extra: {'team': equipos[index]}),
+                    },
+                  ),
+                )
+              : ListTile(
+                  title: Text(equipos[index].nombre),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                  onTap: () => {
+                    context.go(
+                        '/home/0/club/${widget.idclub}/0/${equipos[index].id}',
+                        extra: {'team': equipos[index]}),
+                  },
+                );
         },
       ),
     );

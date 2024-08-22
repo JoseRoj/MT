@@ -1,15 +1,21 @@
 const { Pool } = require("pg");
+const cron = require("node-cron");
 
 // TODO : Conneccion DataBase
 const connectionPostgres = new Pool({
-  connectionString: process.env.DB_CONNECTION_STRING,
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false, // Para evitar errores de certificado SSL
   },
 });
 
-/*connectionPostgres
-  .connect()
-  .then(() => console.log("Conexión exitosa a PostgreSQL"))
-  .catch((err) => console.error("Error de conexión a PostgreSQL:", err));*/
+(async () => {
+  try {
+    await connectionPostgres.connect();
+    console.log("Conexión exitosa a la base de datos.");
+  } catch (err) {
+    console.error("Error al conectar a la base de datos:", err);
+  }
+})();
+
 module.exports = connectionPostgres;

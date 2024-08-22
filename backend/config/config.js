@@ -10,7 +10,7 @@ module.exports = {
     define: {
       freezeTableName: true,
     },
-    connectionString: process.env.DB_CONNECTION_STRING,
+    connectionString: process.env.DATABASE_URL,
     configToken: {
       SEED: "secret",
       expiration: "24h",

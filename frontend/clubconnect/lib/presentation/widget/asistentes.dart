@@ -51,13 +51,15 @@ class _AttendeesListState extends State<AttendeesList> {
         ),
         more
             ? SingleChildScrollView(
-                child: Wrap(
-                  children: widget.asistentes.map((e) {
-                    return userList(
-                      name: e.nombre,
-                      image: e.imagen,
-                    );
-                  }).toList(),
+                child: Flexible(
+                  child: Wrap(
+                    children: widget.asistentes.map((e) {
+                      return userList(
+                        name: e.nombre,
+                        image: e.imagen,
+                      );
+                    }).toList(),
+                  ),
                 ),
               )
             : Container(

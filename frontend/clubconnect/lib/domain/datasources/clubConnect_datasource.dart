@@ -84,5 +84,6 @@ abstract class ClubConnectDataSource {
   //* --------------- CONFIGURACION EVENTOS ----------------*//
   Future<List<ConfigEventos>> getConfigEventos(int idequipo);
   Future<dynamic> createConfigEvento(ConfigEventos configEvento);
-  Future<dynamic> deleteConfigEvento(int id);
+  Future<dynamic> deleteConfigEvento(int idConfig);
+  Future<dynamic> editConfigEvento(ConfigEventos configEvento);
 }

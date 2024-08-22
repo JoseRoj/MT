@@ -182,16 +182,20 @@ class CardEventoState extends ConsumerState<CardEvento> {
                 style: styleText.titleSmall, textAlign: TextAlign.center),
             Text(DateFormat('dd / MM / yyyy').format(evento.evento.fecha),
                 style: styleText.labelSmall),
-            Text(evento.evento.descripcion, style: styleText.bodyMedium),
+            Text(evento.evento.descripcion,
+                style: styleText.bodyMedium, textAlign: TextAlign.center),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.location_pin),
-                Text(
-                  evento.evento.lugar,
-                  textAlign: TextAlign.center,
-                )
+                Flexible(
+                  child: Text(
+                    evento.evento.lugar,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.visible,
+                  ),
+                ),
               ],
             ),
             AttendeesList(asistentes: evento.asistentes),

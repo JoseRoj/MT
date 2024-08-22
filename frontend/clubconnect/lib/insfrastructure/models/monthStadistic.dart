@@ -5,7 +5,7 @@ class MonthStadisticUser {
   String mes;
   int participation;
   int totalEventos;
-  int percentile;
+  double percentile;
   int idUsuario;
 
   MonthStadisticUser({
@@ -28,7 +28,7 @@ class MonthStadisticUser {
         mes: json["mes"],
         participation: json["participation"],
         totalEventos: json["total_eventos"],
-        percentile: json["percentile"],
+        percentile: json["percentile"].toDouble(),
         idUsuario: json["id_usuario"],
       );
 

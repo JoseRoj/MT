@@ -182,6 +182,18 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
   }
 
   /* 
+  * params: 
+    * estado = "Activo" | "Terminado" | "Cancelado" | "Todos"
+    * pullRefresh = true | false
+  */
+  Future<List<ConfigEventos>?> getConfigEventos() async {
+    final eventosRecurrentesValue =
+        await ref.read(clubConnectProvider).getConfigEventos(widget.idequipo);
+    eventosRecurrentes = eventosRecurrentesValue;
+    return eventosRecurrentesValue;
+  }
+
+  /* 
     * params: 
       * estado = "Activo" | "Terminado" | "Cancelado" | "Todos"
       * pullRefresh = true | false
@@ -300,8 +312,10 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
           indexNotifier: _indexNotifier,
           idEquipo: widget.idequipo,
           equipo: widget.team,
+          role: role,
           idClub: widget.idclub,
           settingEventosRecurrentes: eventosRecurrentes,
+          getConfigEventos: getConfigEventos,
           /*getEventosCallback: (estado, pullRefresh, int month, int year) =>
               getEventos(estado, pullRefresh, DateTime.now(), month, year),
        */

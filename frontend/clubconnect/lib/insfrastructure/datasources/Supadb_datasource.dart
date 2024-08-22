@@ -765,8 +765,22 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
-  Future<bool> deleteConfigEvento(int id) {
-    // TODO: implement deleteConfigEvento
-    throw UnimplementedError();
+  Future<dynamic> deleteConfigEvento(int idConfig) {
+    final dio = Dio(BaseOptions(headers: {}));
+    final response = dio.delete(
+      '${dotenv.env["API_URL"]}/configEvento',
+      queryParameters: {'id_config': idConfig},
+    );
+    return response;
+  }
+
+  @override
+  Future<dynamic> editConfigEvento(ConfigEventos configEvento) {
+    final dio = Dio(BaseOptions(headers: {}));
+    final response = dio.put(
+      '${dotenv.env["API_URL"]}/configEvento',
+      data: jsonEncode(configEvento.toJson()),
+    );
+    return response;
   }
 }

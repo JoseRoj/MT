@@ -57,7 +57,6 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
       final stats = await ref
           .read(clubConnectProvider)
           .getMonthStadisticUser(widget.iduser, widget.idequipo);
-      print("Holanda" + stats.toString());
 
       if (stats.length != 0) {
         data = <PieData>[
@@ -68,6 +67,7 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
               'No Asistido'),
         ];
       }
+
       setState(() {
         monthStadistic = stats;
         selected = stats.first;
@@ -322,7 +322,7 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
                                         ],
                                       ),
                                       child: Text(
-                                          'La asistencia ha sido mejor o igual al ${selected.percentile}%',
+                                          'La asistencia ha sido mejor o igual al ${selected.percentile.round()}%',
                                           style: styleText.labelSmall,
                                           overflow: TextOverflow.visible),
                                     ),
