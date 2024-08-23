@@ -1,6 +1,8 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/helpers/toast.dart';
+import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/insfrastructure/models/equipo.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
@@ -38,10 +40,10 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
   final TextEditingController controllerDes = TextEditingController();
   final TextEditingController controllerLugar = TextEditingController();
   List<DateTime?> _dates = [];
-  TimeOfDay _selectedTimeInicio = TimeOfDay.now();
-  TimeOfDay _selectedTimeFin = TimeOfDay.now();
-  bool selectTimeInicio = false;
-  bool selectTimeFin = false;
+  TimeOfDay? _selectedTimeInicio;
+  TimeOfDay? _selectedTimeFin;
+
+  ThemeData style = AppTheme().getTheme();
 
   Future<bool?> _showDialog(Widget child) async {
     final response = await showCupertinoModalPopup<bool>(
@@ -62,8 +64,8 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Crear Evento"),
-        centerTitle: true,
+        title: Text("Crear Evento", style: style.textTheme.titleSmall),
+        centerTitle: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -83,19 +85,110 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
                 _dates = dates;
               }),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blue),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
+            const Text(
+              "Horario Inicio & Término",
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.4,
+                child: ElevatedButton.icon(
+                  label: Text(
+                      _selectedTimeInicio != null
+                          ? _selectedTimeInicio!.format(context)
+                          : "",
+                      style: const TextStyle(fontSize: 12),
+                      textAlign: TextAlign.center),
+                  icon: const Icon(Icons.access_time, size: 12),
+                  onPressed: () async {
+                    if (_selectedTimeInicio == null) {
+                      _selectedTimeInicio = TimeOfDay.now();
+                      setState(() {});
+                    }
+                    await showCupertinoModalPopup(
+                      context: context,
+                      builder: (context) => Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
+                          ),
+                        ),
+                        height: 150,
+                        child: CupertinoDatePicker(
+                            mode: CupertinoDatePickerMode.time,
+                            use24hFormat: true,
+                            initialDateTime: _selectedTimeInicio != null
+                                ? dateTimeWithHourSpecific(_selectedTimeInicio!)
+                                : DateTime.now(),
+                            onDateTimeChanged: (DateTime newDateTime) {
+                              _selectedTimeInicio =
+                                  TimeOfDay.fromDateTime(newDateTime);
+                              setState(() {});
+                              (() {});
+                              /*setState(() {
+                                    _horaFin = TimeOfDay.fromDateTime(newDateTime)
+                                        .format(context);
+                                    print(_horaFin);*/
+                            }),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.4,
+                child: ElevatedButton.icon(
+                  label: Text(
+                      _selectedTimeFin != null
+                          ? _selectedTimeFin!.format(context)
+                          : "",
+                      style: const TextStyle(fontSize: 12),
+                      textAlign: TextAlign.center),
+                  icon: const Icon(Icons.access_time, size: 12),
+                  onPressed: () async {
+                    if (_selectedTimeFin == null) {
+                      _selectedTimeFin = TimeOfDay.now();
+                      setState(() {});
+                    }
+                    await showCupertinoModalPopup(
+                      context: context,
+                      builder: (context) => Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
+                          ),
+                        ),
+                        height: 150,
+                        child: CupertinoDatePicker(
+                            mode: CupertinoDatePickerMode.time,
+                            use24hFormat: true,
+                            initialDateTime: _selectedTimeFin != null
+                                ? dateTimeWithHourSpecific(_selectedTimeFin!)
+                                : DateTime.now(),
+                            onDateTimeChanged: (DateTime newDateTime) {
+                              _selectedTimeFin =
+                                  TimeOfDay.fromDateTime(newDateTime);
+                              setState(() {});
+                              /*setState(() {
+                                    _horaFin = TimeOfDay.fromDateTime(newDateTime)
+                                        .format(context);
+                                    print(_horaFin);*/
+                            }),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ]),
+            /*Container(
                         width: 130,
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: const Text(
@@ -149,11 +242,9 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
                               ? Text(_selectedTimeInicio.format(context))
                               : const Text("Hora"),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
+                      ),*/
+
+            /*Container(
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.blue),
                     borderRadius: BorderRadius.circular(10),
@@ -218,8 +309,8 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
                     ],
                   ),
                 )
-              ],
-            ),
+              */
+
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               child: Form(
@@ -253,7 +344,7 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
                     customToast("Seleccione una fecha", context, "isError");
                     return;
                   }
-                  if (!selectTimeInicio || !selectTimeFin) {
+                  if (_selectedTimeInicio == null || _selectedTimeFin == null) {
                     customToast("Seleccione una hora", context, "isError");
                     return;
                   }
@@ -264,9 +355,9 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
                       .read(clubConnectProvider)
                       .createEvento(
                           fechas,
-                          _selectedTimeInicio.format(context),
+                          _selectedTimeInicio!.format(context),
                           controllerDes.text,
-                          _selectedTimeFin.format(context),
+                          _selectedTimeFin!.format(context),
                           widget.idequipo,
                           widget.idclub,
                           controllerName.text,

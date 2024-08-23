@@ -49,7 +49,18 @@ class MiembrosEquipoWidgetState extends ConsumerState<MiembrosEquipoWidget> {
     return Scaffold(
       key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
       appBar: AppBar(
-        title: const Text('Miembros'),
+        centerTitle: false,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Miembros',
+                style: styleText.titleSmall, textAlign: TextAlign.center),
+            Text(
+              widget.equipo.nombre,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
+            )
+          ],
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -140,6 +151,19 @@ class MiembrosEquipoWidgetState extends ConsumerState<MiembrosEquipoWidget> {
                           .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
                     },
                   ),
+                  ListTile(
+                    leading: const Icon(Icons.event_repeat_rounded),
+                    title: Text(
+                      'Config Eventos Recurrentes',
+                      style: styleText.bodyMedium,
+                    ),
+                    onTap: () {
+                      _scaffoldKey.currentState!.closeDrawer();
+                      setState(() {
+                        widget.indexNotifier.value = 5;
+                      });
+                    },
+                  )
                   // Agrega más ListTile según sea necesario
                 ],
               ),

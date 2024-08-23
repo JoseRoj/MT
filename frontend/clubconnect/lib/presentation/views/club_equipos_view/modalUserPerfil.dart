@@ -105,102 +105,111 @@ void modalUserPerfil(BuildContext context, dynamic miembro, Club? club,
                       ? Container()
                       : SizedBox(
                           height: 200,
-                          child: ListView.builder(
-                            itemCount: miembro.equipos.length,
-                            itemBuilder: (context, index) {
-                              return Container(
-                                margin: const EdgeInsets.symmetric(vertical: 2),
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 2, horizontal: 5),
-                                decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.black, width: 1),
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.white,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.grey.withOpacity(0.5),
-                                      spreadRadius: 1,
-                                      blurRadius: 1,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                              "${miembro.equipos[index].nombre}",
-                                              style: AppTheme()
-                                                  .getTheme()
-                                                  .textTheme
-                                                  .labelMedium,
-                                              textAlign: TextAlign.start),
-                                          Text(
-                                              "Rol: ${miembro.equipos[index].rol}",
-                                              style: AppTheme()
-                                                  .getTheme()
-                                                  .textTheme
-                                                  .labelSmall,
-                                              textAlign: TextAlign.start),
+                          child: miembro.equipos.isEmpty
+                              ? const Center(
+                                  child: Text("No pertenece a ningun equipo"),
+                                )
+                              : ListView.builder(
+                                  itemCount: miembro.equipos.length,
+                                  itemBuilder: (context, index) {
+                                    return Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 2, horizontal: 5),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color: Colors.black, width: 1),
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.5),
+                                            spreadRadius: 1,
+                                            blurRadius: 1,
+                                            offset: const Offset(0, 1),
+                                          ),
                                         ],
                                       ),
-                                      IconButton(
-                                        onPressed: () async {
-                                          if (miembro.equipos.length == 1) {
-                                            showDialog(
-                                                context: context,
-                                                builder:
-                                                    (BuildContext context) {
-                                                  return AlertDialog(
-                                                    content: const Text(
-                                                        "El usuario pertenece a un solo equipo, no se puede eliminar. Si desea quitarlo de todos los equipos, expulselo del club."),
-                                                    actions: <Widget>[
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                        child:
-                                                            const Text('Salir'),
-                                                      ),
-                                                    ],
-                                                  );
-                                                });
-                                            return;
-                                          }
-                                          final response = await ref
-                                              .read(clubConnectProvider)
-                                              .deleteMiembro(
-                                                  int.parse(miembro.id),
-                                                  int.parse(miembro
-                                                      .equipos[index].id));
-                                          if (response) {
-                                            setModalState(() {});
-                                            miembro.equipos.removeAt(index);
-                                            customToast(
-                                                "Usuario Eliminado del equipo",
-                                                context,
-                                                "isSuccess");
-                                          } else {
-                                            customToast(
-                                                "Error al eliminar usuario",
-                                                context,
-                                                "isError");
-                                          }
-                                          // TODO: Crear Funcion para eliminar de un equipo
-                                        },
-                                        icon: Icon(Icons.person_remove),
-                                      ),
-                                    ]),
-                              );
-                            },
-                          ),
+                                      child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                    "${miembro.equipos[index].nombre}",
+                                                    style: AppTheme()
+                                                        .getTheme()
+                                                        .textTheme
+                                                        .labelMedium,
+                                                    textAlign: TextAlign.start),
+                                                Text(
+                                                    "Rol: ${miembro.equipos[index].rol}",
+                                                    style: AppTheme()
+                                                        .getTheme()
+                                                        .textTheme
+                                                        .labelSmall,
+                                                    textAlign: TextAlign.start),
+                                              ],
+                                            ),
+                                            IconButton(
+                                              onPressed: () async {
+                                                if (miembro.equipos.length ==
+                                                    1) {
+                                                  showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext
+                                                          context) {
+                                                        return AlertDialog(
+                                                          content: const Text(
+                                                              "El usuario pertenece a un solo equipo, no se puede eliminar. Si desea quitarlo de todos los equipos, expulselo del club."),
+                                                          actions: <Widget>[
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                              },
+                                                              child: const Text(
+                                                                  'Salir'),
+                                                            ),
+                                                          ],
+                                                        );
+                                                      });
+                                                  return;
+                                                }
+                                                final response = await ref
+                                                    .read(clubConnectProvider)
+                                                    .deleteMiembro(
+                                                        int.parse(miembro.id),
+                                                        int.parse(miembro
+                                                            .equipos[index]
+                                                            .id));
+                                                if (response) {
+                                                  setModalState(() {});
+                                                  miembro.equipos
+                                                      .removeAt(index);
+                                                  customToast(
+                                                      "Usuario Eliminado del equipo",
+                                                      context,
+                                                      "isSuccess");
+                                                } else {
+                                                  customToast(
+                                                      "Error al eliminar usuario",
+                                                      context,
+                                                      "isError");
+                                                }
+                                                // TODO: Crear Funcion para eliminar de un equipo
+                                              },
+                                              icon: Icon(Icons.person_remove),
+                                            ),
+                                          ]),
+                                    );
+                                  },
+                                ),
                         ),
                 ],
               ),

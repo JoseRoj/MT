@@ -565,6 +565,7 @@ class SupabdDatasource extends ClubConnectDataSource {
       },
     );
 
+    if (response.data["data"].length <= 0) return [];
     List<EventoFull> eventos = response.data["data"].map<EventoFull>((evento) {
       return EventoFull.fromJson(evento);
     }).toList();

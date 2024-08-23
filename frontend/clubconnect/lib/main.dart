@@ -1,6 +1,7 @@
 import 'package:clubconnect/config/router/app_router.dart';
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:clubconnect/services/firebase.dart';
 import 'package:clubconnect/services/local_notification.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -49,6 +50,17 @@ class MainAppState extends ConsumerState<MainApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       routerConfig: appRouter,
+      locale: Locale('es'), // Cambia 'es' por el código del idioma deseado
+      supportedLocales: [
+        Locale('en'), // Inglés
+        Locale('es'), // Español
+        // Agrega otros idiomas si es necesario
+      ],
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       debugShowCheckedModeBanner: false,
       theme: AppTheme().getTheme(),
     );

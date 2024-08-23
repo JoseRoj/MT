@@ -257,6 +257,7 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
             return Scaffold(
               key: _scaffoldKey,
               appBar: AppBar(
+                centerTitle: false,
                 title: Text(title,
                     style: AppTheme().getTheme().textTheme.titleSmall),
                 leading: IconButton(
@@ -275,8 +276,18 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
               key: _scaffoldKey,
               appBar: AppBar(
                   centerTitle: false,
-                  title: Text(title,
-                      style: AppTheme().getTheme().textTheme.titleSmall),
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          style: AppTheme().getTheme().textTheme.titleSmall),
+                      Text(
+                        club!.club.nombre,
+                        style: const TextStyle(
+                            fontSize: 10, fontWeight: FontWeight.w400),
+                      )
+                    ],
+                  ),
                   leading: IconButton(
                     icon: const Icon(Icons.arrow_back),
                     onPressed: () {

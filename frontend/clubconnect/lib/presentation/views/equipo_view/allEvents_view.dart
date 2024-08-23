@@ -85,9 +85,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
             widget.selectedMonthYear.month, widget.selectedMonthYear.year)
         .then((value) {
       widget.eventos = value;
-      setState(() {});
     });
-    print("Entre 1 " + widget.eventos![0].asistentes.length.toString());
     initfechaSeleccionada = widget.initfechaSeleccionada;
     fechaSeleccionada = widget.fechaSeleccionada;
   }
@@ -145,13 +143,22 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    print("Refresh 20 " + widget.eventos![0].asistentes.length.toString());
-
     Color colorprimary = AppTheme().getTheme().colorScheme.primary;
     return Scaffold(
       key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
       appBar: AppBar(
-        title: Text("Todos los Eventos"),
+        centerTitle: false,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Todos los Eventos',
+                style: styleText.titleSmall, textAlign: TextAlign.center),
+            Text(
+              widget.equipo.nombre,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
+            )
+          ],
+        ),
         leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -243,14 +250,16 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.exit_to_app),
+                    leading: const Icon(Icons.event_repeat_rounded),
                     title: Text(
-                      'Cerrar Sesión',
+                      'Config Eventos Recurrentes',
                       style: styleText.bodyMedium,
                     ),
                     onTap: () {
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                          '/login', (Route<dynamic> route) => false);
+                      _scaffoldKey.currentState!.closeDrawer();
+                      setState(() {
+                        widget.indexNotifier.value = 5;
+                      });
                     },
                   )
                   // Agrega más ListTile según sea necesario
@@ -409,14 +418,16 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                 ],
               ),*/
               // Your date selection widgets here
-              Expanded(
-                child: ListView.builder(
-                  itemCount: widget.eventos!.length,
-                  itemBuilder: (context, index) {
-                    return buildEventCard(index);
-                  },
-                ),
-              ),
+              widget.eventos!.isEmpty
+                  ? Container()
+                  : Expanded(
+                      child: ListView.builder(
+                        itemCount: widget.eventos!.length,
+                        itemBuilder: (context, index) {
+                          return buildEventCard(index);
+                        },
+                      ),
+                    )
             ],
           ),
           loading

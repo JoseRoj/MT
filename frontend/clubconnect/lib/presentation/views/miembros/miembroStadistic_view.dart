@@ -40,7 +40,6 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
   late TooltipBehavior _tooltip;
   late Future<void> _futuremonthStadistic;
   late List<MonthStadisticUser> monthStadistic;
-  final TextEditingController mesController = TextEditingController();
   late MonthStadisticUser selected;
   @override
   void initState() {
@@ -52,7 +51,6 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
   }
 
   Future<void> _getMonthStadisticUser() async {
-    print("Holanda");
     try {
       final stats = await ref
           .read(clubConnectProvider)
@@ -77,10 +75,8 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
     }
   }
 
-  void updatePieChart() {
-    selected = monthStadistic
-        .where((element) => element.mes == mesController.text)
-        .first;
+  void updatePieChart(String value) {
+    selected = monthStadistic.where((element) => element.mes == value).first;
     data = <PieData>[
       PieData(Colors.lightGreen, selected.participation, 'Asistido'),
       PieData(Colors.red, selected.totalEventos - selected.participation,
@@ -93,7 +89,7 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Estadisticas'),
+          title: const Text('Estadísticas'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -214,63 +210,51 @@ class UserStadisticState extends ConsumerState<UserStadistic> {
                                     ],
                                   ),
                                 ),
-                                DropdownMenu<MonthStadisticUser>(
-                                  textStyle: styleText.labelSmall,
-                                  initialSelection: monthStadistic[0],
-                                  controller: mesController,
-                                  inputDecorationTheme: InputDecorationTheme(
-                                      fillColor: AppTheme()
+                                Container(
+                                  width: 150,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme()
+                                        .getTheme()
+                                        .colorScheme
+                                        .onSecondary,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: AppTheme()
                                           .getTheme()
                                           .colorScheme
-                                          .onSecondary,
-                                      labelStyle: styleText.labelSmall,
-                                      filled: true,
-                                      constraints:
-                                          BoxConstraints(maxHeight: 40),
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          borderSide: BorderSide(
-                                              color: AppTheme()
-                                                  .getTheme()
-                                                  .colorScheme
-                                                  .onSecondary,
-                                              width: 1))),
-                                  requestFocusOnTap: true,
-                                  label: const Text('Mes'),
-                                  onSelected: (MonthStadisticUser? color) {
-                                    setState(() {
-                                      updatePieChart();
-                                    });
-                                  },
-                                  menuStyle: MenuStyle(
-                                    backgroundColor: WidgetStateProperty.all(
-                                        AppTheme()
-                                            .getTheme()
-                                            .colorScheme
-                                            .surfaceContainerLow),
-                                    padding: WidgetStateProperty.all(
-                                        EdgeInsets.zero),
+                                          .primary,
+                                      width: 1,
+                                    ),
                                   ),
-                                  dropdownMenuEntries: monthStadistic.map<
-                                          DropdownMenuEntry<
-                                              MonthStadisticUser>>(
-                                      (MonthStadisticUser mes) {
-                                    return DropdownMenuEntry<
-                                        MonthStadisticUser>(
-                                      value: mes,
-                                      label: mes.mes,
-                                      style: ButtonStyle(
-                                        padding: WidgetStateProperty.all(
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 10, vertical: 0)),
-                                        textStyle: WidgetStateProperty.all(
-                                            styleText.labelSmall),
-                                      ),
-
-                                      //enabled: color.label != 'Grey',
-                                    );
-                                  }).toList(),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<MonthStadisticUser>(
+                                      value: selected,
+                                      onChanged:
+                                          (MonthStadisticUser? selectedMonth) {
+                                        if (selectedMonth != null) {
+                                          updatePieChart(selectedMonth
+                                              .mes); // Actualiza el gráfico con el mes seleccionado
+                                          setState(() {});
+                                        }
+                                      },
+                                      items: monthStadistic.map<
+                                              DropdownMenuItem<
+                                                  MonthStadisticUser>>(
+                                          (MonthStadisticUser mes) {
+                                        return DropdownMenuItem<
+                                            MonthStadisticUser>(
+                                          value: mes,
+                                          child: Text(mes.mes,
+                                              style: styleText.labelSmall),
+                                        );
+                                      }).toList(),
+                                      style: styleText.labelSmall,
+                                      isExpanded:
+                                          true, // Para que ocupe todo el ancho del container
+                                    ),
+                                  ),
                                 ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,

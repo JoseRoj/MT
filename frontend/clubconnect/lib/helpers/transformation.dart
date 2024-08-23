@@ -32,6 +32,16 @@ Future<String> toBase64C(String ruta) async {
   }
 }
 
+DateTime dateTimeWithHourSpecific(TimeOfDay hora) {
+  return DateTime(
+      DateTime.now().year, // Año actual
+      DateTime.now().month, // Mes actual
+      DateTime.now().day, // Día actual
+      hora.hour, // Hora especificada en `hours`
+      hora.minute // Minuto especificado en `horaInicio`
+      );
+}
+
 Uint8List imagenFromBase64(String s) {
   return base64Decode(s);
 }

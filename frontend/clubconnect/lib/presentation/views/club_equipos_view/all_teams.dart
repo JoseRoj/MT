@@ -1,3 +1,4 @@
+import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,18 +29,20 @@ class AllTeamsWidgetState extends ConsumerState<AllTeamsWidget> {
     super.initState();
   }
 
+  ThemeData theme = AppTheme().getTheme();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Equipos'),
+        title: Text('Equipos', style: theme.textTheme.titleSmall),
       ),
       body: FutureBuilder(
         future: _futureequipos,
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.waiting:
-              return Center(
+              return const Center(
                 child: CircularProgressIndicator(),
               );
             case ConnectionState.done:
@@ -50,7 +53,7 @@ class AllTeamsWidgetState extends ConsumerState<AllTeamsWidget> {
                   itemBuilder: (context, index) {
                     return ListTile(
                       title: Text(equipos[index].nombre),
-                      trailing: Icon(Icons.arrow_forward_ios, size: 14),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                       onTap: () => context.go(
                           '/home/0/club/${widget.idclub}/equipos/${equipos[index].id}'),
                     );
@@ -58,9 +61,9 @@ class AllTeamsWidgetState extends ConsumerState<AllTeamsWidget> {
                 ),
               );
             case ConnectionState.none:
-              return Text('none');
+              return const Text('none');
             case ConnectionState.active:
-              return Text('active');
+              return const Text('active');
           }
         },
       ),

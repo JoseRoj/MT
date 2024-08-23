@@ -234,7 +234,8 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
     if (pullRefresh != null && pullRefresh) {
       loading = false;
     }
-    setState(() {});
+    print("EventsResponse " + eventsResponse!.length.toString());
+    //setState(() {});
     return eventsResponse;
   }
 
@@ -252,7 +253,6 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
   }
 
   Widget _getBody(value) {
-    print("Refresh " + eventosActivos![0].asistentes.length.toString());
     switch (value) {
       case 0:
         return EventsActives(
@@ -327,8 +327,6 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
 
   @override
   Widget build(BuildContext context) {
-    print("Refresh");
-
     if (role != "") {
       return ValueListenableBuilder(
         valueListenable: _indexNotifier,
@@ -345,7 +343,8 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
               return Scaffold(
                 key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
                 appBar: AppBar(
-                  title: const Text("Eventos"),
+                  centerTitle: false,
+                  title: Text("Eventos", style: styleText.titleSmall),
                   leading: IconButton(
                     icon: const Icon(Icons.arrow_back),
                     onPressed: () {

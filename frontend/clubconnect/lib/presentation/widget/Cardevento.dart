@@ -12,6 +12,7 @@ import 'package:clubconnect/presentation/views/clubEquipos/Clubequipos.dart';
 import 'package:clubconnect/presentation/widget/asistentes.dart';
 import 'package:clubconnect/presentation/widget/userlist.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -46,108 +47,123 @@ class CardEventoState extends ConsumerState<CardEvento> {
 
   //List<EventoFull?>? eventos;
   TextTheme styleText = AppTheme().getTheme().textTheme;
-  EventoFull? eventoSelected;
   @override
   void initState() {
-    eventoSelected = widget.eventoSelected;
+    print("CardEventoState initState");
     // eventos = widget.eventos;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    print("CardEventoState build ${widget.eventoSelected}");
+    print("CardEvento + ${widget.eventos!.isEmpty}}");
     final theme = AppTheme().getTheme();
     return Column(children: [
       SizedBox(
         width: MediaQuery.of(context).size.width,
         height: 220,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: widget.eventos!.length,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () {
-                eventoSelected = widget.eventos![index];
-                widget.updateEventoSelectedCallback(widget.eventos![index]!);
+        child: widget.eventos!.isEmpty
+            ? Center(
+                child: Text(
+                  "No hay eventos",
+                  style: styleText.bodyMedium,
+                ),
+              )
+            : ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: widget.eventos!.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
+                      widget.eventoSelected = widget.eventos![index];
+                      widget.updateEventoSelectedCallback(
+                          widget.eventos![index]!);
 
-                /*eventoSelected =
+                      /*eventoSelected =
                     widget.updateEventoSelectedCallback(eventos![index]!);*/
-                setState(() {});
-              },
-              child: Container(
-                  padding: const EdgeInsets.all(1),
-                  margin: index == 0
-                      ? const EdgeInsets.only(left: 10, bottom: 10, top: 10)
-                      : const EdgeInsets.only(left: 10, top: 10, bottom: 10),
-                  width: 150,
-                  decoration: BoxDecoration(
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10,
-                          offset: Offset(0, 1),
-                        ),
-                      ],
-                      color: AppTheme().getTheme().primaryColor,
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [theme.primaryColor, theme.primaryColorLight],
-                      ),
-                      borderRadius: BorderRadius.circular(20)),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(children: [
-                        Text(
-                          "${widget.eventos![index]!.evento.fecha.day} ${Months.where((element) => element.value == widget.eventos![index]!.evento.fecha.month).first.mes}",
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        Text(
-                          widget.eventos![index]!.evento.titulo,
-                          style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                          textAlign: TextAlign.center,
-                        ),
-                      ]),
-                      Column(children: [
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.group),
-                              const SizedBox(width: 5), // Espacio
+                      setState(() {});
+                    },
+                    child: Container(
+                        padding: const EdgeInsets.all(1),
+                        margin: index == 0
+                            ? const EdgeInsets.only(
+                                left: 10, bottom: 10, top: 10)
+                            : const EdgeInsets.only(
+                                left: 10, top: 10, bottom: 10),
+                        width: 150,
+                        decoration: BoxDecoration(
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 10,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
+                            color: AppTheme().getTheme().primaryColor,
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                theme.primaryColor,
+                                theme.primaryColorLight
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(20)),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(children: [
                               Text(
-                                  widget.eventos![index]!.asistentes.length
-                                      .toString(),
-                                  style: styleText.labelSmall,
-                                  textAlign: TextAlign.center),
+                                "${widget.eventos![index]!.evento.fecha.day} ${Months.where((element) => element.value == widget.eventos![index]!.evento.fecha.month).first.mes}",
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                widget.eventos![index]!.evento.titulo,
+                                style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                                textAlign: TextAlign.center,
+                              ),
                             ]),
-                        Text(
-                            "${widget.eventos![index]!.evento.horaInicio.substring(0, 5)} - ${widget.eventos![index]!.evento.horaFinal.substring(0, 5)}",
-                            style: const TextStyle(
-                                fontSize: 15, color: Colors.black)),
-                      ])
-                    ],
-                  )),
-            );
-          },
-        ),
+                            Column(children: [
+                              Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.group),
+                                    const SizedBox(width: 5), // Espacio
+                                    Text(
+                                        widget
+                                            .eventos![index]!.asistentes.length
+                                            .toString(),
+                                        style: styleText.labelSmall,
+                                        textAlign: TextAlign.center),
+                                  ]),
+                              Text(
+                                  "${widget.eventos![index]!.evento.horaInicio.substring(0, 5)} - ${widget.eventos![index]!.evento.horaFinal.substring(0, 5)}",
+                                  style: const TextStyle(
+                                      fontSize: 15, color: Colors.black)),
+                            ])
+                          ],
+                        )),
+                  );
+                },
+              ),
       ),
-      eventoSelected != null
+      widget.eventoSelected != null
           ? Container(
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height *
                     0.6, // Ajusta según sea necesario
               ),
               child: SingleChildScrollView(
-                child: event(eventoSelected),
+                child: event(widget.eventoSelected),
               ),
             )
           : Container(),
@@ -224,13 +240,10 @@ class CardEventoState extends ConsumerState<CardEvento> {
                               DateTime.now(),
                               widget.dateSelected.month,
                               widget.dateSelected.year);
-                      eventoSelected = response!.firstWhere((element) {
+                      widget.eventoSelected = response!.firstWhere((element) {
                         return element.evento.id == evento.evento.id;
                       });
                       setState(() {
-                        eventoSelected = response.firstWhere((element) {
-                          return element.evento.id == evento.evento.id;
-                        });
                         widget.eventos = response;
                         //eventos = response;
                       });
@@ -255,9 +268,7 @@ class CardEventoState extends ConsumerState<CardEvento> {
                           DateTime.now(),
                           widget.dateSelected.month,
                           widget.dateSelected.year);
-                      eventoSelected = response!.firstWhere((element) {
-                        return element.evento.id == evento.evento.id;
-                      });
+
                       /*final response = await ref
                           .read(clubConnectProvider)
                           .getEventos(
@@ -267,6 +278,9 @@ class CardEventoState extends ConsumerState<CardEvento> {
                               widget.dateSelected.month,
                               widget.dateSelected.year);*/
                       setState(() {
+                        widget.eventoSelected = response!.firstWhere((element) {
+                          return element.evento.id == evento.evento.id;
+                        });
                         widget.eventos = response;
                         //eventos = response;
                       });

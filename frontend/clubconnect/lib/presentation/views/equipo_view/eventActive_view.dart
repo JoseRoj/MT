@@ -98,6 +98,8 @@ class EventsActivesState extends ConsumerState<EventsActives> {
   TextEditingController mesController = TextEditingController(
       text: Months.where((e) => e.value == DateTime.now().month).first.mes);
 
+  final FocusNode _focusNode = FocusNode();
+
   final styleText = AppTheme().getTheme().textTheme; // Estilo de texto
   var buttonText = "";
   bool loading = false;
@@ -134,12 +136,22 @@ class EventsActivesState extends ConsumerState<EventsActives> {
 
   @override
   Widget build(BuildContext context) {
-    print("Refresh 1o");
     return Scaffold(
       key: _scaffoldKey,
       // Asociar la GlobalKey al Scaffold
       appBar: AppBar(
-        title: const Text("Eventos"),
+        centerTitle: false,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Eventos ',
+                style: styleText.titleSmall, textAlign: TextAlign.center),
+            Text(
+              widget.equipo.nombre,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
+            )
+          ],
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -256,60 +268,51 @@ class EventsActivesState extends ConsumerState<EventsActives> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                DropdownMenu<MonthYear>(
-                  textStyle: styleText.labelSmall,
-                  initialSelection: proximoTresMeses
-                      .where((e) => e.month == widget.dateSelected.month)
-                      .first,
-                  controller: mesController,
-                  inputDecorationTheme: InputDecorationTheme(
-                      fillColor: AppTheme().getTheme().colorScheme.onSecondary,
-                      labelStyle: styleText.labelSmall,
-                      filled: true,
-                      constraints: const BoxConstraints(maxHeight: 40),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                              color:
-                                  AppTheme().getTheme().colorScheme.onSecondary,
-                              width: 1))),
-                  requestFocusOnTap: true,
-                  label: const Text('Mes'),
-                  onSelected: (MonthYear? value) async {
-                    print("Value : $value");
-                    widget.updateFechaActivosCallback(value);
-                    /*DateFormat('dd / MM / yyyy')
-                                            .format(fechaSeleccionada);*/
-                    widget.dateSelected = value!;
-                    widget.eventosActivos = await widget.getEventosCallback(
-                        EstadosEventos.activo,
-                        true,
-                        DateTime.now(),
-                        value!.month,
-                        value.year);
-                    setState(() {});
-                  },
-                  menuStyle: MenuStyle(
-                    backgroundColor: WidgetStateProperty.all(
-                        AppTheme().getTheme().colorScheme.surfaceContainerLow),
-                    padding: WidgetStateProperty.all(EdgeInsets.zero),
+                Container(
+                  width: 150,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: AppTheme().getTheme().colorScheme.onSecondary,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppTheme().getTheme().colorScheme.primary,
+                      width: 2,
+                    ),
                   ),
-                  dropdownMenuEntries: proximoTresMeses
-                      .map<DropdownMenuEntry<MonthYear>>((MonthYear mes) {
-                    return DropdownMenuEntry<MonthYear>(
-                      value: mes,
-                      label: mes.nameMonth,
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all(
-                            const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 0)),
-                        textStyle:
-                            WidgetStateProperty.all(styleText.labelSmall),
-                      ),
-
-                      //enabled: color.label != 'Grey',
-                    );
-                  }).toList(),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<MonthYear>(
+                      value: proximoTresMeses
+                          .where((e) => e.month == widget.dateSelected.month)
+                          .first,
+                      onChanged: (MonthYear? newValue) async {
+                        if (newValue != null &&
+                            widget.dateSelected != newValue) {
+                          widget.updateFechaActivosCallback(newValue);
+                          widget.dateSelected = newValue;
+                          widget.eventosActivos =
+                              await widget.getEventosCallback(
+                                  EstadosEventos.activo,
+                                  true,
+                                  DateTime.now(),
+                                  newValue.month,
+                                  newValue.year);
+                          widget.eventoSelected = null;
+                          setState(() {});
+                        }
+                      },
+                      items: proximoTresMeses
+                          .map<DropdownMenuItem<MonthYear>>((MonthYear mes) {
+                        return DropdownMenuItem<MonthYear>(
+                          value: mes,
+                          child:
+                              Text(mes.nameMonth, style: styleText.labelSmall),
+                        );
+                      }).toList(),
+                      style: styleText.labelSmall,
+                      isExpanded:
+                          true, // Para que ocupe todo el ancho del container
+                    ),
+                  ),
                 ),
                 GestureDetector(
                   onTap: () async {
