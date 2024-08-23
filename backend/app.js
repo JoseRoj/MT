@@ -23,7 +23,7 @@ app.use(express.json());
 // Routes
 require("./routes")(app);
 
-cron.schedule("0 4 * * *", async () => {
+cron.schedule("26 * * * *", async () => {
   console.log("Running a task every minute");
   await finishEvents();
 });
