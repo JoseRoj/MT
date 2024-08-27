@@ -1,4 +1,5 @@
 const connectionPostgres = require("../database/db");
+const moment = require("moment-timezone");
 
 module.exports = {
   /*
@@ -82,6 +83,84 @@ module.exports = {
     } catch (e) {
       console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
+  async stadisticTeams(fecha_inicio, fecha_final, id_club, id_equipo) {
+    try {
+      const data = {
+        eventos: [],
+        recurrentes: [],
+        userList: [],
+      };
+      /* Trnasformar initialDate */
+      const timeInit = moment(fecha_inicio, "YYYY-MM-DD HH:mm:ss.SSSSSS");
+      //const timeEnd = moment(endDate, "YYYY-MM-DD HH:mm:ss.SSSSSS");
+      // Configura la zona horaria a Chile/Continental
+      timeInit.tz("America/Santiago");
+
+      const formattedTimeInitString = timeInit.toDate().toISOString();
+      console.log("fecha", fecha_inicio);
+      console.log("fecha", fecha_final);
+
+      /* Obtener todos los eventos que se encuentran en la fecha */
+      let queryEvents = `SELECT * FROM "Evento"  WHERE "Evento".fecha >= $1 AND "Evento".fecha <= $2 AND "Evento".id_equipo = $3`;
+      const response = await connectionPostgres.query(queryEvents, [
+        formattedTimeInitString,
+        fecha_final,
+        id_equipo,
+      ]);
+
+      for (var event of response.rows) {
+        query = `SELECT "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".id, "Usuarios".imagen FROM public."Usuarios" 
+        JOIN public."Asistencia" ON "Usuarios".id = "Asistencia".id_usuario
+        WHERE "Asistencia".id_evento = $1`;
+        const asistents = await connectionPostgres.query(query, [event.id]);
+        data.eventos.push({
+          ...event,
+          asistentes: asistents.rows,
+        });
+      }
+
+      /* obtener los posibles eventos recurrentes en caso de querer filtrar por estos */
+      var queryRecurrentes = `SELECT * FROM configevento WHERE configevento.fecha_inicio >= $1 OR configevento.fecha_final <= $2 AND id_equipo = $3`;
+      const responseRecurrentes = await connectionPostgres.query(
+        queryRecurrentes,
+        [fecha_inicio, fecha_final, id_equipo]
+      );
+      data.recurrentes = responseRecurrentes.rows;
+
+      var queryList = `
+      WITH UsuariosSeleccionados AS (
+        SELECT DISTINCT u.id
+        FROM "Miembros" m
+        JOIN "Usuarios" u ON u.id = m.id_usuario
+        WHERE m.id_equipo = $3
+        UNION
+        SELECT DISTINCT u.id
+        FROM "Administra" a
+        JOIN "Usuarios" u ON u.id = a.id_usuario
+        WHERE a.id_club = $4
+      )
+
+      SELECT CONCAT_WS(' ', u.nombre, u.apellido1, u.apellido2) AS nombreCompleto, COUNT(a.id) AS total_asistencias
+        FROM UsuariosSeleccionados us
+        JOIN "Usuarios" u ON u.id = us.id
+        LEFT JOIN "Asistencia" a ON u.id = a.id_usuario
+        LEFT JOIN "Evento" e ON a.id_evento = e.id AND e.fecha BETWEEN $1 AND $2 AND e.id_equipo = $3
+        GROUP BY u.id, u.nombre, u.apellido1, u.apellido2
+      ORDER BY total_asistencias DESC`;
+      const responseList = await connectionPostgres.query(queryList, [
+        fecha_inicio,
+        fecha_final,
+        id_equipo,
+        id_club,
+      ]);
+      data.userList = responseList.rows;
+      return { statusCode: 200, data: data, message: "" };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar la petición" };
     }
   },
 };
