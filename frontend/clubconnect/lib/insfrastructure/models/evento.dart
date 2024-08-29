@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
+
 class Evento {
-  String? id;
+  String id;
   String descripcion;
   DateTime fecha;
   String horaInicio;
@@ -10,9 +12,11 @@ class Evento {
   String idEquipo;
   String titulo;
   String lugar;
+  String? idConfig;
+  List<Asistente>? asistentes;
 
   Evento({
-    this.id,
+    required this.id,
     required this.descripcion,
     required this.fecha,
     required this.horaInicio,
@@ -21,6 +25,8 @@ class Evento {
     required this.idEquipo,
     required this.titulo,
     required this.lugar,
+    required this.idConfig,
+    this.asistentes,
   });
 
   factory Evento.fromRawJson(String str) => Evento.fromJson(json.decode(str));
@@ -37,6 +43,11 @@ class Evento {
         idEquipo: json["id_equipo"],
         titulo: json["titulo"],
         lugar: json["lugar"],
+        idConfig: json["id_config"],
+        asistentes: json["asistentes"] == null
+            ? []
+            : List<Asistente>.from(
+                json["asistentes"]!.map((x) => Asistente.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
@@ -49,9 +60,14 @@ class Evento {
         "id_equipo": idEquipo,
         "titulo": titulo,
         "lugar": lugar,
+        "id_config": idConfig,
+        "asistentes": asistentes == null
+            ? []
+            : List<dynamic>.from(asistentes!.map((x) => x.toJson())),
       };
 }
 
+// TODO: VER ESTO
 class EventoFull {
   Evento evento;
   List<Asistente> asistentes;
@@ -75,38 +91,5 @@ class EventoFull {
   Map<String, dynamic> toJson() => {
         "evento": evento.toJson(),
         "asistentes": List<dynamic>.from(asistentes.map((x) => x.toJson())),
-      };
-}
-
-class Asistente {
-  String nombre;
-  String apellido1;
-  String imagen;
-  String id;
-
-  Asistente({
-    required this.nombre,
-    required this.apellido1,
-    required this.id,
-    required this.imagen,
-  });
-
-  factory Asistente.fromRawJson(String str) =>
-      Asistente.fromJson(json.decode(str));
-
-  String toRawJson() => json.encode(toJson());
-
-  factory Asistente.fromJson(Map<String, dynamic> json) => Asistente(
-        nombre: json["nombre"],
-        apellido1: json["apellido1"],
-        imagen: json["imagen"] ?? "",
-        id: json["id"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "nombre": nombre,
-        "apellido1": apellido1,
-        "id": id,
-        "imagem": imagen,
       };
 }

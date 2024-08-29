@@ -6,12 +6,14 @@ Widget userList({
   required String name,
   required String? image,
 }) {
+  print("name : + ${name}");
   return Container(
     margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(10),
     ),
     width: 70,
+
     // Ajusta el ancho de los elementos según sea necesario
     child: Column(
       children: [

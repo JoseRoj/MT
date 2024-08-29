@@ -4,6 +4,7 @@ import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/categoria.dart';
 import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'package:clubconnect/insfrastructure/models/deporte.dart';
+import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:dio/dio.dart';
@@ -783,5 +784,23 @@ class SupabdDatasource extends ClubConnectDataSource {
       data: jsonEncode(configEvento.toJson()),
     );
     return response;
+  }
+
+  @override
+  Future<EventoStadistic> getEventoStadistic(
+      DateTime initDate, DateTime endDate, int idequipo, int idClub) async {
+    final dio = Dio(BaseOptions(headers: {}));
+    final response = await dio.get(
+      '${dotenv.env["API_URL"]}/equipo/stadistic',
+      queryParameters: {
+        'fecha_inicio': initDate,
+        'fecha_final': endDate,
+        'id_equipo': idequipo,
+        'id_club': idClub
+      },
+    );
+    EventoStadistic stadistic = EventoStadistic.fromJson(response.data["data"]);
+
+    return stadistic;
   }
 }

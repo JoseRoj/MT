@@ -4,10 +4,12 @@ import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/insfrastructure/models/equipo.dart';
 import 'package:clubconnect/insfrastructure/models/evento.dart';
+import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/user.dart';
 import 'package:clubconnect/presentation/views/equipo_view/editEvent_vies.dart';
 import 'package:clubconnect/presentation/views/equipo_view/eventActive_view.dart';
 import 'package:clubconnect/presentation/widget/asistentes.dart';
+import 'package:clubconnect/presentation/widget/inputMonthOrYear.dart';
 import 'package:clubconnect/presentation/widget/modalCarga.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -76,6 +78,16 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
   String? descripcionEdit;
   String? lugarEdit;
   List<Asistente>? asistentes;
+
+  //* ------------------ Funciones -----------------
+  void selectedMonthYear(int selectedItem) {
+    setState(() {
+      Meses selectedMonth = Months[selectedItem];
+      widget.selectedMonthYear = MonthYear(selectedMonth.value,
+          widget.selectedMonthYear.year, selectedMonth.mes);
+    });
+  }
+
   //* ------------------------------------------------------
   @override
   void initState() {
@@ -95,8 +107,6 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     super.dispose();
   }
 
-  List<int> years = List.generate(3, (index) => DateTime.now().year + index);
-
   Future<List<EventoFull>?> getEventos(
       String estado, bool? pullRefresh, DateTime? endDate) async {
     List<EventoFull>? eventsResponse;
@@ -112,33 +122,6 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     }
     setState(() {});
     return eventsResponse;
-  }
-
-  Widget _getbody(value) {
-    switch (value) {
-      case 0:
-        return builderAllEvents();
-      case 1:
-        return Container();
-      /*EditEventWidget(
-            fechaEdit: fechaEdit!,
-            horaInicio: horaInicio!,
-            horaFin: horaFin!,
-            tituloEdit: tituloEdit,
-            descripcionEdit: descripcionEdit,
-            lugarEdit: lugarEdit,
-            asistentes: asistentes,
-            asistentesId: asistentesId,
-            eventId: eventId,
-            idequipo: widget.idequipo,
-            styleText: styleText,
-            indexNotifier: indexWidget,
-            getEventosCallback: (estado, pullRefresh, endDate) =>
-                getEventos(estado, pullRefresh, endDate));*/
-      default:
-        return const Center(
-            child: Text("No tienes permisos para ver los eventos"));
-    }
   }
 
   @override
@@ -304,12 +287,17 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    inputFecha(
-                        120, widget.selectedMonthYear.nameMonth, "month"),
-                    const SizedBox(width: 20, child: Text(" - ")),
-                    inputFecha(
-                        80, widget.selectedMonthYear.year.toString(), "year"),
+                    InputFechaWidget(
+                        width: 120,
+                        date: widget.selectedMonthYear,
+                        value: "month",
+                        onMonthYearChanged: selectedMonthYear),
                     const SizedBox(width: 10),
+                    InputFechaWidget(
+                        width: 100,
+                        date: widget.selectedMonthYear,
+                        value: "year",
+                        onMonthYearChanged: selectedMonthYear),
                     IconButton.filled(
                       onPressed: () async {
                         widget.eventos = await widget.getEventosCallback(
@@ -321,7 +309,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                         widget.updateMonthYear(widget.selectedMonthYear);
                         setState(() {});
                       },
-                      icon: Icon(Icons.search),
+                      icon: const Icon(Icons.search),
                     ),
                   ],
                 ),
@@ -440,92 +428,6 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                 )
               : Container(),
         ],
-      ),
-    );
-  }
-
-  Widget inputFecha(double width, String date, String value) {
-    return GestureDetector(
-      onTap: () {
-        showCupertinoModalPopup<void>(
-          context: context,
-          builder: (context) => Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-              ),
-              height: 200,
-              child: value == "month"
-                  ? CupertinoPicker(
-                      magnification: 1.22,
-                      squeeze: 1.2,
-                      useMagnifier: true,
-                      itemExtent: 30,
-                      // This sets the initial item.
-                      scrollController: FixedExtentScrollController(
-                        initialItem: widget.selectedMonthYear.month - 1,
-                      ),
-                      // This is called when selected item is changed.
-                      onSelectedItemChanged: (int selectedItem) {
-                        setState(() {
-                          Meses selectedMonth = Months[selectedItem];
-                          widget.selectedMonthYear = MonthYear(
-                              selectedMonth.value,
-                              widget.selectedMonthYear.year,
-                              selectedMonth.mes);
-                        });
-                      },
-                      children:
-                          List<Widget>.generate(Months.length, (int index) {
-                        return Center(child: Text(Months[index].mes));
-                      }),
-                    )
-                  : CupertinoPicker(
-                      magnification: 1.22,
-                      squeeze: 1.2,
-                      useMagnifier: true,
-                      itemExtent: 30,
-                      // This sets the initial item.
-                      scrollController: FixedExtentScrollController(
-                          initialItem: widget.selectedMonthYear.year -
-                              DateTime.now().year),
-                      // This is called when selected item is changed.
-                      onSelectedItemChanged: (int selectedItem) {
-                        setState(() {
-                          widget.selectedMonthYear = MonthYear(
-                              widget.selectedMonthYear.month,
-                              years[selectedItem],
-                              widget.selectedMonthYear.nameMonth);
-                        });
-                      },
-                      children:
-                          List<Widget>.generate(years.length, (int index) {
-                        return Center(child: Text(years[index].toString()));
-                      }),
-                    )),
-        );
-      },
-      child: Container(
-        width: width,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Text(
-          date,
-          textAlign: TextAlign.center,
-        ),
       ),
     );
   }
@@ -869,7 +771,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     );
   }
 }
- /*
+/*
  Stack(children: [
       Container(
           padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 35),

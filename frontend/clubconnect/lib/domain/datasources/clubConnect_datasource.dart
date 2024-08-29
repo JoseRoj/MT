@@ -1,4 +1,5 @@
 import 'package:clubconnect/insfrastructure/models.dart';
+import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
@@ -32,6 +33,9 @@ abstract class ClubConnectDataSource {
     int idequipo,
   );
   Future<bool> deleteEquipo(int idequipo);
+
+  Future<EventoStadistic> getEventoStadistic(
+      DateTime initDate, DateTime endDate, int idequipo, int idClub);
 
   Future<List<MonthStadisticUser>> getMonthStadisticUser(
       int idusuario, int idequipo);

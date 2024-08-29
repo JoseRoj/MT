@@ -20,10 +20,7 @@ module.exports = {
   async getEquiposByUser(id_usuario, id_club) {
     try {
       let query = `SELECT * FROM public."Equipo" WHERE id IN (SELECT id_equipo FROM public."Miembros" WHERE id_usuario = $1) AND id_club = $2`;
-      const response = await connectionPostgres.query(query, [
-        id_usuario,
-        id_club,
-      ]);
+      const response = await connectionPostgres.query(query, [id_usuario, id_club]);
       return { statusCode: 200, data: response.rows, message: "" };
     } catch (e) {
       console.log("Error: ", e);
@@ -104,15 +101,11 @@ module.exports = {
       console.log("fecha", fecha_final);
 
       /* Obtener todos los eventos que se encuentran en la fecha */
-      let queryEvents = `SELECT * FROM "Evento"  WHERE "Evento".fecha >= $1 AND "Evento".fecha <= $2 AND "Evento".id_equipo = $3`;
-      const response = await connectionPostgres.query(queryEvents, [
-        formattedTimeInitString,
-        fecha_final,
-        id_equipo,
-      ]);
+      let queryEvents = `SELECT * FROM "Evento"  WHERE "Evento".fecha >= $1 AND "Evento".fecha <= $2 AND "Evento".id_equipo = $3 ORDER BY "Evento".fecha ASC`;
+      const response = await connectionPostgres.query(queryEvents, [formattedTimeInitString, fecha_final, id_equipo]);
 
       for (var event of response.rows) {
-        query = `SELECT "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".id, "Usuarios".imagen FROM public."Usuarios" 
+        query = `SELECT "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".apellido2, "Usuarios".id, "Usuarios".imagen FROM public."Usuarios" 
         JOIN public."Asistencia" ON "Usuarios".id = "Asistencia".id_usuario
         WHERE "Asistencia".id_evento = $1`;
         const asistents = await connectionPostgres.query(query, [event.id]);
@@ -124,10 +117,7 @@ module.exports = {
 
       /* obtener los posibles eventos recurrentes en caso de querer filtrar por estos */
       var queryRecurrentes = `SELECT * FROM configevento WHERE configevento.fecha_inicio >= $1 OR configevento.fecha_final <= $2 AND id_equipo = $3`;
-      const responseRecurrentes = await connectionPostgres.query(
-        queryRecurrentes,
-        [fecha_inicio, fecha_final, id_equipo]
-      );
+      const responseRecurrentes = await connectionPostgres.query(queryRecurrentes, [fecha_inicio, fecha_final, id_equipo]);
       data.recurrentes = responseRecurrentes.rows;
 
       var queryList = `
@@ -150,12 +140,7 @@ module.exports = {
         LEFT JOIN "Evento" e ON a.id_evento = e.id AND e.fecha BETWEEN $1 AND $2 AND e.id_equipo = $3
         GROUP BY u.id, u.nombre, u.apellido1, u.apellido2
       ORDER BY total_asistencias DESC`;
-      const responseList = await connectionPostgres.query(queryList, [
-        fecha_inicio,
-        fecha_final,
-        id_equipo,
-        id_club,
-      ]);
+      const responseList = await connectionPostgres.query(queryList, [fecha_inicio, fecha_final, id_equipo, id_club]);
       data.userList = responseList.rows;
       return { statusCode: 200, data: data, message: "" };
     } catch (e) {

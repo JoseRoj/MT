@@ -1,3 +1,4 @@
+import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 
@@ -22,6 +23,10 @@ abstract class ClubConnectRepository {
   Future<List<Club>> getClubsUser(int idusuario);
   Future<String> getRole(int idusuario, int idclub, int? idequipo);
   Future<List<UserTeam>> getMiembros(int idclub);
+
+  //* ------ EQUIPO ------------*//
+  Future<EventoStadistic> getEventoStadistic(
+      DateTime initDate, DateTime endDate, int idequipo, int idClub);
 
   //* ------ EQUIPOS USUARIO ------- *//
   Future<List<Equipo>> getEquipos(int idclub);

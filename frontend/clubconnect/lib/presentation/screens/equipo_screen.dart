@@ -8,26 +8,12 @@ import 'package:clubconnect/presentation/views/equipo_view/allEvents_view.dart';
 import 'package:clubconnect/presentation/views/equipo_view/createEvent_view.dart';
 import 'package:clubconnect/presentation/views/equipo_view/eventActive_view.dart';
 import 'package:clubconnect/presentation/views/equipo_view/eventRecurrentes_view.dart';
+import 'package:clubconnect/presentation/views/equipo_view/stadistic_view.dart';
 import 'package:clubconnect/presentation/views/miembros/miembros_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum Menu { eliminar, editar, terminar }
-
-final List<Meses> Months = <Meses>[
-  Meses("Enero", 1),
-  Meses("Febrero", 2),
-  Meses("Marzo", 3),
-  Meses("Abril", 4),
-  Meses("Mayo", 5),
-  Meses("Junio", 6),
-  Meses("Julio", 7),
-  Meses("Agosto", 8),
-  Meses("Septiembre", 9),
-  Meses("Octubre", 10),
-  Meses("Noviembre", 11),
-  Meses("Diciembre", 12),
-];
 
 class EquipoSpecific extends ConsumerStatefulWidget {
   static const name = 'equipo';
@@ -103,6 +89,10 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
 
   //* EVENTOS RECURRENTES */
   List<ConfigEventos>? eventosRecurrentes = [];
+
+  //* ESTADISTICAS EQUIPO */
+
+  /* ------------------------------------------------------------------- */
 
   @override
   void initState() {
@@ -320,6 +310,12 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
               getEventos(estado, pullRefresh, DateTime.now(), month, year),
        */
         );
+      case 6:
+        return StadisticTeam(
+            equipo: widget.team,
+            idequipo: widget.idequipo,
+            indexNotifier: _indexNotifier,
+            role: role);
       default:
         return Container();
     }

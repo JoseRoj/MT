@@ -1,5 +1,6 @@
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/insfrastructure/models/evento.dart';
+import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 import 'package:clubconnect/presentation/widget/userlist.dart';
 import 'package:flutter/material.dart';
 
@@ -61,7 +62,7 @@ class _AttendeesListState extends State<AttendeesList> {
                 ),
               )
             : Container(
-                height: 80,
+                height: 110,
                 child: SingleChildScrollView(
                   child: Wrap(
                     children: widget.asistentes.take(4).map((e) {

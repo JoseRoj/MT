@@ -2,6 +2,7 @@ import 'package:clubconnect/domain/datasources/clubConnect_datasource.dart';
 import 'package:clubconnect/domain/repositories/club_repository.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/categoria.dart';
+import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
@@ -250,5 +251,12 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   @override
   Future<dynamic> editConfigEvento(ConfigEventos configEvento) async {
     return await clubConnectDataSource.editConfigEvento(configEvento);
+  }
+
+  @override
+  Future<EventoStadistic> getEventoStadistic(
+      DateTime initDate, DateTime endDate, int idequipo, int idClub) async {
+    return await clubConnectDataSource.getEventoStadistic(
+        initDate, endDate, idequipo, idClub);
   }
 }

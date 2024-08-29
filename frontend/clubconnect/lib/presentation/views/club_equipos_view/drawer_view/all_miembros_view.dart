@@ -44,6 +44,7 @@ class _AllMiembrosWidgetState extends ConsumerState<AllMiembrosWidget> {
 
   @override
   void initState() {
+    print("Entrando en AllMiembros");
     super.initState();
     miembros = widget.miembros;
     logoClub = imagenFromBase64(widget.club.logo);

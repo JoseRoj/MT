@@ -4,6 +4,7 @@ import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/insfrastructure/models/evento.dart';
+import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/user.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
@@ -88,6 +89,7 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
         .where((element) =>
             !_employeeDataSource.doesRowExist(element.id.toString()))
         .toList();
+
     _miembrosDataSource = DataSource(AsistentesData: miembros);
   }
 
@@ -131,6 +133,7 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               formInput(
                 label: "Titulo",
@@ -229,7 +232,7 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
                 validator: (value) => emptyOrNull(value, "descripción"),
               ),
               Container(
-                width: MediaQuery.of(context).size.width * 0.6,
+                width: MediaQuery.of(context).size.width * 0.9,
                 child: SfDataGrid(
                   rowHeight: 40,
                   allowSwiping: true,
@@ -268,8 +271,8 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
                       ),
                     ),
                     GridColumn(
-                      minimumWidth: MediaQuery.of(context).size.width * 0.6,
-                      maximumWidth: MediaQuery.of(context).size.width * 0.6,
+                      minimumWidth: MediaQuery.of(context).size.width * 0.9,
+                      maximumWidth: MediaQuery.of(context).size.width * 0.9,
                       columnName: 'Miembros',
                       label: Container(
                         alignment: Alignment.center,
@@ -355,7 +358,8 @@ class DataSource extends DataGridSource {
     _employeeData = AsistentesData.map<DataGridRow>((e) => DataGridRow(cells: [
           DataGridCell<String>(columnName: 'ID', value: e.id),
           DataGridCell<String>(
-              columnName: 'Nombre', value: e.nombre + " " + e.apellido1),
+              columnName: 'Nombre',
+              value: e.nombre + " " + e.apellido1 + " " + e.apellido2 ?? ""),
         ])).toList();
   }
 
