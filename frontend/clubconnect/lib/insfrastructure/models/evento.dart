@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 
@@ -14,41 +15,42 @@ class Evento {
   String lugar;
   String? idConfig;
   List<Asistente>? asistentes;
+  dynamic pctasistencia;
 
-  Evento({
-    required this.id,
-    required this.descripcion,
-    required this.fecha,
-    required this.horaInicio,
-    required this.horaFinal,
-    required this.estado,
-    required this.idEquipo,
-    required this.titulo,
-    required this.lugar,
-    required this.idConfig,
-    this.asistentes,
-  });
+  Evento(
+      {required this.id,
+      required this.descripcion,
+      required this.fecha,
+      required this.horaInicio,
+      required this.horaFinal,
+      required this.estado,
+      required this.idEquipo,
+      required this.titulo,
+      required this.lugar,
+      required this.idConfig,
+      this.asistentes,
+      this.pctasistencia});
 
   factory Evento.fromRawJson(String str) => Evento.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
   factory Evento.fromJson(Map<String, dynamic> json) => Evento(
-        id: json["id"],
-        descripcion: json["descripcion"],
-        fecha: DateTime.parse(json["fecha"]),
-        horaInicio: json["hora_inicio"],
-        horaFinal: json["hora_final"],
-        estado: json["estado"],
-        idEquipo: json["id_equipo"],
-        titulo: json["titulo"],
-        lugar: json["lugar"],
-        idConfig: json["id_config"],
-        asistentes: json["asistentes"] == null
-            ? []
-            : List<Asistente>.from(
-                json["asistentes"]!.map((x) => Asistente.fromJson(x))),
-      );
+      id: json["id"],
+      descripcion: json["descripcion"],
+      fecha: DateTime.parse(json["fecha"]),
+      horaInicio: json["hora_inicio"],
+      horaFinal: json["hora_final"],
+      estado: json["estado"],
+      idEquipo: json["id_equipo"],
+      titulo: json["titulo"],
+      lugar: json["lugar"],
+      idConfig: json["id_config"],
+      asistentes: json["asistentes"] == null
+          ? []
+          : List<Asistente>.from(
+              json["asistentes"]!.map((x) => Asistente.fromJson(x))),
+      pctasistencia: json["pctasistencia"]);
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -64,6 +66,7 @@ class Evento {
         "asistentes": asistentes == null
             ? []
             : List<dynamic>.from(asistentes!.map((x) => x.toJson())),
+        "pctasitencia": pctasistencia ?? 0
       };
 }
 

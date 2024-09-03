@@ -20,12 +20,13 @@ class EquipoSpecific extends ConsumerStatefulWidget {
   final int idclub;
   final int idequipo;
   final Equipo team;
-  const EquipoSpecific({
-    super.key,
-    required this.idclub,
-    required this.idequipo,
-    required this.team,
-  });
+  final int drawerIndex;
+  const EquipoSpecific(
+      {super.key,
+      required this.idclub,
+      required this.idequipo,
+      required this.team,
+      required this.drawerIndex});
 
   @override
   EquipoSpecificState createState() => EquipoSpecificState();
@@ -93,6 +94,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
   //* ESTADISTICAS EQUIPO */
 
   /* ------------------------------------------------------------------- */
+  var viewRoutes = <Widget>[];
 
   @override
   void initState() {
@@ -135,6 +137,70 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
           role = roleValue;
           miembros = miembrosValue;
           eventos = eventosValue;
+          viewRoutes = [
+            EventsActives(
+              equipo: widget.team,
+              //fechaSeleccionada: fechaSeleccionada,
+              //dateSelected: dateSelected,
+              //eventoSelected: eventoSelected,
+              role: role,
+              idClub: widget.idclub,
+              /*updateEventoSelectedCallback: (evento) =>
+                  updateEventoSelected(evento),
+              updateFechaActivosCallback: (fecha) => updateFechaActivos(fecha),
+              getEventosCallback: (estado, pullRefresh, initDate, month,
+                      year) =>
+                  getEventos(estado, pullRefresh, DateTime.now(), month, year),*/
+            ),
+            CreateEventWidget(
+              equipo: widget.team,
+              idClub: widget.idclub,
+              /*getEventosCallback: (estado, pullRefresh, int month, int year) =>
+                  getEventos(estado, pullRefresh, DateTime.now(), month, year),
+            */
+            ),
+
+            AllEventsWidget(
+              idClub: widget.idclub,
+              initfechaSeleccionada: initfechaSeleccionada,
+              fechaSeleccionada: endFechaSeleccionada,
+              role: role,
+              //selectedMonthYear: selectedMonthYear,
+              //eventos: eventos,
+              equipo: widget.team,
+              miembros: miembros,
+              /*updateMonthYear: (monthYear) => updateMonthYear(monthYear),
+                updateDate: (initDateSelected, endDateSelected) =>
+                    updateFechas(initDateSelected, endDateSelected),
+                getEventosCallback:
+                    (estado, pullRefresh, initDate, month, year) =>
+                        getEventos(estado, pullRefresh, initDate, month, year)*/
+            ),
+            MiembrosEquipoWidget(
+              idClub: int.parse(widget.idclub.toString()),
+              equipo: widget.team,
+              miembros: miembros,
+              getMiembros: getMiembros,
+              role: role,
+            ),
+
+            EventRecurrentes(
+              equipo: widget.team,
+              idClub: widget.idclub,
+              role: role,
+              settingEventosRecurrentes: eventosRecurrentes,
+              getConfigEventos: getConfigEventos,
+              /*getEventosCallback: (estado, pullRefresh, int month, int year) =>
+              getEventos(estado, pullRefresh, DateTime.now(), month, year),
+       */
+            ),
+            StadisticTeam(
+                equipo: widget.team,
+                idClub: widget.idclub,
+                indexNotifier: _indexNotifier,
+                role: role),
+            //FavoritesView(),
+          ];
         });
       }
     } catch (e) {
@@ -144,7 +210,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
 
   Duration duration = const Duration(hours: 1, minutes: 23);
 
-  void updateFechas(DateTime? init, DateTime? end) {
+  /*void updateFechas(DateTime? init, DateTime? end) {
     if (init != null) {
       initfechaSeleccionada = init;
     }
@@ -169,7 +235,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
     if (evento != null) {
       eventoSelected = evento;
     }
-  }
+  }*/
 
   /* 
   * params: 
@@ -188,7 +254,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
       * estado = "Activo" | "Terminado" | "Cancelado" | "Todos"
       * pullRefresh = true | false
   */
-  Future<List<EventoFull>?> getEventos(String estado, bool? pullRefresh,
+  /*Future<List<EventoFull>?> getEventos(String estado, bool? pullRefresh,
       DateTime initDate, int month, int year) async {
     List<EventoFull>? eventsResponse;
     if (pullRefresh != null && pullRefresh) {
@@ -228,7 +294,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
     //setState(() {});
     return eventsResponse;
   }
-
+*/
   //* Obtener los miembros del equipo *//
   Future<List<User>?> getMiembros() async {
     final miembrosResponse = await ref
@@ -242,7 +308,7 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
     return miembrosResponse;
   }
 
-  Widget _getBody(value) {
+  /*Widget _getBody(value) {
     switch (value) {
       case 0:
         return EventsActives(
@@ -250,7 +316,6 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
           fechaSeleccionada: fechaSeleccionada,
           dateSelected: dateSelected,
           eventoSelected: eventoSelected,
-          eventosActivos: eventosActivos,
           role: role,
           idequipo: widget.idequipo,
           indexNotifier: _indexNotifier,
@@ -320,68 +385,55 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
         return Container();
     }
   }
-
+*/
   @override
   Widget build(BuildContext context) {
-    if (role != "") {
-      return ValueListenableBuilder(
-        valueListenable: _indexNotifier,
-        builder: (BuildContext context, dynamic value, Widget? child) {
-          return _getBody(value);
-        },
-      );
-    } else {
-      return FutureBuilder(
-        future: _initializationFuture,
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.waiting:
-              return Scaffold(
-                key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
-                appBar: AppBar(
-                  centerTitle: false,
-                  title: Text("Eventos", style: styleText.titleSmall),
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () {
-                      _indexNotifier.value == 0;
-                      setState(() {});
-                    },
-                  ),
-                  actions: role == "Administrador" || role == "Entrenador"
-                      ? <Widget>[
-                          IconButton(
-                            icon: const Icon(Icons.menu),
-                            onPressed: () {
-                              _scaffoldKey.currentState!.openDrawer();
-                            },
-                          ),
-                        ]
-                      : null,
-                ),
-                body: const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            case ConnectionState.done:
-              if (snapshot.hasError) {
-                return const Text('Error');
-              } else {
-                return ValueListenableBuilder(
-                  valueListenable: _indexNotifier,
-                  builder:
-                      (BuildContext context, dynamic value, Widget? child) {
-                    return _getBody(value);
+    return FutureBuilder(
+      future: _initializationFuture,
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.waiting:
+            return Scaffold(
+              key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
+              appBar: AppBar(
+                centerTitle: false,
+                title: Text("Eventos", style: styleText.titleSmall),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    setState(() {});
                   },
-                );
-              }
-            case ConnectionState.none:
-              return const Text('none');
-            case ConnectionState.active:
-              return const Text('active');
-          }
-        },
-      );
-    }
+                ),
+                actions: role == "Administrador" || role == "Entrenador"
+                    ? <Widget>[
+                        IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () {
+                            _scaffoldKey.currentState!.openDrawer();
+                          },
+                        ),
+                      ]
+                    : null,
+              ),
+              body: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          case ConnectionState.done:
+            if (snapshot.hasError) {
+              return const Text('Error');
+            } else {
+              return IndexedStack(
+                index: widget.drawerIndex,
+                children: viewRoutes,
+              );
+            }
+          case ConnectionState.none:
+            return const Text('none');
+          case ConnectionState.active:
+            return const Text('active');
+        }
+      },
+    );
   }
 }

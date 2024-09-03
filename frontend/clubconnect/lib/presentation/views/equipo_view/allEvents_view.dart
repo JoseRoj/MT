@@ -7,57 +7,56 @@ import 'package:clubconnect/insfrastructure/models/evento.dart';
 import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/user.dart';
 import 'package:clubconnect/presentation/views/equipo_view/editEvent_vies.dart';
-import 'package:clubconnect/presentation/views/equipo_view/eventActive_view.dart';
 import 'package:clubconnect/presentation/widget/asistentes.dart';
+import 'package:clubconnect/presentation/widget/drawerEquipo.dart';
 import 'package:clubconnect/presentation/widget/inputMonthOrYear.dart';
+import 'package:clubconnect/presentation/widget/loadingScreens/loadingAllEvents.dart';
 import 'package:clubconnect/presentation/widget/modalCarga.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../providers/club_provider.dart';
 
 enum Menu { eliminar, editar, terminar }
 
+// ignore: must_be_immutable
 class AllEventsWidget extends ConsumerStatefulWidget {
   final DateTime? initfechaSeleccionada;
   final DateTime? fechaSeleccionada;
-  MonthYear selectedMonthYear;
-  final int idclub;
-  final int idequipo;
+  //MonthYear selectedMonthYear;
+  final int idClub;
   final Equipo equipo;
   final String role;
   final List<User> miembros;
-  List<EventoFull>? eventos;
-  final ValueNotifier<int> indexNotifier;
-  final Function(MonthYear monthYear) updateMonthYear;
+  //List<EventoFull>? eventos;
+
+/*  final Function(MonthYear monthYear) updateMonthYear;
   final Function(DateTime? initDateSelected, DateTime? endDateSelected)
       updateDate;
   final Future<List<EventoFull>?> Function(String estado, bool? pullRefresh,
-      DateTime initDate, int month, int year) getEventosCallback;
+      DateTime initDate, int month, int year) getEventosCallback;*/
 
   AllEventsWidget({
     super.key,
-    required this.indexNotifier,
     required this.initfechaSeleccionada,
     required this.fechaSeleccionada,
-    required this.selectedMonthYear,
-    required this.eventos,
+    //required this.selectedMonthYear,
+    //required this.eventos,
     required this.role,
-    required this.idclub,
+    required this.idClub,
     required this.equipo,
     required this.miembros,
-    required this.idequipo,
-    required this.updateMonthYear,
+    /*required this.updateMonthYear,
     required this.updateDate,
-    required this.getEventosCallback,
+    required this.getEventosCallback,*/
   });
 
   @override
-  _AllEventsWidgetState createState() => _AllEventsWidgetState();
+  AllEventsWidgetState createState() => AllEventsWidgetState();
 }
 
-class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
+class AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
   Color colorAsistir = const Color.fromARGB(255, 117, 204, 124);
   Color colorCancelar = const Color.fromARGB(255, 237, 65, 65);
 
@@ -69,6 +68,12 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
   final ValueNotifier<int> indexWidget = ValueNotifier<int>(0);
   bool loading = false;
 
+  //* VARIABLES DE ALL EVENTOS *//
+  late Future<void> futureInit;
+  List<EventoFull> allEventos = [];
+  MonthYear monthYear = MonthYear(DateTime.now().month, DateTime.now().year,
+      Months[DateTime.now().month - 1].mes);
+
   //* VARIABLES AL SELECCIONAR EVENTO PARA PODER EDITAR */
   int? eventId = 0;
   DateTime? fechaEdit;
@@ -78,28 +83,22 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
   String? descripcionEdit;
   String? lugarEdit;
   List<Asistente>? asistentes;
+  bool isLoading = false;
 
   //* ------------------ Funciones -----------------
   void selectedMonthYear(int selectedItem) {
     setState(() {
       Meses selectedMonth = Months[selectedItem];
-      widget.selectedMonthYear = MonthYear(selectedMonth.value,
-          widget.selectedMonthYear.year, selectedMonth.mes);
+      monthYear =
+          MonthYear(selectedMonth.value, monthYear.year, selectedMonth.mes);
     });
   }
 
   //* ------------------------------------------------------
   @override
   void initState() {
+    futureInit = initData();
     super.initState();
-    widget
-        .getEventosCallback(EstadosEventos.todos, false, initfechaSeleccionada!,
-            widget.selectedMonthYear.month, widget.selectedMonthYear.year)
-        .then((value) {
-      widget.eventos = value;
-    });
-    initfechaSeleccionada = widget.initfechaSeleccionada;
-    fechaSeleccionada = widget.fechaSeleccionada;
   }
 
   @override
@@ -107,7 +106,35 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     super.dispose();
   }
 
-  Future<List<EventoFull>?> getEventos(
+  Future<void> initData() async {
+    allEventos = await ref.read(clubConnectProvider).getEventos(
+        int.parse(widget.equipo.id!),
+        EstadosEventos.todos,
+        DateTime.now(),
+        DateTime.now().month,
+        DateTime.now().year);
+  }
+
+  //** -------------- FUNCIONES ------------ **/
+  Future<void> getAllEvents() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      allEventos = await ref.read(clubConnectProvider).getEventos(
+          int.parse(widget.equipo.id!),
+          EstadosEventos.todos,
+          DateTime.now(),
+          monthYear.month,
+          monthYear.year);
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  /*Future<List<EventoFull>?> getEventos(
       String estado, bool? pullRefresh, DateTime? endDate) async {
     List<EventoFull>? eventsResponse;
     if (pullRefresh != null && pullRefresh) {
@@ -122,11 +149,10 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     }
     setState(() {});
     return eventsResponse;
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
-    Color colorprimary = AppTheme().getTheme().colorScheme.primary;
     return Scaffold(
       key: _scaffoldKey, // Asociar la GlobalKey al Scaffold
       appBar: AppBar(
@@ -145,7 +171,9 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
         leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              widget.indexNotifier.value = 0;
+              context.go(
+                  '/home/0/club/${widget.idClub}/0/${widget.equipo.id}/0',
+                  extra: {'team': widget.equipo});
             }),
         actions: widget.role == "Administrador" || widget.role == "Entrenador"
             ? <Widget>[
@@ -160,257 +188,119 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
       ),
 
       drawer: widget.role == "Administrador" || widget.role == "Entrenador"
-          ? Drawer(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: <Widget>[
-                  DrawerHeader(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: colorprimary,
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          child: Text(
-                            widget.equipo.nombre,
-                            style: styleText.titleSmall,
-                            maxLines: 1,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.calendar_today),
-                    title: Text('Eventos Activos', style: styleText.bodyMedium),
-                    onTap: () {
-                      setState(() {
-                        widget.indexNotifier.value = 0;
-                        _scaffoldKey.currentState!.closeDrawer();
-                      });
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.calendar_today),
-                    title: Text('Crear Evento', style: styleText.bodyMedium),
-                    onTap: () {
-                      setState(() {
-                        widget.indexNotifier.value = 1;
-                      });
-                      _scaffoldKey.currentState!.closeDrawer();
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.list_alt),
-                    title: Text(
-                      'Todos los Eventos',
-                      style: styleText.bodyMedium,
-                    ),
-                    onTap: () {
-                      setState(() {
-                        widget.indexNotifier.value = 2;
-                      });
-                      _scaffoldKey.currentState!
-                          .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.group),
-                    title: Text(
-                      'Miembros',
-                      style: styleText.bodyMedium,
-                    ),
-                    onTap: () {
-                      setState(() {
-                        widget.indexNotifier.value = 4;
-                      });
-                      _scaffoldKey.currentState!
-                          .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.event_repeat_rounded),
-                    title: Text(
-                      'Config Eventos Recurrentes',
-                      style: styleText.bodyMedium,
-                    ),
-                    onTap: () {
-                      _scaffoldKey.currentState!.closeDrawer();
-                      setState(() {
-                        widget.indexNotifier.value = 5;
-                      });
-                    },
-                  )
-                  // Agrega más ListTile según sea necesario
-                ],
-              ),
+          ? CustomDrawer(
+              equipo: widget.equipo,
+              scaffoldKey: _scaffoldKey,
+              idClub: widget.idClub,
             )
           : null,
-      body: builderAllEvents(),
+      body: FutureBuilder(
+        future: futureInit,
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.waiting:
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+
+            case ConnectionState.done:
+              if (snapshot.hasError) {
+                return const Text('Error');
+              } else {
+                return isLoading
+                    ? SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            selectedDate(),
+                            const LoadingScreenAllEvents()
+                          ],
+                        ),
+                      )
+                    : builderAllEvents();
+              }
+            case ConnectionState.none:
+              return const Text('none');
+            case ConnectionState.active:
+              return const Text('active');
+          }
+        },
+      ),
+    );
+  }
+
+  Widget selectedDate() {
+    return Container(
+      width: 300,
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          InputFechaWidget(
+              width: 120,
+              date: monthYear,
+              value: "month",
+              onMonthYearChanged: selectedMonthYear),
+          const SizedBox(width: 10),
+          InputFechaWidget(
+              width: 100,
+              date: monthYear,
+              value: "year",
+              onMonthYearChanged: selectedMonthYear),
+          IconButton.filled(
+            onPressed: () async {
+              await getAllEvents();
+              setState(() {});
+            },
+            icon: const Icon(Icons.search),
+          ),
+        ],
+      ),
     );
   }
 
   Widget builderAllEvents() {
     return RefreshIndicator(
       onRefresh: () async {
-        widget.eventos = await widget.getEventosCallback(
-            EstadosEventos.todos,
-            true,
-            initfechaSeleccionada!,
-            widget.selectedMonthYear.month,
-            widget.selectedMonthYear.year);
+        await getAllEvents();
+
         setState(() {});
       },
       child: Stack(
         children: [
           Column(
             children: [
-              Container(
-                width: 300,
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    InputFechaWidget(
-                        width: 120,
-                        date: widget.selectedMonthYear,
-                        value: "month",
-                        onMonthYearChanged: selectedMonthYear),
-                    const SizedBox(width: 10),
-                    InputFechaWidget(
-                        width: 100,
-                        date: widget.selectedMonthYear,
-                        value: "year",
-                        onMonthYearChanged: selectedMonthYear),
-                    IconButton.filled(
-                      onPressed: () async {
-                        widget.eventos = await widget.getEventosCallback(
-                            EstadosEventos.todos,
-                            true,
-                            initfechaSeleccionada!,
-                            widget.selectedMonthYear.month,
-                            widget.selectedMonthYear.year);
-                        widget.updateMonthYear(widget.selectedMonthYear);
-                        setState(() {});
-                      },
-                      icon: const Icon(Icons.search),
-                    ),
-                  ],
-                ),
-              ),
-
-              /*Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 5, horizontal: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          const Icon(Icons.calendar_today),
-                          Text(
-                            DateFormat('MM/dd/yyyy')
-                                .format(initfechaSeleccionada!),
-                            style: styleText.labelMedium,
-                            textAlign: TextAlign.end,
-                          ),
-                        ],
-                      ),
-                    ),
-                    onTap: () async {
-                      var selectedDate = await cuppertinoModal(
-                        context,
-                        initfechaSeleccionada,
-                        DateTime(2021, 1, 1),
-                        fechaSeleccionada,
-                      );
-                      if (selectedDate != null) {
-                        setState(() {
-                          loading = true;
-                        });
-                        initfechaSeleccionada = selectedDate;
-                        eventos = await widget.getEventosCallback(
-                            EstadosEventos.todos,
-                            true,
-                            initfechaSeleccionada!,
-                            8,
-                            2024);
-                        widget.updateDate(initfechaSeleccionada, null);
-
-                        setState(() {
-                          loading = false;
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(child: Text(" - ")),
-                  GestureDetector(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 5, horizontal: 25),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          const Icon(Icons.calendar_today),
-                          Text(
-                            DateFormat('MM/dd/yyyy').format(fechaSeleccionada!),
-                            style: styleText.labelMedium,
-                            textAlign: TextAlign.end,
-                          ),
-                        ],
-                      ),
-                    ),
-                    onTap: () async {
-                      var selectedDate = await cuppertinoModal(
-                        context,
-                        fechaSeleccionada,
-                        initfechaSeleccionada,
-                        null,
-                      );
-                      if (selectedDate != null) {
-                        setState(() {
-                          loading = true;
-                        });
-                        fechaSeleccionada = selectedDate;
-                        widget.updateDate(null, fechaSeleccionada);
-                        eventos = await widget.getEventosCallback(
-                            EstadosEventos.todos,
-                            true,
-                            initfechaSeleccionada!,
-                            8,
-                            2024);
-                        setState(() {
-                          loading = false;
-                        });
-                      }
-                    },
-                  ),
-                ],
-              ),*/
+              selectedDate(),
               // Your date selection widgets here
-              widget.eventos!.isEmpty
-                  ? Container()
+              allEventos.isEmpty
+                  ? const Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.event_busy,
+                                size: 100, color: Colors.grey),
+                            Text("No hay eventos ",
+                                style: TextStyle(
+                                    fontSize: 20, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    )
                   : Expanded(
                       child: ListView.builder(
-                        itemCount: widget.eventos!.length,
+                        itemCount: allEventos.length,
                         itemBuilder: (context, index) {
                           return buildEventCard(index);
                         },
@@ -435,7 +325,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
   Widget buildEventCard(int index) {
     ThemeData theme = AppTheme().getTheme();
     return GestureDetector(
-      onTap: () => modalEventDetails(widget.eventos![index]),
+      onTap: () => modalEventDetails(allEventos[index]),
       child: Stack(children: [
         Container(
             padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 35),
@@ -473,13 +363,13 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       Text(
-                          "${widget.eventos![index].evento.fecha.day} ${Months.where((element) => element.value == widget.eventos![index]!.evento.fecha.month).first.mes} ${widget.eventos![index]!.evento.fecha.year}",
+                          "${allEventos[index].evento.fecha.day} ${Months.where((element) => element.value == allEventos[index].evento.fecha.month).first.mes} ${allEventos[index].evento.fecha.year}",
                           style: styleText.displayMedium,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
                           maxLines: 1),
                       Container(
-                        child: Text("${widget.eventos![index].evento.titulo} ",
+                        child: Text("${allEventos[index].evento.titulo} ",
                             style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 18,
@@ -495,7 +385,7 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                           Icon(Icons.group),
                           const SizedBox(width: 10),
                           Text(
-                              "Asistentes: ${widget.eventos![index].asistentes.length}",
+                              "Asistentes: ${allEventos[index].asistentes.length}",
                               style: styleText.labelSmall),
                           SizedBox(
                             width: 10,
@@ -503,14 +393,14 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                           Icon(
                             Icons.circle,
                             size: 15,
-                            color: widget.eventos![index].evento.estado
-                                        .toLowerCase() ==
-                                    "activo"
-                                ? colorAsistir
-                                : colorCancelar,
+                            color:
+                                allEventos[index].evento.estado.toLowerCase() ==
+                                        "activo"
+                                    ? colorAsistir
+                                    : colorCancelar,
                           ),
                           const SizedBox(width: 5),
-                          Text(widget.eventos![index].evento.estado,
+                          Text(allEventos[index].evento.estado,
                               style: styleText.labelSmall),
                         ],
                       ),
@@ -552,41 +442,39 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                       Navigator.of(context).pop();
                       //indexWidget.value = 1;
                       setState(() {
-                        eventId = int.parse(widget.eventos![index].evento
-                            .id!); // widget.eventos![index].evento.id;
-                        fechaEdit = widget.eventos![index].evento.fecha;
-                        horaInicio = convertirStringATimeOfDay(
-                            widget.eventos![index].evento.horaInicio);
-                        horaFin = convertirStringATimeOfDay(
-                            widget.eventos![index].evento.horaFinal);
-                        tituloEdit = widget.eventos![index].evento.titulo;
-                        descripcionEdit =
-                            widget.eventos![index].evento.descripcion;
-                        tituloEdit = widget.eventos![index].evento.titulo;
-                        lugarEdit = widget.eventos![index].evento.lugar;
-                        asistentes = widget.eventos![index].asistentes
-                            .map((e) => e)
-                            .toList();
-                        widget.indexNotifier.value = 3;
+                        var evento = allEventos[index];
+                        eventId =
+                            int.parse(evento.evento.id!); // evento.evento.id;
+                        fechaEdit = evento.evento.fecha;
+                        horaInicio =
+                            convertirStringATimeOfDay(evento.evento.horaInicio);
+                        horaFin =
+                            convertirStringATimeOfDay(evento.evento.horaFinal);
+                        tituloEdit = evento.evento.titulo;
+                        descripcionEdit = evento.evento.descripcion;
+                        tituloEdit = evento.evento.titulo;
+                        lugarEdit = evento.evento.lugar;
+                        asistentes = evento.asistentes.map((e) => e).toList();
+                        // widget.indexNotifier.value = 3;
                       });
                       MaterialPageRoute route = MaterialPageRoute(
-                          builder: (context) => EditEventWidget(
-                              evento: widget.eventos![index],
-                              fechaEdit: fechaEdit!,
-                              horaInicio: horaInicio!,
-                              horaFin: horaFin!,
-                              tituloEdit: tituloEdit,
-                              descripcionEdit: descripcionEdit,
-                              lugarEdit: lugarEdit,
-                              asistentes: asistentes,
-                              eventId: eventId,
-                              idequipo: widget.idequipo,
-                              miembros: widget.miembros,
-                              styleText: styleText,
-                              indexNotifier: indexWidget,
-                              getEventosCallback: (estado, pullRefresh,
-                                      endDate) =>
-                                  getEventos(estado, pullRefresh, endDate)));
+                        builder: (context) => EditEventWidget(
+                          evento: allEventos[index],
+                          fechaEdit: fechaEdit!,
+                          horaInicio: horaInicio!,
+                          horaFin: horaFin!,
+                          tituloEdit: tituloEdit,
+                          descripcionEdit: descripcionEdit,
+                          lugarEdit: lugarEdit,
+                          asistentes: asistentes,
+                          eventId: eventId,
+                          idequipo: int.parse(widget.equipo.id!),
+                          miembros: widget.miembros,
+                          styleText: styleText,
+                          indexNotifier: indexWidget,
+                          getEventosCallback: getAllEvents,
+                        ),
+                      );
                       Navigator.of(context).push(route);
                     },
                   ),
@@ -596,28 +484,28 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                   child: ListTile(
                     dense: true,
                     leading: const Icon(Icons.done),
-                    title: widget.eventos![index].evento.estado ==
-                            EstadosEventos.activo
-                        ? const Text('Terminar')
-                        : const Text('Activar'),
+                    title:
+                        allEventos[index].evento.estado == EstadosEventos.activo
+                            ? const Text('Terminar')
+                            : const Text('Activar'),
                     onTap: () async {
                       Navigator.of(context).pop();
                       final response = await ref
                           .read(clubConnectProvider)
                           .updateEstadoEvento(
-                              int.parse(widget.eventos![index].evento.id!),
-                              widget.eventos![index].evento.estado ==
+                              int.parse(allEventos[index].evento.id!),
+                              allEventos[index].evento.estado ==
                                       EstadosEventos.activo
                                   ? EstadosEventos.terminado
                                   : EstadosEventos.activo);
                       if (response) {
-                        if (widget.eventos![index].evento.estado ==
+                        if (allEventos[index].evento.estado ==
                             EstadosEventos.activo) {
-                          widget.eventos![index].evento.estado =
+                          allEventos[index].evento.estado =
                               EstadosEventos.terminado;
                           customToast("Evento terminado", context, "isSuccess");
                         } else {
-                          widget.eventos![index].evento.estado =
+                          allEventos[index].evento.estado =
                               EstadosEventos.activo;
                           customToast("Evento Activado", context, "isSuccess");
                         }
@@ -673,16 +561,17 @@ class _AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     // Realiza la operación asíncrona
     var result = await ref
         .read(clubConnectProvider)
-        .deleteEvento(int.parse(widget.eventos![index].evento.id!));
+        .deleteEvento(int.parse(allEventos[index].evento.id));
     // Cierra el diálogo de carga solo si está activo
     // ignore: use_build_context_synchronously
 
     // Actualiza el estado y maneja el resultado
     if (result) {
-      await widget.getEventosCallback(
+      getAllEvents();
+/*      await widget.getEventosCallback(
           "updateFull", true, initfechaSeleccionada!, 8, 2024);
       widget.eventos?.removeAt(index);
-
+*/
       setState(() {});
     }
     if (Navigator.of(context, rootNavigator: true).canPop()) {

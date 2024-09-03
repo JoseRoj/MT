@@ -52,11 +52,9 @@ class AllTeamsWidgetState extends ConsumerState<AllTeamsWidget> {
                   itemCount: equipos.length,
                   itemBuilder: (context, index) {
                     return ListTile(
-                      title: Text(equipos[index].nombre),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                      onTap: () => context.go(
-                          '/home/0/club/${widget.idclub}/equipos/${equipos[index].id}'),
-                    );
+                        title: Text(equipos[index].nombre),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                        onTap: () {});
                   },
                 ),
               );

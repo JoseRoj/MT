@@ -88,7 +88,7 @@ class TeamsState extends ConsumerState<Teams> {
                     trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                     onTap: () => {
                       context.go(
-                          '/home/0/club/${widget.idclub}/0/${equipos[index].id}',
+                          '/home/0/club/${widget.idclub}/0/${equipos[index].id}/0',
                           extra: {'team': equipos[index]}),
                     },
                   ),
@@ -98,7 +98,7 @@ class TeamsState extends ConsumerState<Teams> {
                   trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                   onTap: () => {
                     context.go(
-                        '/home/0/club/${widget.idclub}/0/${equipos[index].id}',
+                        '/home/0/club/${widget.idclub}/0/${equipos[index].id}/0',
                         extra: {'team': equipos[index]}),
                   },
                 );

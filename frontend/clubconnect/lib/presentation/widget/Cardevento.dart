@@ -5,6 +5,7 @@ import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/evento.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
+import 'package:clubconnect/presentation/providers/eventosActivos_provider.dart';
 import 'package:clubconnect/presentation/screens/equipo_screen.dart';
 import 'package:clubconnect/presentation/widget/asistentes.dart';
 import 'package:flutter/material.dart';
@@ -14,23 +15,25 @@ import 'package:intl/intl.dart';
 
 // ignore: must_be_immutable
 class CardEvento extends ConsumerStatefulWidget {
-  List<EventoFull?>? eventos;
+  //List<EventoFull?>? eventos;
   int idequipo;
   MonthYear dateSelected;
   EventoFull? eventoSelected;
   DateTime endDate;
-  final Function(EventoFull evento) updateEventoSelectedCallback;
-  final Future<List<EventoFull>?> Function(String estado, bool? pullRefresh,
-      DateTime? initDate, int month, int year) getEventosCallback;
+  final Function(String id) updateEventoSelectedCallback;
+  /*final Future<List<EventoFull>?> Function(String estado, bool? pullRefresh,
+      DateTime? initDate, int month, int year) getEventosCallback;*/
   CardEvento({
     super.key,
-    required this.eventos,
+    required this.updateEventoSelectedCallback,
+
+    //required this.eventos,
     required this.eventoSelected,
     required this.dateSelected,
     required this.idequipo,
     required this.endDate,
-    required this.getEventosCallback,
-    required this.updateEventoSelectedCallback,
+/*    required this.getEventosCallback,
+    required this.updateEventoSelectedCallback,*/
   });
 
   @override
@@ -51,30 +54,35 @@ class CardEventoState extends ConsumerState<CardEvento> {
 
   @override
   Widget build(BuildContext context) {
+    dynamic eventos = ref.read(eventosActivosProvider);
     print("CardEventoState build ${widget.eventoSelected}");
-    print("CardEvento + ${widget.eventos!.isEmpty}}");
+    print("CardEvento + ${eventos.isEmpty}}");
     final theme = AppTheme().getTheme();
     return Column(children: [
       SizedBox(
         width: MediaQuery.of(context).size.width,
         height: 220,
-        child: widget.eventos!.isEmpty
-            ? Center(
-                child: Text(
-                  "No hay eventos",
-                  style: styleText.bodyMedium,
+        child: eventos!.isEmpty
+            ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.event_busy, size: 100, color: Colors.grey),
+                    Text("No hay eventos",
+                        style: TextStyle(fontSize: 20, color: Colors.grey)),
+                  ],
                 ),
               )
             : ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: widget.eventos!.length,
+                itemCount: eventos!.length,
                 itemBuilder: (context, index) {
                   return GestureDetector(
                     onTap: () {
-                      widget.eventoSelected = widget.eventos![index];
-                      widget.updateEventoSelectedCallback(
+                      widget.eventoSelected = eventos![index];
+                      /*widget.updateEventoSelectedCallback(
                           widget.eventos![index]!);
-
+*/
                       /*eventoSelected =
                     widget.updateEventoSelectedCallback(eventos![index]!);*/
                       setState(() {});
@@ -110,7 +118,7 @@ class CardEventoState extends ConsumerState<CardEvento> {
                           children: [
                             Column(children: [
                               Text(
-                                "${widget.eventos![index]!.evento.fecha.day} ${Months.where((element) => element.value == widget.eventos![index]!.evento.fecha.month).first.mes}",
+                                "${eventos![index]!.evento.fecha.day} ${Months.where((element) => element.value == eventos![index]!.evento.fecha.month).first.mes}",
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -119,7 +127,7 @@ class CardEventoState extends ConsumerState<CardEvento> {
                                 textAlign: TextAlign.center,
                               ),
                               Text(
-                                widget.eventos![index]!.evento.titulo,
+                                eventos![index]!.evento.titulo,
                                 style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.bold,
@@ -134,14 +142,15 @@ class CardEventoState extends ConsumerState<CardEvento> {
                                     const Icon(Icons.group),
                                     const SizedBox(width: 5), // Espacio
                                     Text(
-                                        widget
-                                            .eventos![index]!.asistentes.length
+                                        eventos![index]!
+                                            .asistentes
+                                            .length
                                             .toString(),
                                         style: styleText.labelSmall,
                                         textAlign: TextAlign.center),
                                   ]),
                               Text(
-                                  "${widget.eventos![index]!.evento.horaInicio.substring(0, 5)} - ${widget.eventos![index]!.evento.horaFinal.substring(0, 5)}",
+                                  "${eventos![index]!.evento.horaInicio.substring(0, 5)} - ${eventos![index]!.evento.horaFinal.substring(0, 5)}",
                                   style: const TextStyle(
                                       fontSize: 15, color: Colors.black)),
                             ])
@@ -228,18 +237,29 @@ class CardEventoState extends ConsumerState<CardEvento> {
                             ref.read(authProvider).id!);
                     if (response) {
                       buttonText = "Asistir";
-                      List<EventoFull>? response =
+                      await ref
+                          .watch(eventosActivosProvider.notifier)
+                          .getEventosActivos(
+                              widget.idequipo,
+                              DateTime.now(),
+                              widget.dateSelected.month,
+                              widget.dateSelected
+                                  .year); /*List<EventoFull>? response =
                           await widget.getEventosCallback(
                               EstadosEventos.activo,
                               false,
                               DateTime.now(),
                               widget.dateSelected.month,
-                              widget.dateSelected.year);
-                      widget.eventoSelected = response!.firstWhere((element) {
+                              widget.dateSelected.year);*/
+                      /*widget.eventoSelected = ref
+                          .read(eventosActivosProvider)!
+                          .firstWhere((element) {
                         return element.evento.id == evento.evento.id;
-                      });
+                      });*/
                       setState(() {
-                        widget.eventos = response;
+                        widget.updateEventoSelectedCallback(evento.evento.id);
+
+                        //widget.eventos = response;
                         //eventos = response;
                       });
                       // ignore: use_build_context_synchronously
@@ -257,13 +277,20 @@ class CardEventoState extends ConsumerState<CardEvento> {
                             ref.read(authProvider).id!);
                     if (response) {
                       buttonText = "Cancelar";
-                      final response = await widget.getEventosCallback(
+                      await ref
+                          .watch(eventosActivosProvider.notifier)
+                          .getEventosActivos(
+                              widget.idequipo,
+                              DateTime.now(),
+                              widget.dateSelected.month,
+                              widget.dateSelected.year);
+                      /*                    final response = await widget.getEventosCallback(
                           EstadosEventos.activo,
                           false,
                           DateTime.now(),
                           widget.dateSelected.month,
                           widget.dateSelected.year);
-
+*/
                       /*final response = await ref
                           .read(clubConnectProvider)
                           .getEventos(
@@ -273,10 +300,11 @@ class CardEventoState extends ConsumerState<CardEvento> {
                               widget.dateSelected.month,
                               widget.dateSelected.year);*/
                       setState(() {
-                        widget.eventoSelected = response!.firstWhere((element) {
+                        widget.updateEventoSelectedCallback(evento.evento.id);
+                        /*widget.eventoSelected = response!.firstWhere((element) {
                           return element.evento.id == evento.evento.id;
                         });
-                        widget.eventos = response;
+                        widget.eventos = response;*/
                         //eventos = response;
                       });
                       // ignore: use_build_context_synchronously

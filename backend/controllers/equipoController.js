@@ -137,7 +137,8 @@ module.exports = {
         FROM UsuariosSeleccionados us
         JOIN "Usuarios" u ON u.id = us.id
         LEFT JOIN "Asistencia" a ON u.id = a.id_usuario
-        LEFT JOIN "Evento" e ON a.id_evento = e.id AND e.fecha BETWEEN $1 AND $2 AND e.id_equipo = $3
+        LEFT JOIN "Evento" e ON a.id_evento = e.id
+        WHERE (e.fecha >= $1 AND e.fecha <= $2) AND e.id_equipo = $3
         GROUP BY u.id, u.nombre, u.apellido1, u.apellido2
       ORDER BY total_asistencias DESC`;
       const responseList = await connectionPostgres.query(queryList, [fecha_inicio, fecha_final, id_equipo, id_club]);

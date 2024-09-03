@@ -33,8 +33,7 @@ class EditEventWidget extends ConsumerStatefulWidget {
   final int idequipo;
   final dynamic styleText;
   ValueNotifier<int> indexNotifier;
-  final Future<void> Function(
-      String estado, bool? pullRefresh, DateTime? endDate) getEventosCallback;
+  final Future<void> Function() getEventosCallback;
 
   EditEventWidget({
     super.key,
@@ -336,8 +335,7 @@ class EditEventWidgetState extends ConsumerState<EditEventWidget> {
                 _asistentesId!);
 
             if (response == true) {
-              await widget.getEventosCallback(EstadosEventos.todos, true,
-                  DateTime.now().add(const Duration(days: 365)));
+              await widget.getEventosCallback();
               widget.indexNotifier.value = 0;
 
               // ignore: use_build_context_synchronously

@@ -6,19 +6,19 @@ import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/presentation/providers.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
+import 'package:clubconnect/presentation/widget/drawerEquipo.dart';
 import 'package:clubconnect/presentation/widget/formInput.dart';
 import 'package:clubconnect/presentation/widget/modalDelete.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../insfrastructure/models.dart';
 
 class EventRecurrentes extends ConsumerStatefulWidget {
-  ValueNotifier<int> indexNotifier;
-  final int idEquipo;
   final Equipo equipo;
   final int idClub;
   final String role;
@@ -27,11 +27,9 @@ class EventRecurrentes extends ConsumerStatefulWidget {
 
   EventRecurrentes({
     super.key,
-    required this.idEquipo,
     required this.equipo,
     required this.role,
     required this.idClub,
-    required this.indexNotifier,
     this.settingEventosRecurrentes,
     required this.getConfigEventos,
   });
@@ -98,7 +96,9 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
         leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              widget.indexNotifier.value = 0;
+              context.go(
+                  '/home/0/club/${widget.idClub}/0/${widget.equipo.id}/0',
+                  extra: {'team': widget.equipo});
             }),
         actions: widget.role == "Administrador" || widget.role == "Entrenador"
             ? <Widget>[
@@ -112,103 +112,19 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
             : null,
       ),
       drawer: widget.role == "Administrador" || widget.role == "Entrenador"
-          ? Drawer(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: <Widget>[
-                  DrawerHeader(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          child: Text(
-                            widget.equipo.nombre,
-                            style: styleText.titleSmall,
-                            maxLines: 1,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.calendar_today),
-                    title: Text('Eventos Activos', style: styleText.bodyMedium),
-                    onTap: () {
-                      setState(() {
-                        widget.indexNotifier.value = 0;
-                        _scaffoldKey.currentState!.closeDrawer();
-                      });
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.calendar_today),
-                    title: Text('Crear Evento', style: styleText.bodyMedium),
-                    onTap: () {
-                      setState(() {
-                        widget.indexNotifier.value = 1;
-                      });
-                      _scaffoldKey.currentState!.closeDrawer();
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.list_alt),
-                    title: Text(
-                      'Todos los Eventos',
-                      style: styleText.bodyMedium,
-                    ),
-                    onTap: () {
-                      setState(() {
-                        widget.indexNotifier.value = 2;
-                      });
-                      _scaffoldKey.currentState!
-                          .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.group),
-                    title: Text(
-                      'Miembros',
-                      style: styleText.bodyMedium,
-                    ),
-                    onTap: () {
-                      setState(() {
-                        widget.indexNotifier.value = 4;
-                      });
-                      _scaffoldKey.currentState!
-                          .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.event_repeat_rounded),
-                    title: Text(
-                      'Config Eventos Recurrentes',
-                      style: styleText.bodyMedium,
-                    ),
-                    onTap: () {
-                      _scaffoldKey.currentState!.closeDrawer();
-                      setState(() {
-                        widget.indexNotifier.value = 5;
-                      });
-                    },
-                  ),
-                  // Agrega más ListTile según sea necesario
-                ],
-              ),
+          ? CustomDrawer(
+              equipo: widget.equipo,
+              scaffoldKey: _scaffoldKey,
+              idClub: widget.idClub,
             )
           : null,
       body: widget.settingEventosRecurrentes!.isEmpty
-          ? Center(
+          ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.event_busy, size: 100, color: Colors.grey),
-                  const Text("No hay eventos recurrentes",
+                  Icon(Icons.event_busy, size: 100, color: Colors.grey),
+                  Text("No hay eventos recurrentes",
                       style: TextStyle(fontSize: 20, color: Colors.grey)),
                 ],
               ),
@@ -690,7 +606,7 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
                                 fechaFinal: dateEnd!,
                                 horaInicio: horaInicio!.format(context),
                                 horaFinal: horaFin!.format(context),
-                                idEquipo: widget.idEquipo.toString(),
+                                idEquipo: widget.equipo.id!,
                                 descripcion: controllerDescriptionEdit.text,
                                 lugar: controllerLugarEdit.text,
                                 diaRepetible:

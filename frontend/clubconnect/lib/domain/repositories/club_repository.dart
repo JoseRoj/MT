@@ -60,7 +60,7 @@ abstract class ClubConnectRepository {
   Future<bool> deleteMiembro(int idusuario, int idequipo);
 
   //* --------------- EVENTOS ----------------*//
-  Future<List<EventoFull>?> getEventos(
+  Future<List<EventoFull>> getEventos(
       int idequipo, String estado, DateTime initialDate, int month, int year);
   Future<bool> createEvento(
       List<String> fechas,

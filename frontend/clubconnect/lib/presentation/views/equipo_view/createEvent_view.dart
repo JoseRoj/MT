@@ -6,28 +6,25 @@ import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/insfrastructure/models/equipo.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
+import 'package:clubconnect/presentation/providers/eventosActivos_provider.dart';
 import 'package:clubconnect/presentation/widget/formInput.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class CreateEventWidget extends ConsumerStatefulWidget {
-  final ValueNotifier<int> indexNotifier;
-  final int idequipo;
   final Equipo equipo;
-  final int idclub;
-  final dynamic styleText;
-  final Future<void> Function(
-      String estado, bool? pullRefresh, int month, int year) getEventosCallback;
+  final int idClub;
+/*  final Future<void> Function(
+      String estado, bool? pullRefresh, int month, int year) getEventosCallback;*/
 
   CreateEventWidget({
     super.key,
-    required this.indexNotifier,
     required this.equipo,
-    required this.idequipo,
-    required this.idclub,
-    required this.styleText,
-    required this.getEventosCallback,
+    required this.idClub,
+/*    required this.styleText,
+    required this.getEventosCallback,*/
   });
 
   @override
@@ -69,7 +66,8 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            widget.indexNotifier.value = 0;
+            context.go('/home/0/club/${widget.idClub}/0/${widget.equipo.id}/0',
+                extra: {'team': widget.equipo});
           },
         ),
       ),
@@ -336,7 +334,8 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
               ),
             ),
             ElevatedButton.icon(
-              label: Text("Crear Evento", style: widget.styleText.labelMedium),
+              label: Text("Crear Evento",
+                  style: AppTheme().getTheme().textTheme.labelMedium),
               icon: const Icon(Icons.add),
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
@@ -358,22 +357,23 @@ class CreateEventWidgetState extends ConsumerState<CreateEventWidget> {
                           _selectedTimeInicio!.format(context),
                           controllerDes.text,
                           _selectedTimeFin!.format(context),
-                          widget.idequipo,
-                          widget.idclub,
+                          int.parse(widget.equipo.id!),
+                          widget.idClub,
                           controllerName.text,
                           controllerLugar.text);
 
                   if (response == true) {
                     customToast(
                         "Evento Registrado con éxito", context, "isSuccess");
-                    await widget.getEventosCallback(EstadosEventos.todos, true,
-                        DateTime.now().month, DateTime.now().year);
+                    //await ref.watch(eventosActivosProvider.notifier).getEventosActivos(int.parse(widget.equipo.id!), DateTime.now(), month, year)
                   } else {
                     customToast(
                         "Error al registrar evento", context, "isError");
                   }
                   setState(() {
-                    widget.indexNotifier.value = 0;
+                    context.go(
+                        '/home/0/club/${widget.idClub}/0/${widget.equipo.id}/0',
+                        extra: {'team': widget.equipo});
                   });
                 }
               },

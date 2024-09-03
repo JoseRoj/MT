@@ -35,17 +35,21 @@ final appRouter =
           },
           routes: [
             GoRoute(
-                path: ':idequipo', //:id',
+                path: ':idequipo/:drawerTeam', //:id',
                 name: EquipoSpecific.name,
                 builder: (context, state) {
                   final clubId = state.pathParameters['id'] ?? 'no-id';
                   final equipoId = state.pathParameters['idequipo'] ?? 'no-id';
+                  final drawerIndex =
+                      state.pathParameters['drawerTeam'] ?? 'no-id';
+
                   final Map<String, dynamic>? extras =
                       state.extra as Map<String, dynamic>?;
 
                   return EquipoSpecific(
                     idclub: int.parse(clubId),
                     idequipo: int.parse(equipoId),
+                    drawerIndex: int.parse(drawerIndex),
                     team: extras!['team'] as Equipo,
                     //usuario: usuario
                   );

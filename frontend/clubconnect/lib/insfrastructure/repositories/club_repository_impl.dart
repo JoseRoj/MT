@@ -168,7 +168,7 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
-  Future<List<EventoFull>?> getEventos(int idequipo, String estado,
+  Future<List<EventoFull>> getEventos(int idequipo, String estado,
       DateTime initialDate, int month, int year) async {
     return await clubConnectDataSource.getEventos(
         idequipo, estado, initialDate, month, year);

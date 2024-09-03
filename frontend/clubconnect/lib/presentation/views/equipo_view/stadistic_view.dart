@@ -4,7 +4,11 @@ import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 import 'package:clubconnect/presentation/providers.dart';
 import 'package:clubconnect/presentation/widget/Cardevento.dart';
+import 'package:clubconnect/presentation/widget/OvalImage.dart';
+import 'package:clubconnect/presentation/widget/drawerEquipo.dart';
+import 'package:clubconnect/presentation/widget/dropdowmEvent.dart';
 import 'package:clubconnect/presentation/widget/inputMonthOrYear.dart';
+import 'package:clubconnect/presentation/widget/loadingScreens/loadingStadisctic.dart';
 import 'package:clubconnect/presentation/widget/userlist.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -25,15 +29,15 @@ class ChartData {
 enum Menu { eliminar, editar, terminar }
 
 class StadisticTeam extends ConsumerStatefulWidget {
-  final int idequipo;
   final Equipo equipo;
+  final int idClub;
   ValueNotifier<int> indexNotifier;
   String role;
 
   StadisticTeam({
     super.key,
     required this.equipo,
-    required this.idequipo,
+    required this.idClub,
     required this.indexNotifier,
     required this.role,
   });
@@ -51,11 +55,11 @@ class Option {
 
 class StadisticTeamState extends ConsumerState<StadisticTeam> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  DateTime? dateInitial;
-  DateTime? dateEnd;
+  DateTime dateInitial = DateTime.now();
+  DateTime? dateEnd = DateTime.now().add(const Duration(days: 50));
   final FocusNode _focusNode = FocusNode();
   final styleText = AppTheme().getTheme().textTheme; // Estilo de texto
-  bool loading = false;
+  bool isLoading = false;
 
   EventoStadistic? test;
   List<Evento>? eventoFilter;
@@ -75,14 +79,20 @@ class StadisticTeamState extends ConsumerState<StadisticTeam> {
     setState(() {});
   }
 
-  void filterEventsBy(String id) {
-    if (id == "0") {
-      eventoFilter = test!.eventos;
+  void filterEventsBy(String id, dynamic test) {
+    if (test!.eventos.isEmpty) {
+      selectedEvent == null;
+      eventoFilter = [];
     } else {
-      eventoFilter = test!.eventos.where((evento) {
-        return evento.idConfig != null && evento.idConfig == id;
-      }).toList();
-      selectedEvent = eventoFilter![0];
+      if (id == "0") {
+        eventoFilter = test!.eventos;
+        selectedEvent = test!.eventos[0];
+      } else {
+        eventoFilter = test!.eventos.where((evento) {
+          return evento.idConfig != null && evento.idConfig == id;
+        }).toList();
+        selectedEvent = eventoFilter![0];
+      }
     }
   }
 
@@ -138,6 +148,9 @@ class StadisticTeamState extends ConsumerState<StadisticTeam> {
     super.initState();
   }
 
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
   Duration duration = const Duration(hours: 1, minutes: 23);
 
   /* 
@@ -152,90 +165,6 @@ class StadisticTeamState extends ConsumerState<StadisticTeam> {
 
   @override
   Widget build(BuildContext context) {
-    if (test == null) {
-      return Scaffold(
-        key: _scaffoldKey,
-        // Asociar la GlobalKey al Scaffold
-        appBar: AppBar(
-          centerTitle: false,
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Estadísticas ',
-                  style: styleText.titleSmall, textAlign: TextAlign.center),
-              Text(
-                widget.equipo.nombre,
-                style:
-                    const TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
-              )
-            ],
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              context.pop();
-            },
-          ),
-          actions: widget.role == "Administrador" || widget.role == "Entrenador"
-              ? <Widget>[
-                  IconButton(
-                    icon: const Icon(Icons.menu),
-                    onPressed: () {
-                      _scaffoldKey.currentState!.openDrawer();
-                    },
-                  ),
-                ]
-              : null,
-        ),
-        drawer: widget.role == "Administrador" || widget.role == "Entrenador"
-            ? drawer()
-            : null,
-        body: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                InputFechaWidget(
-                    width: 110,
-                    date: dateInitial ?? DateTime.now(),
-                    value: "date",
-                    type: "Init",
-                    updateDate: selectedDate),
-                const SizedBox(width: 10),
-                InputFechaWidget(
-                    width: 110,
-                    date: dateEnd ?? DateTime.now(),
-                    value: "date",
-                    type: "End",
-                    updateDate: selectedDate),
-                IconButton.filled(
-                  onPressed: () async {
-                    final x = await ref
-                        .read(clubConnectProvider)
-                        .getEventoStadistic(dateInitial!, dateEnd!, 88, 110);
-                    test = x;
-                    selectedEvent = x.eventos[0];
-                    options = [Option(name: 'Todos', value: '0')];
-                    test!.recurrentes
-                        .map((config) => {
-                              options!.add(
-                                  Option(name: config.titulo, value: config.id))
-                            })
-                        .toList();
-                    selected = options![0];
-                    filterEventsBy("0");
-                    setState(() {});
-                  },
-                  icon: const Icon(Icons.search),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-
     return Scaffold(
         key: _scaffoldKey,
         // Asociar la GlobalKey al Scaffold
@@ -271,155 +200,159 @@ class StadisticTeamState extends ConsumerState<StadisticTeam> {
               : null,
         ),
         drawer: widget.role == "Administrador" || widget.role == "Entrenador"
-            ? drawer()
+            ? CustomDrawer(
+                equipo: widget.equipo,
+                idClub: widget.idClub,
+                scaffoldKey: _scaffoldKey)
             : null,
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  InputFechaWidget(
-                      width: 110,
-                      date: dateInitial ?? DateTime.now(),
-                      value: "date",
-                      type: "Init",
-                      updateDate: selectedDate),
-                  const SizedBox(width: 10),
-                  InputFechaWidget(
-                      width: 110,
-                      date: dateEnd ?? DateTime.now(),
-                      value: "date",
-                      type: "End",
-                      updateDate: selectedDate),
-                  IconButton.filled(
-                    onPressed: () async {
-                      final x = await ref
-                          .read(clubConnectProvider)
-                          .getEventoStadistic(dateInitial!, dateEnd!, 88, 110);
-                      test = x;
-                      selectedEvent = x.eventos[0];
-                      options = [Option(name: 'Todos', value: '0')];
-                      test!.recurrentes
-                          .map((config) => {
-                                options!.add(Option(
-                                    name: config.titulo, value: config.id))
-                              })
-                          .toList();
-                      selected = options![0];
-                      setState(() {});
-                    },
-                    icon: const Icon(Icons.search),
-                  ),
-                ],
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {});
-                },
-                label: Text("Lista de Asistencia Total",
-                    style: AppTheme().getTheme().textTheme.labelSmall),
-                icon: const Icon(Icons.list_alt),
-              ),
-              dropdownButtonAllOrRecurrent(),
-              const SizedBox(height: 5),
-              dropdownButtonTime(),
-              grafico(),
-              dropdownButtonEventSpecific(),
-              infoEvent()
-            ],
-          ),
-        ));
+        body: isLoading
+            ? Column(
+                children: [selectedDates(), const LoadingScreen()],
+              )
+            : test != null
+                ? SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        selectedDates(),
+                        test!.eventos.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.only(top: 100),
+                                child: Center(
+                                  child: Text(
+                                      "No hay eventos para generar estadísticas"),
+                                ),
+                              )
+                            : Column(children: [
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    print(
+                                        "Asistentes : ${test!.userList.length}");
+                                    bottonList();
+                                    //setState(() {});
+                                  },
+                                  label: Text("Lista de Asistencia Total",
+                                      style: AppTheme()
+                                          .getTheme()
+                                          .textTheme
+                                          .labelSmall),
+                                  icon: const Icon(Icons.list_alt),
+                                ),
+                                selectedEvent != null
+                                    ? Column(
+                                        children: [
+                                          dropdownButtonAllOrRecurrent(),
+                                          const SizedBox(height: 5),
+                                          grafico(),
+                                          DropdownButtonEventSpecific(
+                                              eventoFilter: eventoFilter,
+                                              selectedEvent: selectedEvent),
+                                        ],
+                                      )
+                                    : Container()
+                              ])
+                      ],
+                    ),
+                  )
+                : selectedDates());
   }
 
-  Widget drawer() {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: <Widget>[
-          DrawerHeader(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            decoration: BoxDecoration(
-              color: AppTheme().getTheme().primaryColor,
-            ),
+  void bottonList() async {
+    await showModalBottomSheet<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
             child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Text(
-                    widget.equipo.nombre,
-                    style: styleText.titleSmall,
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
+                // Título del modal
+                Text('Lista de Asistencias',
+                    style: AppTheme()
+                        .getTheme()
+                        .textTheme
+                        .titleSmall // Estilo del título
+                    ),
+                const SizedBox(
+                    height: 20), // Espacio entre el título y la lista
+                // Lista de usuarios
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true, // Ajusta la lista al contenido
+                    itemCount: test!.userList.length,
+                    itemBuilder: (context, index) {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              test!.userList[index].nombrecompleto,
+                              style: AppTheme().getTheme().textTheme.bodyMedium,
+                            ),
+                          ),
+                          Text(test!.userList[index].totalAsistencias)
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.calendar_today),
-            title: Text('Eventos Activos', style: styleText.bodyMedium),
-            onTap: () {
-              setState(() {
-                widget.indexNotifier.value = 0;
-              });
-              _scaffoldKey.currentState!.closeDrawer();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.calendar_today),
-            title: Text('Crear Evento', style: styleText.bodyMedium),
-            onTap: () {
-              setState(() {
-                widget.indexNotifier.value = 1;
-              });
-              _scaffoldKey.currentState!.closeDrawer();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.list_alt),
-            title: Text(
-              'Todos los Eventos',
-              style: styleText.bodyMedium,
-            ),
-            onTap: () {
-              setState(() {
-                widget.indexNotifier.value = 2;
-              });
-              _scaffoldKey.currentState!
-                  .closeDrawer(); // Acción cuando se presiona la opción 2 del Drawer
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.group),
-            title: Text(
-              'Miembros',
-              style: styleText.bodyMedium,
-            ),
-            onTap: () {
-              _scaffoldKey.currentState!.closeDrawer();
-              setState(() {
-                widget.indexNotifier.value = 4;
-              });
-              // Acción cuando se presiona la opción 2 del Drawer
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.event_repeat_rounded),
-            title: Text(
-              'Config Eventos Recurrentes',
-              style: styleText.bodyMedium,
-            ),
-            onTap: () {
-              _scaffoldKey.currentState!.closeDrawer();
-              setState(() {
-                widget.indexNotifier.value = 5;
-              });
-            },
-          )
-        ],
-      ),
+          );
+        });
+  }
+
+  Widget selectedDates() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        InputFechaWidget(
+            width: 110,
+            date: dateInitial,
+            value: "date",
+            type: "Init",
+            updateDate: selectedDate),
+        const SizedBox(width: 10),
+        InputFechaWidget(
+            width: 110,
+            date: dateEnd,
+            value: "date",
+            type: "End",
+            updateDate: selectedDate),
+        IconButton.filled(
+          onPressed: () async {
+            setState(() {
+              isLoading = true;
+            });
+            final x = await ref.read(clubConnectProvider).getEventoStadistic(
+                dateInitial,
+                dateEnd!,
+                int.parse(widget.equipo.id!),
+                widget.idClub);
+            test = x;
+            options = [Option(name: 'Todos', value: '0')];
+            if (x.eventos.isNotEmpty) {
+              test!.recurrentes
+                  .map((config) => {
+                        options!
+                            .add(Option(name: config.titulo, value: config.id))
+                      })
+                  .toList();
+              selected = options![0];
+
+              eventoFilter = test!.eventos;
+              selectedEvent = test!.eventos[0];
+            } else {
+              if (test!.eventos.isEmpty) {
+                selectedEvent == null;
+              }
+            }
+            setState(() {
+              isLoading = false;
+            });
+          },
+          icon: const Icon(Icons.search),
+        ),
+      ],
     );
   }
 
@@ -537,8 +470,7 @@ class StadisticTeamState extends ConsumerState<StadisticTeam> {
           value: selected,
           onChanged: (Option? option) {
             if (option != null) {
-              filterEventsBy(option.value);
-
+              filterEventsBy(option.value, test);
               setState(() {
                 selected = option;
               });
@@ -593,66 +525,6 @@ class StadisticTeamState extends ConsumerState<StadisticTeam> {
           isExpanded: true, // Para que ocupe todo el ancho del container
         ),
       ),
-    );
-  }
-
-  Widget dropdownButtonEventSpecific() {
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.8,
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: AppTheme().getTheme().colorScheme.onSecondary,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: AppTheme().getTheme().colorScheme.primary,
-          width: 1,
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<Evento>(
-          menuMaxHeight: 300,
-          value: selectedEvent,
-          onChanged: (Evento? option) {
-            if (option != null) {
-              setState(() {
-                selectedEvent = option;
-              });
-            }
-          },
-          items: eventoFilter!.map<DropdownMenuItem<Evento>>((Evento option) {
-            return DropdownMenuItem<Evento>(
-              value: option,
-              child: Center(
-                  child: Text(
-                      "${option.titulo} (${(DateFormat('dd/MM/yyyy').format(option.fecha))})",
-                      style: styleText.labelSmall)),
-            );
-          }).toList(),
-          style: styleText.labelSmall,
-          isExpanded: true, // Para que ocupe todo el ancho del container
-        ),
-      ),
-    );
-  }
-
-  Widget infoEvent() {
-    return Column(
-      children: [
-        Text(selectedEvent!.titulo),
-        const Text("90 % Asistencia"),
-        const Text("Asistentes"),
-        SingleChildScrollView(
-          child: Wrap(
-            children: selectedEvent!.asistentes!.map((e) {
-              return userList(
-                name: e.nombre,
-                image: e.imagen,
-              );
-            }).toList(),
-          ),
-        )
-      ],
     );
   }
 }

@@ -6,10 +6,10 @@ import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
-import 'package:clubconnect/presentation/views/club_equipos_view/drawer_view/all_miembros_view.dart';
-import 'package:clubconnect/presentation/views/club_equipos_view/drawer_view/all_teams_view.dart';
-import 'package:clubconnect/presentation/views/club_equipos_view/drawer_view/informacion_club_view.dart';
-import 'package:clubconnect/presentation/views/club_equipos_view/drawer_view/solicitudes_view.dart';
+import 'package:clubconnect/presentation/views/equiposClub/drawerClub/all_miembros_view.dart';
+import 'package:clubconnect/presentation/views/equiposClub/drawerClub/all_teams_view.dart';
+import 'package:clubconnect/presentation/views/equiposClub/drawerClub/informacion_club_view.dart';
+import 'package:clubconnect/presentation/views/equiposClub/drawerClub/solicitudes_view.dart';
 import 'package:clubconnect/presentation/widget.dart';
 import 'package:clubconnect/presentation/widget/OvalImage.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +53,6 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
   var viewRoutes = <Widget>[];
   @override
   void initState() {
-    print("JOJO");
     super.initState();
     _initializationFuture = _initializeData();
   }

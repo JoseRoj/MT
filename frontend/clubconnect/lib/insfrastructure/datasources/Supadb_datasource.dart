@@ -552,7 +552,7 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
-  Future<List<EventoFull>?> getEventos(int idequipo, String estado,
+  Future<List<EventoFull>> getEventos(int idequipo, String estado,
       DateTime initialDate, int month, int year) async {
     final dio = Dio(BaseOptions(headers: {}));
     final response = await dio.get(

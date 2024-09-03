@@ -1,6 +1,7 @@
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'package:clubconnect/presentation/providers.dart';
+import 'package:clubconnect/presentation/providers/clubesUser_provider.dart';
 import 'package:clubconnect/presentation/widget/cardClub.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,26 +15,27 @@ class ListClubView extends ConsumerStatefulWidget {
 }
 
 class ListClubViewState extends ConsumerState<ListClubView> {
-  late Future<List<Club>?> futureClubs;
+  late Future<void> futureClubsUser;
   List<Club> clubs = [];
   @override
   void initState() {
     print("Entree");
-    futureClubs = ref
+    super.initState();
+
+    futureClubsUser = initData();
+    /*futureClubs = ref
         .read(clubConnectProvider)
         .getClubsUser(ref.read(authProvider).id!)
         .then((value) => clubs = value!);
-
-    super.initState();
+*/
   }
 
-  Future<void> getClubsUser() async {
-    final response = await ref
-        .read(clubConnectProvider)
-        .getClubsUser(ref.read(authProvider).id!);
-    setState(() {
-      clubs = response;
-    });
+  Future<void> initData() async {
+    await ref
+        .read(clubesUserProvider.notifier)
+        .getClubesUser(ref.read(authProvider).id!);
+    clubs = await ref.read(clubesUserProvider);
+    setState(() {});
   }
 
   @override
@@ -72,6 +74,80 @@ class ListClubViewState extends ConsumerState<ListClubView> {
           ),
         ),
         Expanded(
+          child: FutureBuilder(
+            future: futureClubsUser,
+            builder: (context, snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                  return Text('none');
+                case ConnectionState.waiting:
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                case ConnectionState.active:
+                  return Text('active');
+                case ConnectionState.done:
+                  if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    if (clubs.isEmpty) {
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          await ref
+                              .read(clubesUserProvider.notifier)
+                              .getClubesUser(ref.read(authProvider).id!);
+                        },
+                        child: SingleChildScrollView(
+                          physics: AlwaysScrollableScrollPhysics(),
+                          child: Container(
+                            height: MediaQuery.of(context).size.height,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'No tienes clubes',
+                                    style: AppTheme()
+                                        .getTheme()
+                                        .textTheme
+                                        .bodyMedium,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    } else {
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          await ref
+                              .read(clubesUserProvider.notifier)
+                              .getClubesUser(ref.read(authProvider).id!);
+                        },
+                        child: ListView.builder(
+                          itemCount: clubs.length,
+                          padding: EdgeInsets.only(top: 0),
+                          itemBuilder: (context, index) {
+                            return CardClub(club: clubs[index]);
+                            //return ClubCard(
+                            //  club: clubs[index],
+                            //  onPressed: () => context.go('/movie/${clubs[index].id}'),
+                          },
+                        ),
+                      );
+                    }
+                  }
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+/*
+Expanded(
           child: FutureBuilder(
             future: futureClubs,
             builder: (context, snapshot) {
@@ -136,7 +212,39 @@ class ListClubViewState extends ConsumerState<ListClubView> {
             },
           ),
         ),
-      ],
-    );
-  }
-}
+          clubs.isEmpty
+            ? RefreshIndicator(
+                onRefresh: () async {
+                  ref
+                      .watch(clubesUserProvider.notifier)
+                      .getClubesUser(ref.watch(authProvider).id!);
+                },
+                child: SingleChildScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  child: Center(
+                    child: Text(
+                      'No tienes clubes',
+                      style: AppTheme().getTheme().textTheme.bodyMedium,
+                    ),
+                  ),
+                ),
+              )
+            : Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    await ref
+                        .watch(clubesUserProvider.notifier)
+                        .getClubesUser(ref.watch(authProvider).id!);
+                  },
+                  child: ListView.builder(
+                    itemCount: clubs.length,
+                    padding: EdgeInsets.only(top: 0),
+                    itemBuilder: (context, index) {
+                      return CardClub(club: clubs[index]);
+                      //return ClubCard(
+                      //  club: clubs[index],
+                      //  onPressed: () => context.go('/movie/${clubs[index].id}'),
+                    },
+                  ),
+                ),
+              ),*/
