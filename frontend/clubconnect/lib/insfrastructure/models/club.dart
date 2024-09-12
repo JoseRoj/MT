@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:google_maps_cluster_manager_2/google_maps_cluster_manager_2.dart';
+import 'package:google_maps_flutter_platform_interface/src/types/location.dart';
+
 class ClubEspecifico {
   Club club;
   List<String> categorias;
@@ -29,7 +32,7 @@ class ClubEspecifico {
       };
 }
 
-class Club {
+class Club implements ClusterItem {
   String? id;
   double latitud;
   DateTime? createdAt;
@@ -99,4 +102,10 @@ class Club {
         "tiktok": tiktok,
         "deporte": deporte,
       };
+
+  @override
+  String get geohash => "Lat";
+
+  @override
+  LatLng get location => LatLng(latitud, longitud);
 }

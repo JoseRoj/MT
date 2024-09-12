@@ -4,8 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 module.exports = {
-  /* 
-    * Authenticacion de Usuario
+  /* Authenticacion de Usuario
     ? @param email - email del usuario
     ? @param contrasena - contraseña del usuario
   */
@@ -15,10 +14,7 @@ module.exports = {
       const response = await connectionPostgres.query(query, [email]);
 
       //console.log(bcrypt.compareSync(contrasena, response.rows[0].contrasena));
-      if (
-        response.rowCount > 0 &&
-        (contrasena == response.rows[0].contrasena) == true
-      ) {
+      if (response.rowCount > 0 && (contrasena == response.rows[0].contrasena) == true) {
         // Verify email and password
         const jwtoken = jwt.sign(
           {
@@ -57,14 +53,15 @@ module.exports = {
       //await connectionPostgres.end();
     }
   },
-  // TODO: TESTEAR
+
+  /* Actualización Token Firebase de Usuario
+    ? @param id_usuario - id del usuario
+    ? @param tokenfb - nuevo token del dispositivo
+  */
   async updateToken(id_usuario, tokenfb) {
     try {
       let query = `UPDATE public."Usuarios" SET tokenfb = $1 WHERE id = $2`;
-      const response = await connectionPostgres.query(query, [
-        tokenfb,
-        id_usuario,
-      ]);
+      const response = await connectionPostgres.query(query, [tokenfb, id_usuario]);
       return { statusCode: 200, data: response.rows, message: "" };
     } catch (error) {
       console.log("Error: ", error);

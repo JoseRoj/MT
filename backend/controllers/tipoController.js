@@ -1,9 +1,7 @@
 const connectionPostgres = require("../database/db");
 
 module.exports = {
-  /*
-   * Obtener todos los tipos
-   */
+  // Obtener todos los tipos
   async getTipo() {
     try {
       let query = `SELECT * FROM public."Tipo"`;

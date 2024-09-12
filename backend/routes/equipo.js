@@ -1,6 +1,7 @@
 const equipo = require("../controllers/equipoController");
 
 module.exports = (app) => {
+  // Obtener los Equipos de un club
   app.get("/equipo/getEquipos", async (req, res) => {
     try {
       const { id_club } = req.query;
@@ -16,6 +17,7 @@ module.exports = (app) => {
     }
   });
 
+  // ? NO TESTEABLE - NO SE USA
   app.get("/equipo/getEquipoById", async (req, res) => {
     const { id_usuario, id_club } = req.query;
     try {
@@ -31,6 +33,7 @@ module.exports = (app) => {
     }
   });
 
+  // Obtener equipos de un Usuario
   app.get("/equipo/getEquiposByUser", async (req, res) => {
     const { id_usuario, id_club } = req.query;
     try {
@@ -46,6 +49,7 @@ module.exports = (app) => {
     }
   });
 
+  // ? NO TESTEABLE - NO SE USA
   app.get("/equipo/getEquipo", async (req, res) => {
     const { id_equipo } = req.query;
     try {
@@ -61,6 +65,7 @@ module.exports = (app) => {
     }
   });
 
+  // Crear Equipo
   app.post("/equipo/createEquipo", async (req, res) => {
     const { nombre, id_club } = req.body;
     try {
@@ -78,6 +83,7 @@ module.exports = (app) => {
     }
   });
 
+  // Eliminar Equipo
   app.delete("/equipo/deleteEquipo", async (req, res) => {
     const { id_equipo } = req.query;
     try {
@@ -88,6 +94,7 @@ module.exports = (app) => {
         ? res.status(500).send({ message: response.message })
         : res.status(200).send({
             data: response.data,
+            message: response.message,
           });
     } catch (error) {
       console.log("Error: ", error);
@@ -95,15 +102,11 @@ module.exports = (app) => {
     }
   });
 
+  // Obtener estadisticas del equipo
   app.get("/equipo/stadistic", async (req, res) => {
     const { fecha_inicio, fecha_final, id_club, id_equipo } = req.query;
     try {
-      const response = await equipo.stadisticTeams(
-        fecha_inicio,
-        fecha_final,
-        id_club,
-        id_equipo
-      );
+      const response = await equipo.stadisticTeams(fecha_inicio, fecha_final, id_club, id_equipo);
 
       return response.statusCode === 500
         ? res.status(500).send({ message: response.message })
@@ -115,7 +118,8 @@ module.exports = (app) => {
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
-  //TODO : TESTEAR
+
+  // Obtener los miembros de un equipo
   app.get("/equipo/miembros", async (req, res) => {
     const { id_equipo } = req.query;
     try {

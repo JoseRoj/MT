@@ -1,14 +1,16 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/providers/deporte_provider.dart';
 import 'package:clubconnect/presentation/widget/bottonCardClub.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
+import 'package:google_maps_cluster_manager_2/google_maps_cluster_manager_2.dart';
 import '../../insfrastructure/models/club.dart';
 import '../providers/location_provider.dart';
 
@@ -21,9 +23,20 @@ class ClubsMap extends ConsumerStatefulWidget {
   ClubsMapState createState() => ClubsMapState();
 }
 
+class Place with ClusterItem {
+  final String id;
+  final LatLng latLng;
+
+  Place({required this.latLng, required this.id});
+
+  @override
+  LatLng get location => latLng;
+}
+
 class ClubsMapState extends ConsumerState<ClubsMap> {
+  late ClusterManager manager;
   LatLngBounds? _visibleRegion;
-  var isLoading = false;
+  bool isLoading = false;
   late GoogleMapController mapController;
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
@@ -31,36 +44,91 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
   List<Deporte> selectDeporte = [];
   List<Deporte> saveSelect = [];
   var isChanged = false;
+  bool clusterTap = false;
 
   int? clubSelected;
   int? _bottomInfoWindow;
   @override
   void initState() {
-    print("Select2");
+    manager = ClusterManager<Place>(
+      [],
+      _updateMarkers,
+      markerBuilder: markerBuilder,
+      stopClusteringZoom: 16,
+    );
     selectDeporte = ref.read(deportesProvider).map((e) => e).toList();
-
     super.initState();
   }
 
-  void _mostrarInfoWindow(MarkerId markerId) {
-    clubSelected = int.parse(markerId.value);
-    print(clubSelected);
-    setState(() {});
+  //* ------------- Funciones ------------- */
+
+  void _updateMarkers(Set<Marker> newMarkers) {
+    setState(() {
+      markers = newMarkers;
+    });
   }
 
-  /*markers = clubs
-        .map((club) => Marker(
-              markerId: MarkerId(club.id),
-              position: LatLng(club.latitud, club.longitud),
-              infoWindow: InfoWindow(
-                title: club.nombre,
-                snippet: club.descripcion,
-              ),
-            ))
-        .toSet();*/
-  void _filterMarkers() {
-    if (_visibleRegion == null) return;
+  Future<Marker> Function(Cluster<Place>) get markerBuilder => (cluster) async {
+        return Marker(
+          markerId: MarkerId(cluster.getId()),
+          position: cluster.location,
+          icon: await _getMarkerBitmap(cluster.isMultiple ? 80 : 40,
+              text: cluster.isMultiple ? cluster.count.toString() : null),
+          onTap: () {
+            clusterTap = true;
+            if (cluster.isMultiple) {
+              // Aquí podrías hacer zoom en la cámara si el cluster tiene múltiples elementos
+              mapController.animateCamera(
+                CameraUpdate.newLatLngZoom(cluster.location, 17),
+              );
+            } else {
+              _mostrarInfoWindow(MarkerId(cluster.items.first.id));
+            }
+          },
+        );
+      };
+  Future<BitmapDescriptor> _getMarkerBitmap(int size, {String? text}) async {
+    if (kIsWeb) size = (size / 2).floor();
 
+    final PictureRecorder pictureRecorder = PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    final Paint paint1 = Paint()..color = Colors.orange;
+    final Paint paint2 = Paint()..color = Colors.white;
+
+    canvas.drawCircle(Offset(size / 2, size / 2), size / 2.0, paint1);
+    canvas.drawCircle(Offset(size / 2, size / 2), size / 2.2, paint2);
+    canvas.drawCircle(Offset(size / 2, size / 2), size / 2.8, paint1);
+
+    if (text != null) {
+      TextPainter painter = TextPainter(textDirection: TextDirection.ltr);
+      painter.text = TextSpan(
+        text: text,
+        style: TextStyle(
+            fontSize: size / 3,
+            color: Colors.white,
+            fontWeight: FontWeight.normal),
+      );
+      painter.layout();
+      painter.paint(
+        canvas,
+        Offset(size / 2 - painter.width / 2, size / 2 - painter.height / 2),
+      );
+    }
+
+    final img = await pictureRecorder.endRecording().toImage(size, size);
+    final data = await img.toByteData(format: ImageByteFormat.png) as ByteData;
+
+    return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+  }
+
+  void _mostrarInfoWindow(MarkerId markerId) {
+    setState(() {
+      clubSelected = int.parse(markerId.value);
+    });
+  }
+
+  /* void _filterMarkers() {
+    if (_visibleRegion == null) return;
     final clubs = ref.read(clubesRegisterProvider);
     markers = clubs
         .map(
@@ -72,43 +140,43 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
         )
         .toSet();
     //setState(() {});
-  }
+  }*/
+  /*markers = clubs
+        .map((club) => Marker(
+              markerId: MarkerId(club.id),
+              position: LatLng(club.latitud, club.longitud),
+              infoWindow: InfoWindow(
+                title: club.nombre,
+                snippet: club.descripcion,
+              ),
+            ))
+        .toSet();*/
 
   void closeWindow() {
     clubSelected = null;
     setState(() {});
   }
 
-  void _updateVisibleRegion() async {
-    final bounds = await mapController?.getVisibleRegion();
-    setState(() {
-      _visibleRegion = bounds;
-      _filterMarkers();
-    });
+  Future<void> _updateVisibleRegion() async {
+    final bounds = await mapController.getVisibleRegion();
+    /*await ref.read(clubesRegisterProvider.notifier).getClubes(
+        selectDeporte.map((e) => int.parse(e.id)).toList(),
+        bounds.northeast.latitude,
+        bounds.northeast.longitude,
+        bounds.southwest.latitude,
+        bounds.southwest.longitude);*/
+
+    _visibleRegion = bounds;
   }
 
   @override
   Widget build(BuildContext context) {
+    print("jojo");
     final clubs = ref.watch(clubesRegisterProvider);
-    print("SelectBuild : $clubs ");
     final deportes = ref.watch(deportesProvider);
     final Club club;
     final location = ref.watch(locationProvider.notifier).state;
-    if (!clubs.isEmpty) {
-      markers = clubs
-          .map(
-            (club) => Marker(
-              markerId: MarkerId(club.id!),
-              onTap: () =>
-                  {_mostrarInfoWindow(MarkerId(club.id!)), setState(() {})},
-              //icon: icon!,
-              position: LatLng(club.latitud, club.longitud),
-            ),
-          )
-          .toSet();
-    } else {
-      markers = {};
-    }
+
     //print("Select Build $selectDeporte");
 
     //final clubs = ref.watch(clubesRegistredProvider);
@@ -128,54 +196,55 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
               ),
               onMapCreated: (GoogleMapController controller) async {
                 mapController = controller;
+                manager.setMapId(controller.mapId);
+                manager.setMapId(controller.mapId);
                 if (!_controller.isCompleted) {
                   _controller.complete(controller);
-                  await Future.delayed(Duration(milliseconds: 500));
+                  // Espera a que el mapa esté completamente cargado
+                  await Future.delayed(Duration(
+                      seconds: 1)); // Ajusta el tiempo según sea necesario
 
-                  // Esperar a que el mapa se haya creado y la región visible esté disponible
-                  final bounds = await mapController.getVisibleRegion();
-                  print(bounds);
+                  final bounds = await controller.getVisibleRegion();
                   _visibleRegion = bounds;
-                  await ref
-                      .read(clubesRegisterProvider.notifier)
-                      .getClubes(
-                          selectDeporte.map((e) => int.parse(e.id)).toList(),
-                          bounds.northeast.latitude,
-                          bounds.northeast.longitude,
-                          bounds.southwest.latitude,
-                          bounds.southwest.longitude)
-                      .then((value) => isLoading = false);
 
+                  // Obtén los límites visibles y asegúrate de que los clubes estén cargados
+                  List<Club> clubes =
+                      await ref.read(clubesRegisterProvider.notifier).getClubes(
+                            selectDeporte.map((e) => int.parse(e.id)).toList(),
+                            _visibleRegion!.northeast.latitude,
+                            _visibleRegion!.northeast.longitude,
+                            _visibleRegion!.southwest.latitude,
+                            _visibleRegion!.southwest.longitude,
+                          );
+
+                  // Establece los ítems del manager
+                  manager.setItems(clubes.map((club) {
+                    return Place(
+                      latLng: LatLng(club.latitud, club.longitud),
+                      id: club.id!,
+                    );
+                  }).toList());
+
+                  // Actualiza el mapa
+                  manager.updateMap();
+                  isLoading == false;
                   setState(() {});
                 }
               },
-              onCameraIdle: _updateVisibleRegion,
+              onCameraIdle: () async {
+                await _updateVisibleRegion();
+
+                manager.updateMap();
+
+                // Asegúrate de actualizar el ClusterManager con los nuevos clubes
+              },
+              onCameraMove: (position) {
+                manager.onCameraMove(position);
+              },
               myLocationButtonEnabled: false,
               myLocationEnabled: true,
             ),
-            if (_visibleRegion != null)
-              Positioned(
-                top: 10,
-                left: MediaQuery.of(context).size.width * 0.5 - 100,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    await ref.read(clubesRegisterProvider.notifier).getClubes(
-                        selectDeporte.map((e) => int.parse(e.id)).toList(),
-                        _visibleRegion!.northeast.latitude,
-                        _visibleRegion!.northeast.longitude,
-                        _visibleRegion!.southwest.latitude,
-                        _visibleRegion!.southwest.longitude);
-                  },
-                  style: ButtonStyle(
-                    minimumSize: MaterialStateProperty.all(const Size(200, 40)),
-                    backgroundColor: MaterialStateProperty.all(Colors.white),
-                    foregroundColor: MaterialStateProperty.all(Colors.black),
-                  ),
-                  icon: const Icon(Icons.search_rounded),
-                  label: Text('Buscar en esta Zona',
-                      style: AppTheme().getTheme().textTheme.labelSmall),
-                ),
-              ),
+            uiSearching(),
             Positioned(
               top: 0,
               right: 0,
@@ -235,9 +304,10 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
                                 FilledButton(
                                   onPressed: () async {
                                     _updateVisibleRegion();
-                                    isLoading = true;
-                                    setState(() {});
-                                    await ref
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+                                    List<Club> clubes = await ref
                                         .read(clubesRegisterProvider.notifier)
                                         .getClubes(
                                             selectDeporte
@@ -246,10 +316,19 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
                                             _visibleRegion!.northeast.latitude,
                                             _visibleRegion!.northeast.longitude,
                                             _visibleRegion!.southwest.latitude,
-                                            _visibleRegion!.southwest.longitude)
-                                        .then((value) => isLoading = false);
-                                    setState(() {});
+                                            _visibleRegion!
+                                                .southwest.longitude);
 
+                                    manager.setItems(clubes.map((club) {
+                                      return Place(
+                                        latLng:
+                                            LatLng(club.latitud, club.longitud),
+                                        id: club.id!,
+                                      );
+                                    }).toList());
+                                    setState(() {
+                                      isLoading = false;
+                                    });
                                     Navigator.of(context).pop(true);
                                   },
                                   child: const Text('Aplicar Filtros'),
@@ -267,10 +346,6 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
                 },
               ),
             ),
-            isLoading
-                ? const Positioned(
-                    child: Center(child: CircularProgressIndicator()))
-                : Container(),
             Positioned(
               bottom: 16.0,
               right: 16.0,
@@ -280,6 +355,16 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
                       await _controller.future;
                   controller.animateCamera(CameraUpdate.newLatLngZoom(
                       LatLng(widget.latitude, widget.longitude), 14));
+                  manager.setItems(clubs.map((club) {
+                    // Aquí deberías crear un nuevo objeto Place con los datos del club
+                    return Place(
+                      latLng: LatLng(club.latitud, club.longitud),
+                      // Asumiendo que Place tiene un constructor que acepta ciertos parámetros
+                      // Cambia esto según cómo esté definido tu constructor de Place
+                      id: club.id!,
+                      // Otros campos según la definición de Place
+                    );
+                  }).toList());
                 }, // Llama a la función para ir a la ubicación del usuario
                 child: const Icon(Icons.location_searching),
               ),
@@ -298,7 +383,7 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
                     ),
                   )
                 : Container(),
-            IconButton(
+            /*IconButton(
                 icon: const Icon(Icons.refresh),
                 onPressed: () async {
                   await ref.read(clubesRegisterProvider.notifier).getClubes(
@@ -307,10 +392,55 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
                       _visibleRegion!.northeast.longitude,
                       _visibleRegion!.southwest.latitude,
                       _visibleRegion!.southwest.longitude);
-                }),
+                }),*/
           ]),
         ),
       ],
+    );
+  }
+
+  //* ---- Widgets ---------- *//
+  Widget uiSearching() {
+    return Positioned(
+      top: 10,
+      left: MediaQuery.of(context).size.width * 0.5 - 100,
+      child: ElevatedButton.icon(
+        onPressed: () async {
+          setState(() {
+            isLoading = true;
+          });
+          clubSelected = null;
+          List<Club> clubes = await ref
+              .read(clubesRegisterProvider.notifier)
+              .getClubes(
+                  selectDeporte.map((e) => int.parse(e.id)).toList(),
+                  _visibleRegion!.northeast.latitude,
+                  _visibleRegion!.northeast.longitude,
+                  _visibleRegion!.southwest.latitude,
+                  _visibleRegion!.southwest.longitude);
+          manager.setItems(clubes.map((club) {
+            // Aquí deberías crear un nuevo objeto Place con los datos del club
+            return Place(
+              latLng: LatLng(club.latitud, club.longitud),
+              // Asumiendo que Place tiene un constructor que acepta ciertos parámetros
+              // Cambia esto según cómo esté definido tu constructor de Place
+              id: club.id!,
+              // Otros campos según la definición de Place
+            );
+          }).toList());
+          setState(() {
+            isLoading = false;
+          });
+        },
+        style: ButtonStyle(
+          minimumSize: WidgetStateProperty.all(const Size(200, 40)),
+          backgroundColor: WidgetStateProperty.all(Colors.white),
+          foregroundColor: WidgetStateProperty.all(Colors.black),
+        ),
+        icon: const Icon(Icons.search_rounded),
+        label: Text(isLoading ? 'Buscando ... ' : 'Buscar aquí',
+            style: AppTheme().getTheme().textTheme.labelSmall),
+      ),
     );
   }
 }

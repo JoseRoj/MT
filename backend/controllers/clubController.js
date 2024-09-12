@@ -4,13 +4,7 @@ module.exports = {
   /*
    * Obtener todos los clubes
    */
-  async getClubs(
-    deportes,
-    northeastLat,
-    northeastLng,
-    southwestLat,
-    southwestLng
-  ) {
+  async getClubs(deportes, northeastLat, northeastLng, southwestLat, southwestLng) {
     console.log("Deportes: ", deportes);
     const placeholders = deportes.map((_, index) => `$${index + 1}`).join(", ");
     console.log("Placeholders: ", placeholders);
@@ -29,13 +23,7 @@ module.exports = {
               AND longitud <= $${deportes.length + 3} 
               AND longitud >= $${deportes.length + 4}`;
       console.log("Query: ", query);
-      const response = await connectionPostgres.query(query, [
-        ...deportes,
-        northeastLat,
-        southwestLat,
-        northeastLng,
-        southwestLng,
-      ]);
+      const response = await connectionPostgres.query(query, [...deportes, northeastLat, southwestLat, northeastLng, southwestLng]);
       console.log("Response: ", response.rows);
       return { statusCode: 200, data: response.rows, message: "" };
     } catch (e) {
@@ -105,92 +93,37 @@ module.exports = {
     ? @param tipos - tipos del club
     ? @param id_usuario - id del usuario que crea el club
   */
-  async createClub(
-    id,
-    nombre,
-    descripcion,
-    latitud,
-    longitud,
-    id_deporte,
-    logo,
-    correo,
-    telefono,
-    categorias,
-    tipos,
-    id_usuario,
-    facebook,
-    instagram,
-    tiktok
-  ) {
+  async createClub(nombre, descripcion, latitud, longitud, id_deporte, logo, correo, telefono, categorias, tipos, id_usuario, facebook, instagram, tiktok) {
     try {
+      /* Comprobar que el correo o nombre del club no exista */
       let query = `SELECT COUNT(*) 
       FROM public."Club"
       WHERE nombre = $1 OR correo = $2`;
       //await connectionPostgres.query("BEGIN"); // Inicia la transacción
-      console.log("Nombre: ", id_usuario, correo);
-      //* Primero se debe comprobar que el club no exista;
 
       let response = await connectionPostgres.query(query, [nombre, correo]);
-
       if (response.rows[0].count > 0) {
-        return { statusCode: 400, message: "Nombre existente" };
-      }
-      if (id) {
-        query = `INSERT INTO public."Club" (id, nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono, facebook, instagram, tiktok) VALUES ($9,$1, $2, $3, $4, $5, $6, $7, $8, $10, $11, $12) RETURNING id`;
-        response = await connectionPostgres.query(query, [
-          nombre,
-          latitud,
-          longitud,
-          descripcion,
-          id_deporte,
-          logo,
-          correo,
-          telefono,
-          id,
-          facebook,
-          instagram,
-          tiktok,
-        ]);
-      } else {
-        //* Query para insertar el club
-        query = `INSERT INTO public."Club" (nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono, facebook, instagram, tiktok) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`;
-        response = await connectionPostgres.query(query, [
-          nombre,
-          latitud,
-          longitud,
-          descripcion,
-          id_deporte,
-          logo,
-          correo,
-          telefono,
-          facebook,
-          instagram,
-          tiktok,
-        ]);
+        return { statusCode: 400, message: "El nombre o correo ya se encuentra asociado a otro Club" };
       }
 
-      const id_club = response.rows[0].id;
-      console.log("Id_club: ", id_club);
-      /* Comprobar que el correo o nombre del club no exista */
+      let responseInsert;
+      query = `INSERT INTO public."Club" (nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono, facebook, instagram, tiktok) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`;
+      responseInsert = await connectionPostgres.query(query, [nombre, latitud, longitud, descripcion, id_deporte, logo, correo, telefono, facebook, instagram, tiktok]);
 
-      query =
-        'INSERT INTO public."ClubCategoria" (id_club, id_categoria) VALUES ';
-      query += categorias
-        .map((categoria) => `(${id_club}, ${categoria})`)
-        .join(", ");
-
+      const id_club = responseInsert.rows[0].id;
+      query = 'INSERT INTO public."ClubCategoria" (id_club, id_categoria) VALUES ';
+      query += categorias.map((categoria) => `(${id_club}, ${categoria})`).join(", ");
       response = await connectionPostgres.query(query);
 
       query = 'INSERT INTO public."ClubTipo" (id_club,id_tipo) VALUES ';
       query += tipos.map((tipo) => `(${id_club}, ${tipo})`).join(", ");
       response = await connectionPostgres.query(query);
 
-      //* Asociar al creador del club como administrador del club
+      // Asociar al creador del Club como administrador del club
       query = `INSERT INTO public."Administra" (id_club, id_usuario) VALUES ($1, $2)`;
       await connectionPostgres.query(query, [id_club, id_usuario]);
-
       //await connectionPostgres.query("COMMIT"); // Confirma la transacción
-      return { statusCode: 200, message: "Club creado con éxito" };
+      return { statusCode: 200, data: id_club, message: "Club creado con éxito" };
     } catch (e) {
       console.log("Error: ", e);
       //await connectionPostgres.query("ROLLBACK");
@@ -211,9 +144,7 @@ module.exports = {
       FROM public."Usuarios"
       JOIN public."Administra" ON "Usuarios".id = "Administra".id_usuario
       WHERE "Administra".id_club = $1`;
-      const administrador = await connectionPostgres.query(queryadministrador, [
-        id_club,
-      ]);
+      const administrador = await connectionPostgres.query(queryadministrador, [id_club]);
       const miembros = equipos.rows.map(async (equipo) => {
         query = `SELECT "Usuarios".*, "Miembros".rol, "Equipo".nombre AS equipo, "Equipo".id AS idequipo
         FROM public."Usuarios" 
@@ -274,18 +205,11 @@ module.exports = {
             }
           } else {
             console.log("Usss");
-            const index = uniqueUsuarios.findIndex(
-              (user) => user.id === usuario.id
-            );
+            const index = uniqueUsuarios.findIndex((user) => user.id === usuario.id);
             if (!uniqueUsuarios[index].equipos) {
               uniqueUsuarios[index].equipos = [];
             }
-            if (
-              usuario.equipo !== null &&
-              usuario.equipo != "" &&
-              usuario.rol !== null &&
-              usuario.rol != ""
-            ) {
+            if (usuario.equipo !== null && usuario.equipo != "" && usuario.rol !== null && usuario.rol != "") {
               uniqueUsuarios[index].equipos.push({
                 nombre: usuario.equipo ?? "",
                 id: usuario.idequipo ?? "",
@@ -318,19 +242,13 @@ module.exports = {
       //* Eliminar al usuario de todos los equipos del club //*
       const queryDeleteMiembro = `DELETE FROM public."Miembros" WHERE id_usuario = $1 AND id_equipo = $2`;
       equipos.rows.forEach(async (equipo) => {
-        await connectionPostgres.query(queryDeleteMiembro, [
-          id_usuario,
-          equipo.id,
-        ]);
+        await connectionPostgres.query(queryDeleteMiembro, [id_usuario, equipo.id]);
         await deleteSolicitud(id_usuario, id_club);
       });
 
       //* Eliminar la solicitud del usuario //*
       const queryDeleteSolicitud = `DELETE FROM public."Solicitud" WHERE id_usuario = $1 AND id_club = $2`;
-      await connectionPostgres.query(queryDeleteSolicitud, [
-        id_usuario,
-        id_club,
-      ]);
+      await connectionPostgres.query(queryDeleteSolicitud, [id_usuario, id_club]);
       return { statusCode: 200, message: "Usuario expulsado con éxito" };
     } catch (e) {
       console.log("Error: ", e);
@@ -338,64 +256,18 @@ module.exports = {
     }
   },
 
-  async editClub(
-    id,
-    nombre,
-    descripcion,
-    latitud,
-    longitud,
-    id_deporte,
-    logo,
-    correo,
-    telefono,
-    categorias,
-    tipos,
-    facebook,
-    instagram,
-    tiktok
-  ) {
+  async editClub(id, nombre, descripcion, latitud, longitud, id_deporte, logo, correo, telefono, categorias, tipos, facebook, instagram, tiktok) {
     try {
       let query = `SELECT COUNT(*)
       FROM public."Club"
       WHERE (nombre = $1 OR correo = $2) AND id != $3`;
-      let response = await connectionPostgres.query(query, [
-        nombre,
-        correo,
-        id,
-      ]);
+      let response = await connectionPostgres.query(query, [nombre, correo, id]);
       if (response.rows[0].count > 0) {
         return { statusCode: 400, message: "Nombre existente" };
       }
-      console.log(
-        "datos: ",
-        id,
-        nombre,
-        descripcion,
-        latitud,
-        longitud,
-        id_deporte,
-        logo,
-        correo,
-        telefono,
-        facebook,
-        instagram,
-        tiktok
-      );
+      console.log("datos: ", id, nombre, descripcion, latitud, longitud, id_deporte, logo, correo, telefono, facebook, instagram, tiktok);
       query = `UPDATE public."Club" SET nombre = $1, descripcion = $2, latitud = $3, longitud = $4, id_deporte = $5, logo = $6, correo = $7, telefono = $8, facebook = $9, instagram = $10, tiktok = $11 WHERE id = $12`;
-      response = await connectionPostgres.query(query, [
-        nombre,
-        descripcion,
-        latitud,
-        longitud,
-        id_deporte,
-        logo,
-        correo,
-        telefono,
-        facebook,
-        instagram,
-        tiktok,
-        id,
-      ]);
+      response = await connectionPostgres.query(query, [nombre, descripcion, latitud, longitud, id_deporte, logo, correo, telefono, facebook, instagram, tiktok, id]);
 
       query = `DELETE FROM public."ClubCategoria" WHERE id_club = $1`;
       response = await connectionPostgres.query(query, [id]);
@@ -403,11 +275,8 @@ module.exports = {
       query = `DELETE FROM public."ClubTipo" WHERE id_club = $1`;
       response = await connectionPostgres.query(query, [id]);
 
-      query =
-        'INSERT INTO public."ClubCategoria" (id_club, id_categoria) VALUES ';
-      query += categorias
-        .map((categoria) => `(${id}, ${categoria})`)
-        .join(", ");
+      query = 'INSERT INTO public."ClubCategoria" (id_club, id_categoria) VALUES ';
+      query += categorias.map((categoria) => `(${id}, ${categoria})`).join(", ");
       response = await connectionPostgres.query(query);
 
       query = 'INSERT INTO public."ClubTipo" (id_club, id_tipo) VALUES ';
@@ -421,6 +290,7 @@ module.exports = {
     }
   },
 
+  // ? : NO TESTEABLE, NO SE UTILIZA
   async editImagenClub(id, logo) {
     try {
       let query = `UPDATE public."Club" SET logo = $1 WHERE id = $2`;

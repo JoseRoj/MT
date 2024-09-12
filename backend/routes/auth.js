@@ -5,9 +5,7 @@ module.exports = (app) => {
       const { email, contrasena } = req.body;
       const response = await auth.login(email, contrasena);
       return response.statusCode === 401
-        ? res
-            .status(401)
-            .send({ message: response.message, data: response.data })
+        ? res.status(401).send({ message: response.message, data: response.data })
         : response.statusCode === 500
         ? res.status(500).send({ message: response.message })
         : res.status(200).send({
@@ -20,7 +18,6 @@ module.exports = (app) => {
     }
   });
 
-  //TODO : TESTEAR
   app.patch("/token", async (req, res) => {
     try {
       const { id_usuario, tokenfb } = req.body;

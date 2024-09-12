@@ -1,7 +1,9 @@
 const deportes = require("../controllers/deporteController");
+const verifyToken = require("../middleware/auth");
 
 module.exports = (app) => {
-  app.get("/getDeportes", async (req, res) => {
+  /* Función para obtener todos los datos */
+  app.get("/getDeportes", verifyToken, async (req, res) => {
     try {
       const response = await deportes.getDeportes();
       return response.statusCode === 400

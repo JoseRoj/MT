@@ -58,11 +58,6 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
-  Future<Data?> validar(String email, String contrasena) async {
-    return await clubConnectDataSource.validar(email, contrasena);
-  }
-
-  @override
   Future<bool> updateToken(int idusuario, String tokenfb) async {
     return await clubConnectDataSource.updateToken(idusuario, tokenfb);
   }

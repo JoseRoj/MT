@@ -44,13 +44,13 @@ module.exports = {
 
   async createEquipo(nombre, id_club) {
     try {
-      let query = `INSERT INTO public."Equipo"(nombre, id_club) VALUES ($1 , $2)`;
+      let query = `INSERT INTO public."Equipo"(nombre, id_club) VALUES ($1 , $2) RETURNING id`;
       const response = await connectionPostgres.query(query, [nombre, id_club]);
       console.log(response);
       if (response.rowCount === 0) {
         return { statusCode: 400, message: "Error al crear equipo" };
       }
-      return { statusCode: 201, message: "Equipo creado correctamente" };
+      return { statusCode: 201, data: response.rows[0].id, message: "Equipo creado correctamente" };
     } catch (e) {
       console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };
@@ -62,7 +62,7 @@ module.exports = {
       let query = `DELETE FROM public."Equipo" WHERE id = $1`;
       const response = await connectionPostgres.query(query, [id_equipo]);
       if (response.rowCount === 0) {
-        return { statusCode: 400, message: "Error al eliminar equipo" };
+        return { statusCode: 400, message: "Este equipo no existe" };
       }
       return { statusCode: 200, message: "Equipo eliminado correctamente" };
     } catch (e) {
@@ -116,7 +116,7 @@ module.exports = {
       }
 
       /* obtener los posibles eventos recurrentes en caso de querer filtrar por estos */
-      var queryRecurrentes = `SELECT * FROM configevento WHERE configevento.fecha_inicio >= $1 OR configevento.fecha_final <= $2 AND id_equipo = $3`;
+      var queryRecurrentes = `SELECT * FROM configevento WHERE (configevento.fecha_inicio >= $1 OR configevento.fecha_final <= $2) AND id_equipo = $3`;
       const responseRecurrentes = await connectionPostgres.query(queryRecurrentes, [fecha_inicio, fecha_final, id_equipo]);
       data.recurrentes = responseRecurrentes.rows;
 

@@ -1,7 +1,9 @@
 const categoria = require("../controllers/categoriaController");
+const verifyToken = require("../middleware/auth");
 
 module.exports = (app) => {
-  app.get("/getCategorias", async (req, res) => {
+  /* Obtener todas las categoria que estan predefinidas */
+  app.get("/getCategorias", verifyToken, async (req, res) => {
     try {
       const response = await categoria.getCategoria();
       return response.statusCode === 400

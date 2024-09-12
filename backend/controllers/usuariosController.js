@@ -1,9 +1,7 @@
 const connectionPostgres = require("../database/db");
 
 module.exports = {
-  /*
-   * Obtener todos los usuarios
-   */
+  // Obtener todos los usuarios
   async getUsuarios() {
     try {
       let query = `SELECT * FROM public."Usuarios"`;
@@ -13,6 +11,7 @@ module.exports = {
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },
+
   /*
     * Obtener un usuario por su id
     ? @param id - id del usuario
@@ -42,18 +41,7 @@ module.exports = {
     ? @param genero - género del usuario
     ? @param imagen - imagen del usuario
   */
-  async createUsuario(
-    id,
-    nombre,
-    apellido1,
-    apellido2,
-    email,
-    contrasena,
-    telefono,
-    fecha_nacimiento,
-    genero,
-    imagen
-  ) {
+  async createUsuario(nombre, apellido1, apellido2, email, contrasena, telefono, fecha_nacimiento, genero, imagen) {
     try {
       //* Primero se debe comprobar que el usuario no exista;
       let query = `SELECT COUNT(*) AS cantidad_usuarios
@@ -65,36 +53,10 @@ module.exports = {
       }
 
       //* Query para insertar el usuario
-      if (id) {
-        let query1 = `INSERT INTO public."Usuarios" (id, nombre, apellido1, apellido2, email, telefono, contrasena, fecha_nacimiento, genero, imagen) VALUES ($10 ,$1, $2, $3, $4, $5, $6, $7, $8, $9);`;
-        response = await connectionPostgres.query(query1, [
-          nombre,
-          apellido1,
-          apellido2,
-          email,
-          telefono,
-          contrasena,
-          fecha_nacimiento,
-          genero,
-          imagen,
-          id,
-        ]);
-      } else {
-        let query1 = `INSERT INTO public."Usuarios" (nombre, apellido1, apellido2, email, telefono, contrasena, fecha_nacimiento, genero, imagen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`;
-        response = await connectionPostgres.query(query1, [
-          nombre,
-          apellido1,
-          apellido2,
-          email,
-          telefono,
-          contrasena,
-          fecha_nacimiento,
-          genero,
-          imagen,
-        ]);
-      }
+      let query1 = `INSERT INTO public."Usuarios" (nombre, apellido1, apellido2, email, telefono, contrasena, fecha_nacimiento, genero, imagen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`;
+      response = await connectionPostgres.query(query1, [nombre, apellido1, apellido2, email, telefono, contrasena, fecha_nacimiento, genero, imagen]);
 
-      return { statusCode: 201, message: "Usuario creado con éxito" };
+      return { statusCode: 201, data: response.rows[0].id, message: "Usuario creado con éxito" };
     } catch (error) {
       console.log("error: ", error);
       return { statusCode: 500, message: "Error al realizar petición" };
@@ -112,23 +74,16 @@ module.exports = {
     try {
       // *  Verficar que el usuario es administrador del club
       let query = `SELECT * FROM public."Administra" WHERE id_usuario = $1 AND id_club = $2`;
-      const response = await connectionPostgres.query(query, [
-        id_usuario,
-        id_club,
-      ]);
+      const response = await connectionPostgres.query(query, [id_usuario, id_club]);
       if (response.rows.length === 0) {
         //* Si no es Administrador Verificar si es Entrenador  --- cuando se ingresa al equipo especifico**/
         if (id_equipo != null && id_equipo != undefined && id_equipo != "") {
-          let queryEntrenador = `SELECT * FROM public."Miembros" WHERE id_usuario = $1 AND id_equipo = $2 AND rol = 'Entrenador'`;
-          const rolEntrenador = await connectionPostgres.query(
-            queryEntrenador,
-            [id_usuario, id_equipo]
-          );
-
+          let queryEntrenador = `SELECT rol FROM public."Miembros" WHERE id_usuario = $1 AND id_equipo = $2`;
+          const rolEntrenador = await connectionPostgres.query(queryEntrenador, [id_usuario, id_equipo]);
           if (rolEntrenador.rows.length > 0) {
             return {
               statusCode: 200,
-              data: "Entrenador",
+              data: rolEntrenador.rows[0].rol,
               message: "",
             };
           }
@@ -260,10 +215,7 @@ module.exports = {
             CountEventos.year, CountEventos.mes
         ) AS dataParticipation
         WHERE id_usuario = $1`;
-      const response = await connectionPostgres.query(query, [
-        id_usuario,
-        id_equipo,
-      ]);
+      const response = await connectionPostgres.query(query, [id_usuario, id_equipo]);
       console.log("response: ", response.rows);
       if (response.rowCount === 0) {
         return {

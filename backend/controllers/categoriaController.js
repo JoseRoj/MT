@@ -1,8 +1,7 @@
 const connectionPostgres = require("../database/db");
 
 module.exports = {
-  /*
-   * Obtener todas las categorias
+  /* Obtener todas las categorias
    */
   async getCategoria() {
     try {

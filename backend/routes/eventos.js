@@ -4,16 +4,11 @@ const connectionPostgres = require("../database/db");
 const { getMessaging } = require("firebase-admin/messaging");
 
 module.exports = (app) => {
+  // Obtener Eventos
   app.get("/eventos", async (req, res) => {
     try {
       const { id_equipo, estado, initialDate, month, year } = req.query;
-      const response = await EventosController.getEventos(
-        id_equipo,
-        estado,
-        initialDate,
-        month,
-        year
-      );
+      const response = await EventosController.getEventos(id_equipo, estado, initialDate, month, year);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -44,28 +39,12 @@ module.exports = (app) => {
     }
   });*/
 
+  // Crear Evento
   app.post("/eventos", async (req, res) => {
     console.log("req.body");
-    const {
-      fechas,
-      id_equipo,
-      descripcion,
-      horaInicio,
-      horaFin,
-      titulo,
-      lugar,
-      id_club,
-    } = req.body;
+    const { fechas, id_equipo, descripcion, horaInicio, horaFin, titulo, lugar, id_club } = req.body;
     try {
-      const response = await EventosController.createEvento(
-        fechas,
-        id_equipo,
-        descripcion,
-        horaInicio,
-        horaFin,
-        titulo,
-        lugar
-      );
+      const response = await EventosController.createEvento(fechas, id_equipo, descripcion, horaInicio, horaFin, titulo, lugar);
       if (response.statusCode === 201) {
         //* -- ENVIAR NOTIFICACION A TODOS LOS MIMEBORS DEL EQUIPO -- /
 
@@ -75,9 +54,7 @@ module.exports = (app) => {
         JOIN public."Miembros" ON "Usuarios".id = "Miembros".id_usuario
         WHERE "Miembros".id_equipo = $1 AND "Usuarios".tokenfb IS NOT NULL;`;
 
-          const responsetokens = await connectionPostgres.query(query, [
-            id_equipo,
-          ]);
+          const responsetokens = await connectionPostgres.query(query, [id_equipo]);
 
           const registrationTokens = responsetokens.rows.map((token) => {
             return token.tokenfb;
@@ -87,10 +64,8 @@ module.exports = (app) => {
           query = `SELECT "Club".nombre AS club, "Equipo".nombre AS equipo FROM public."Club"
         JOIN public."Equipo" ON "Club".id = "Equipo".id_club
         WHERE "Equipo".id = $2 AND "Club".id = $1`;
-          const response2 = await connectionPostgres.query(query, [
-            id_club,
-            id_equipo,
-          ]);
+          const response2 = await connectionPostgres.query(query, [id_club, id_equipo]);
+          console.log("Responde2", response2);
           if (fechas.length == 1) {
             const message = {
               notification: {
@@ -102,9 +77,7 @@ module.exports = (app) => {
               },
               tokens: registrationTokens,
             };
-            const notification = await getMessaging().sendEachForMulticast(
-              message
-            );
+            const notification = await getMessaging().sendEachForMulticast(message);
             return res.status(201).send({ message: "" });
           } else {
             const message = {
@@ -117,16 +90,13 @@ module.exports = (app) => {
               },
               token: registrationTokens,
             };
-            const notification = await getMessaging().sendEachForMulticast(
-              message
-            );
+            const notification = await getMessaging().sendEachForMulticast(message);
             console.log("Successfully sent message:", notification);
-            return res.status(201).send({ message: "" });
+            return res.status(201).send({ data: response.data, message: response.message });
           }
         } catch (e) {
           console.log("Error: ", e);
-
-          return res.status(201).send({ message: "" });
+          return res.status(201).send({ data: response.data, message: response.message });
         }
         /*try {
           const registrationToken =
@@ -139,9 +109,7 @@ module.exports = (app) => {
           return res.status(201).send({ message: response.message });
         }*/
       }
-      return response.statusCode === 400
-        ? res.status(400).send({ message: response.message })
-        : res.status(500).send({ message: response.message });
+      return response.statusCode === 400 ? res.status(400).send({ message: response.message }) : res.status(500).send({ message: response.message });
     } catch (e) {
       console.log("Error: ", e);
       res.status(500).send({ message: "Error interno del servidor" });
@@ -163,28 +131,11 @@ module.exports = (app) => {
     }
   });
 
+  // Actualizar eventos
   app.put("/eventos", async (req, res) => {
-    const {
-      id_evento,
-      fecha,
-      descripcion,
-      horaInicio,
-      horaFin,
-      titulo,
-      lugar,
-      asistentesDelete,
-    } = req.body;
+    const { id_evento, fecha, descripcion, horaInicio, horaFin, titulo, lugar, asistentes } = req.body;
     try {
-      const response = await EventosController.editEvento(
-        id_evento,
-        fecha,
-        descripcion,
-        horaInicio,
-        horaFin,
-        titulo,
-        lugar,
-        asistentesDelete
-      );
+      const response = await EventosController.editEvento(id_evento, fecha, descripcion, horaInicio, horaFin, titulo, lugar, asistentes);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -196,6 +147,7 @@ module.exports = (app) => {
     }
   });
 
+  // Finalizar o Activar un evento
   app.patch("/eventos/estado", async (req, res) => {
     const { id_evento, estado } = req.body;
     console.log("id_evento: ", id_evento);

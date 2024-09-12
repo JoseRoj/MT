@@ -18,16 +18,23 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class HomeScreenState extends ConsumerState<HomeScreen> {
+  late Future<void> init;
   @override
   void initState() {
+    init = initData();
+    super.initState();
     /*  FirebaseApi()
         .initNotification(ref)
         .then((value) => print("Notificaciones inicializadas"));
 */
-    super.initState();
+
     //print(";");
-    ref.read(categoriasProvider.notifier).getCategorias();
-    ref
+  }
+
+  Future<void> initData() async {
+    await ref.read(authProvider).loadToken();
+    await ref.read(categoriasProvider.notifier).getCategorias();
+    await ref
         .read(deportesProvider.notifier)
         .getDeportes(); /*.then((value) => ref
         .read(clubesRegisterProvider.notifier)
@@ -36,8 +43,8 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
 
     //      final deportes = ref.watch(deportesProvider);
 
-    ref.read(tiposProvider.notifier).getTipos();
-    ref.read(authProvider).loadToken();
+    await ref.read(tiposProvider.notifier).getTipos();
+    setState(() {});
   }
 
   final viewRoutes = const <Widget>[
@@ -49,29 +56,35 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final loading = ref.watch(initialLoadingProvider);
-    if (loading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    } else {
-      print("Entre...");
-      final deportes = ref.watch(deportesProvider);
+    return FutureBuilder(
+        future: init,
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.waiting:
+              return Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
 
-      /*ref
-          .read(clubesRegisterProvider.notifier)
-          .getClubes(deportes.map((e) => int.parse(e.id)).toList());
-*/
-      return Scaffold(
-        body: IndexedStack(
-          index: widget.pageIndex,
-          children: viewRoutes,
-        ),
-        bottomNavigationBar:
-            CustomBottomNavigation(currentIndex: widget.pageIndex),
-      );
-    }
+            case ConnectionState.done:
+              if (snapshot.hasError) {
+                return const Text('Error');
+              } else {
+                return Scaffold(
+                  body: IndexedStack(
+                    index: widget.pageIndex,
+                    children: viewRoutes,
+                  ),
+                  bottomNavigationBar:
+                      CustomBottomNavigation(currentIndex: widget.pageIndex),
+                );
+              }
+            case ConnectionState.none:
+              return const Text('none');
+            case ConnectionState.active:
+              return const Text('active');
+          }
+        });
   }
 }

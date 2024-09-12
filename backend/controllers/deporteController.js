@@ -1,9 +1,7 @@
 const connectionPostgres = require("../database/db");
 
 module.exports = {
-  /*
-   * Obtener todos los deportes
-   */
+  /* Obtener todos los deportes */
   async getDeportes() {
     try {
       let query = `SELECT * FROM public."Deporte"`;

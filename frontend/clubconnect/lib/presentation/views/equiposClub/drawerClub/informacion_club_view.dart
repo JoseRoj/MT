@@ -116,15 +116,11 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
 
       base64Image = await toBase64C(pickedFile.path);
       club!.club.logo = base64Image;
-
-      await ref
-          .read(clubConnectProvider)
-          .updateImagenClub(base64Image, int.parse(club!.club.id!));
       setState(() {
-        customToast(
+        /*customToast(
             "Foto de perfil cambiada con exito, actualiza tu lista de clubs, para verificar los cambios",
             context,
-            "IsError");
+            "IsError");*/
       });
     }
     Navigator.of(context).pop();
@@ -139,10 +135,7 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
         club!.club.logo = base64Image;
       });
     }
-    await ref
-        .read(clubConnectProvider)
-        .updateImagenClub(base64Image, int.parse(club!.club.id!));
-    setState(() {});
+
     Navigator.of(context).pop();
   }
 
@@ -314,18 +307,20 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
                             },
                           );
                         },
-                        child: ClipOval(
-                          child: Container(
-                            color: Colors.black,
-                            width: 40,
-                            height: 40,
-                            child: const Icon(
-                              Icons.add_a_photo,
-                              size: 20,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                        child: readOnly
+                            ? null
+                            : ClipOval(
+                                child: Container(
+                                  color: Colors.black,
+                                  width: 40,
+                                  height: 40,
+                                  child: const Icon(
+                                    Icons.add_a_photo,
+                                    size: 20,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
                   ],

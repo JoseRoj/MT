@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:clubconnect/insfrastructure/repositories/club_repository_impl.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -78,13 +80,11 @@ class usuario {
 }
 
 final authProvider = ChangeNotifierProvider<AuthProvider>((ref) {
-  final supaDBRepositoryImpl = ref.watch(clubConnectProvider);
-  return AuthProvider(supaDBRepositoryImpl);
+  return AuthProvider();
 });
 
 class AuthProvider extends ChangeNotifier {
-  final SupaDBRepositoryImpl _supaDBRepositoryImpl;
-  AuthProvider(this._supaDBRepositoryImpl) : super();
+  AuthProvider() : super();
   String? _token;
   String? _tokenDispositivo;
 
@@ -96,17 +96,25 @@ class AuthProvider extends ChangeNotifier {
   int? get id => _id;
 
   Future<usuario?> saveToken(String email, String contrasena) async {
+    Login res;
     try {
-      Data? resToken = await _supaDBRepositoryImpl.validar(email, contrasena);
-      _token = resToken!.token;
-      _id = int.parse(resToken.user.id);
-      await _secureStorage.write(
-        key: 'token',
-        value: resToken.token,
-      );
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.post('${dotenv.env["API_URL"]}/login',
+          data: jsonEncode(
+              <String, String>{"email": email, "contrasena": contrasena}));
+      if (response.statusCode == 200) {
+        res = Login.fromJson(response.data);
+        Data? resToken = res.data;
+        _token = resToken.token;
+        _id = int.parse(resToken.user.id);
+        await _secureStorage.write(
+          key: 'token',
+          value: resToken.token,
+        );
 
-      notifyListeners();
-      return resToken.user;
+        notifyListeners();
+        return resToken.user;
+      }
     } catch (e) {
       return null;
     }

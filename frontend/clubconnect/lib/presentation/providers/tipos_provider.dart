@@ -12,7 +12,7 @@ class TiposNotifier extends StateNotifier<List<Tipo>> {
   final SupaDBRepositoryImpl _supaDBRepositoryImpl;
   TiposNotifier(this._supaDBRepositoryImpl) : super([]);
 
-  void getTipos() async {
+  Future<void> getTipos() async {
     final tipos = await _supaDBRepositoryImpl.getTipos();
     //final types = tipos.map((tipo) => {"id": tipo.id: tipo.nombre}).toList();
     state = tipos;

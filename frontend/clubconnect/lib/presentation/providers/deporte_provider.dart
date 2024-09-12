@@ -15,6 +15,7 @@ class DeporteNotifier extends StateNotifier<List<Deporte>> {
 
   Future<void> getDeportes() async {
     final sports = await _supaDBRepositoryImpl.getDeportes();
+    print("Sport" + sports.toString());
     state = sports;
   }
 }

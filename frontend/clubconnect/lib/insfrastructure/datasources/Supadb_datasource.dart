@@ -13,11 +13,20 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/userTeam.dart';
 
 class SupabdDatasource extends ClubConnectDataSource {
+  final Dio dio;
+  SupabdDatasource({required String token})
+      : dio = Dio(BaseOptions(
+          headers: {
+            'Authorization': token, // Usamos el token aquí
+          },
+        ));
+
   @override
   Future<List<Club>> getClubs(List<int> deportes, double northeastLat,
       double northeastLng, double southwestLat, double southwestLng) async {
-    final dio = Dio(BaseOptions(headers: {}));
-    final response = await dio.get('${dotenv.env["API_URL"]}/club/getclubs',
+    final didio = Dio(BaseOptions(headers: {}));
+
+    final response = await didio.get('${dotenv.env["API_URL"]}/club/getclubs',
         data: jsonEncode(<String, dynamic>{
           "deportes": deportes,
           "northeastLat": northeastLat,
@@ -85,7 +94,6 @@ class SupabdDatasource extends ClubConnectDataSource {
 
   @override
   Future<List<Deporte>> getDeportes() async {
-    final dio = Dio(BaseOptions(headers: {}));
     final response = await dio.get('${dotenv.env["API_URL"]}/getDeportes');
     Deportes sports = Deportes.fromJson(response.data);
     return sports.data;
@@ -93,7 +101,6 @@ class SupabdDatasource extends ClubConnectDataSource {
 
   @override
   Future<List<Categoria>> getCategorias() async {
-    final dio = Dio(BaseOptions(headers: {}));
     final response = await dio.get('${dotenv.env["API_URL"]}/getCategorias');
     Categorias cat = Categorias.fromJson(response.data);
     return cat.data;
@@ -101,7 +108,6 @@ class SupabdDatasource extends ClubConnectDataSource {
 
   @override
   Future<List<Tipo>> getTipos() async {
-    final dio = Dio(BaseOptions(headers: {}));
     final response = await dio.get('${dotenv.env["API_URL"]}/getTipos');
     List<Tipo> tipos = response.data["data"].map<Tipo>((tipo) {
       return Tipo.fromJson(tipo);
@@ -159,25 +165,6 @@ class SupabdDatasource extends ClubConnectDataSource {
     } catch (e) {
       return false;
     }
-  }
-
-  @override
-  Future<Data?> validar(String email, String contrasena) async {
-    try {
-      final dio = Dio(BaseOptions(headers: {}));
-
-      final response = await dio.post('${dotenv.env["API_URL"]}/login',
-          data: jsonEncode(
-              <String, String>{"email": email, "contrasena": contrasena}));
-      if (response.statusCode == 200) {
-        Login res = Login.fromJson(response.data);
-        return res.data;
-      }
-    } catch (e) {
-      print("Error: $e");
-      return null;
-    }
-    return null;
   }
 
   @override
@@ -657,7 +644,7 @@ class SupabdDatasource extends ClubConnectDataSource {
             "id_evento": idevento,
             "titulo": titulo,
             "lugar": lugar,
-            "asistentesDelete": asistentesDelete
+            "asistentes": asistentesDelete
           },
         ),
       );

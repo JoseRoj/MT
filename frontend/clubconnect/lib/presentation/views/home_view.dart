@@ -8,6 +8,7 @@ import 'package:clubconnect/presentation/providers/usuario_provider.dart';
 import 'package:clubconnect/presentation/widget/clubsmaps.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -75,7 +76,7 @@ class HomeViewState extends ConsumerState<HomeView> {
     try {
       var longlat = await ref.read(locationProvider);
       var direction = await Dio().get(
-          'https://maps.googleapis.com/maps/api/geocode/json?latlng=${longlat.latitude},${longlat.longitude}&result_type=locality&key=AIzaSyAaWHr_2pbyEG1u-JWxokZUzHjObyZMUO4');
+          'https://maps.googleapis.com/maps/api/geocode/json?latlng=${longlat.latitude},${longlat.longitude}&result_type=locality&key=${dotenv.env["API_KEY"]}');
       setState(() {
         location = longlat;
         address = direction.data['results'][0]['formatted_address'];

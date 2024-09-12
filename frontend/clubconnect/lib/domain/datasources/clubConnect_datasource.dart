@@ -20,7 +20,6 @@ abstract class ClubConnectDataSource {
   Future<dynamic> updateImagenClub(String image, int idclub);
 
   //* --------------- AUTH  ----------- *//
-  Future<Data?> validar(String email, String contrasena);
   Future<bool> updateToken(int idusuario, String tokenfb);
   Future<User> getUsuario(int id);
   Future<List<UserTeam>> getMiembros(int idclub);

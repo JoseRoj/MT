@@ -1,6 +1,7 @@
 const usuarioController = require("../controllers/usuariosController");
 
 module.exports = (app) => {
+  // ? NO TEST - NO SE USA
   app.get("/usuarios/getUsuarios", async (req, res) => {
     try {
       const response = await usuarioController.getUsuarios();
@@ -16,6 +17,7 @@ module.exports = (app) => {
     }
   });
 
+  // Obtener inforamcion de un usuario
   app.get("/usuarios/getUser", async (req, res) => {
     try {
       const response = await usuarioController.getUsuario(req.query.id);
@@ -32,51 +34,29 @@ module.exports = (app) => {
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
+
+  // Testear la creacion de un usuario
   app.post("/usuarios/create", async (req, res) => {
-    const {
-      id,
-      nombre,
-      apellido1,
-      apellido2,
-      email,
-      contrasena,
-      telefono,
-      fecha_nacimiento,
-      genero,
-      imagen,
-    } = req.body;
+    const { nombre, apellido1, apellido2, email, contrasena, telefono, fecha_nacimiento, genero, imagen } = req.body;
     try {
-      const response = await usuarioController.createUsuario(
-        id,
-        nombre,
-        apellido1,
-        apellido2,
-        email,
-        contrasena,
-        telefono,
-        fecha_nacimiento,
-        genero,
-        imagen
-      );
+      const response = await usuarioController.createUsuario(nombre, apellido1, apellido2, email, contrasena, telefono, fecha_nacimiento, genero, imagen);
 
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
         ? res.status(500).send({ message: response.message })
-        : res.status(201).send({ message: response.message });
+        : res.status(201).send({ data: response.data, message: response.message });
     } catch (error) {
       console.log("error: ", error);
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
+
+  // Obtener Rol del usuario en un club y equipo determinado
   app.get("/usuarios/rol", async (req, res) => {
     try {
       const { id_usuario, id_club, id_equipo } = req.query;
-      const response = await usuarioController.getRolClub(
-        id_usuario,
-        id_club,
-        id_equipo
-      );
+      const response = await usuarioController.getRolClub(id_usuario, id_club, id_equipo);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -91,6 +71,7 @@ module.exports = (app) => {
     }
   });
 
+  // Obtener los clubes a los cuales esta asociado un usuario //
   app.get("/usuarios/getclubesUser", async (req, res) => {
     try {
       const { id_usuario } = req.query;
@@ -101,6 +82,7 @@ module.exports = (app) => {
         ? res.status(500).send({ message: response.message })
         : res.status(200).send({
             data: response.data,
+            message: response.message,
           });
     } catch (error) {
       console.log("error: ", error);
@@ -108,6 +90,7 @@ module.exports = (app) => {
     }
   });
 
+  // ? NO TEST - NO SE USA
   app.patch("/usuarios/updateImage", async (req, res) => {
     const { id, imagen } = req.body;
     try {
@@ -123,19 +106,18 @@ module.exports = (app) => {
     }
   });
 
+  // Obtener estadisticas del Usuario en un equipo respectivo
   app.get("/usuarios/stadistic", async (req, res) => {
     try {
       const { id_usuario, id_equipo } = req.query;
-      const response = await usuarioController.getStadistic(
-        id_usuario,
-        id_equipo
-      );
+      const response = await usuarioController.getStadistic(id_usuario, id_equipo);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
         ? res.status(500).send({ message: response.message })
         : res.status(200).send({
             data: response.data,
+            message: response.message,
           });
     } catch (error) {
       console.log("error: ", error);

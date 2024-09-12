@@ -1,6 +1,7 @@
 const tipo = require("../controllers/tipoController");
 
 module.exports = (app) => {
+  // Obtener los diferentes tipo que puede tener un Club
   app.get("/getTipos", async (req, res) => {
     try {
       const response = await tipo.getTipo();

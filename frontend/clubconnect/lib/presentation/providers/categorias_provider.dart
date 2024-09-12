@@ -13,7 +13,7 @@ class CategoriaNotifier extends StateNotifier<List<Categoria>> {
   final SupaDBRepositoryImpl _supaDBRepositoryImpl;
   CategoriaNotifier(this._supaDBRepositoryImpl) : super([]);
 
-  void getCategorias() async {
+  Future<void> getCategorias() async {
     final cats = await _supaDBRepositoryImpl.getCategorias();
     state = cats;
   }

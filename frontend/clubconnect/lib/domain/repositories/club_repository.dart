@@ -39,7 +39,6 @@ abstract class ClubConnectRepository {
       int idusuario, int idequipo);
 
   //* --------------- AUTH  ----------- *//
-  Future<Data?> validar(String email, String contrasena);
   Future<bool> updateToken(int idusuario, String tokenfb);
 
   //* --------------- USUARIOS  ----------- *//
