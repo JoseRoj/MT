@@ -53,15 +53,17 @@ module.exports = {
               ORDER BY "Evento".fecha ASC`;
         response = await connectionPostgres.query(query, [id_equipo, estado, formattedTimeInitString, month, year]);
       }
-
-      for (var equipo of response.rows) {
-        query = `SELECT "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".apellido2, "Usuarios".id, "Usuarios".imagen FROM public."Usuarios" 
-        JOIN public."Asistencia" ON "Usuarios".id = "Asistencia".id_usuario
-        WHERE "Asistencia".id_evento = $1`;
+      const promises = response.rows.map(async (equipo) => {
+        const query = `SELECT "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".apellido2, "Usuarios".id, "Usuarios".imagen 
+                       FROM public."Usuarios"
+                       JOIN public."Asistencia" ON "Usuarios".id = "Asistencia".id_usuario
+                       WHERE "Asistencia".id_evento = $1`;
         const response2 = await connectionPostgres.query(query, [equipo.id]);
-        data.push({ evento: equipo, asistentes: response2.rows });
-      }
-      return { statusCode: 200, data: data, message: "" };
+        return { evento: equipo, asistentes: response2.rows };
+      });
+      const dataSql = await Promise.all(promises);
+
+      return { statusCode: 200, data: dataSql, message: "" };
     } catch (e) {
       console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };
