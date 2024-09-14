@@ -1,13 +1,11 @@
 const solicitudController = require("../controllers/solicitudController");
 const { getMessaging } = require("firebase-admin/messaging");
 module.exports = (app) => {
+  // Enviar Solicitud a un club
   app.post("/solicitud/send", async (req, res) => {
     const { id_usuario, id_club } = req.body;
     try {
-      const response = await solicitudController.sendSolicitud(
-        id_usuario,
-        id_club
-      );
+      const response = await solicitudController.sendSolicitud(id_usuario, id_club);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -21,13 +19,11 @@ module.exports = (app) => {
     }
   });
 
+  // Obtener estado de una solicitud
   app.get("/solicitud/getEstado", async (req, res) => {
     const { id_usuario, id_club } = req.query;
     try {
-      const response = await solicitudController.getEstadoSolicitud(
-        id_usuario,
-        id_club
-      );
+      const response = await solicitudController.getEstadoSolicitud(id_usuario, id_club);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -44,9 +40,7 @@ module.exports = (app) => {
   app.get("/solicitud/getPendientes", async (req, res) => {
     const { id_club } = req.query;
     try {
-      const response = await solicitudController.getSolicitudesPendientes(
-        id_club
-      );
+      const response = await solicitudController.getSolicitudesPendientes(id_club);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -63,11 +57,7 @@ module.exports = (app) => {
   app.patch("/solicitud", async (req, res) => {
     const { id_usuario, id_club, estado } = req.body;
     try {
-      const response = await solicitudController.updateSolicitud(
-        id_usuario,
-        id_club,
-        estado
-      );
+      const response = await solicitudController.updateSolicitud(id_usuario, id_club, estado);
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500
@@ -80,6 +70,8 @@ module.exports = (app) => {
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
+
+  // ? NO TEST - NO SE USA
   app.post("/send", async (req, res) => {
     const tokenreceived = req.body.token;
     // This registration token comes from the client FCM SDKs.

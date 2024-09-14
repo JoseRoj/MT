@@ -1,5 +1,7 @@
+const config = require("../config/config");
 const connectionPostgres = require("../database/db");
-
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 module.exports = {
   // Obtener todos los usuarios
   async getUsuarios() {
@@ -55,8 +57,31 @@ module.exports = {
       //* Query para insertar el usuario
       let query1 = `INSERT INTO public."Usuarios" (nombre, apellido1, apellido2, email, telefono, contrasena, fecha_nacimiento, genero, imagen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`;
       response = await connectionPostgres.query(query1, [nombre, apellido1, apellido2, email, telefono, contrasena, fecha_nacimiento, genero, imagen]);
+      const jwtoken = jwt.sign(
+        {
+          // token with data
+          usuario: {
+            id: response.rows[0].id,
+            nombre: response.rows[0].nombre,
+            email: response.rows[0].email,
+          },
+        },
+        config.development.configToken.SEED,
+        { expiresIn: config.development.configToken.expiration }
+      );
 
-      return { statusCode: 201, data: response.rows[0].id, message: "Usuario creado con éxito" };
+      return {
+        statusCode: 201,
+        data: {
+          user: {
+            id: response.rows[0].id,
+            nombre: nombre,
+            email: email,
+          },
+          token: jwtoken,
+        },
+        message: "Usuario creado con éxito",
+      };
     } catch (error) {
       console.log("error: ", error);
       return { statusCode: 500, message: "Error al realizar petición" };

@@ -23,6 +23,8 @@
     "supertest": "^7.0.0"
   },
   "devDependencies": {
+
+    "globals": "^15.9.0",
     "jest": "^29.7.0",
     "nodemon": "^3.1.0"
   }

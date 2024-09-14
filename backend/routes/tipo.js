@@ -12,7 +12,7 @@ module.exports = (app) => {
         : res.status(200).send({
             data: response.data,
           });
-    } catch (error) {
+    } catch {
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });

@@ -2,9 +2,7 @@ const request = require("supertest");
 const { app, server } = require("../app");
 const api = request(app);
 const connectionPostgres = require("../database/db");
-const { months } = require("moment-timezone");
 const estados = require("../global");
-const asistencia = require("../routes/asistencia");
 const event = {
   fechas: ["2024-09-30"],
   id_equipo: 88,
@@ -25,56 +23,6 @@ const paremetersGetEventos = {
 };
 
 const id_miembroEquipo = 34;
-
-/*describe("Test obtener Eventos de un equipo", () => {
-  describe("Obtener Eventos de un equipo CON Eventos", () => {
-    it("Obtener Todos los Eventos", async () => {
-      const response = await api.get("/eventos").query({
-        id_equipo: 24,
-        estado: "Todos",
-      });
-      expect(response.statusCode).toBe(200);
-      expect(response.body.data).toBeInstanceOf(Array);
-    });
-    it("Obtener Eventos Activos", async () => {
-      const response = await api.get("/eventos").query({
-        id_equipo: 24,
-        estado: "Activo",
-      });
-      for (res of response.body.data) {
-        expect(res.evento.estado).toBe("Activo");
-      }
-      expect(response.statusCode).toBe(200);
-      expect(response.body.data).toBeInstanceOf(Array);
-      expect(response.body.data.length).toBeGreaterThan(0);
-    });
-    it("Obtener Eventos Terminados", async () => {
-      const response = await api.get("/eventos").query({
-        id_equipo: 24,
-        estado: "Terminado",
-      });
-      for (res of response.body.data) {
-        expect(res.evento.estado).toBe("Terminado");
-      }
-      expect(response.statusCode).toBe(200);
-      expect(response.body.data).toBeInstanceOf(Array);
-    });
-  });
-  describe("Obtener Eventos de un equipo SIN Eventos", () => {
-    it("Obtener Eventos", async () => {
-      const response = await api.get("/eventos").query({
-        id_equipo: 1000000,
-        estado: "Todos",
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.body.data).toBeInstanceOf(Array);
-      expect(response.body.data.length).toBe(0);
-    });
-  });
-});*/
-/*describe("Test Evento", () => {});
- */
 describe("Test Secuencia Evento - Asistencia ", () => {
   let idEvento;
   describe("Test Crear Evento", () => {
