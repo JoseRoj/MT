@@ -183,63 +183,104 @@ module.exports = {
     }
   },
 
+  async updateUser(id, nombre, apellido1, apellido2, email, telefono, fecha_nacimiento, genero, imagen) {
+    try {
+      console.log("Nombre", nombre);
+
+      // Verificar si el email ya existe para otro usuario
+      const checkEmailQuery = `SELECT * FROM public."Usuarios" WHERE email = $1 AND id != $2`;
+      const checkEmailResponse = await connectionPostgres.query(checkEmailQuery, [email, id]);
+      if (checkEmailResponse.rowCount > 0) {
+        return { statusCode: 400, message: "El email ya está en uso por otro usuario" };
+      }
+      const query = `
+      UPDATE public."Usuarios"
+      SET
+        nombre = $1,
+        apellido1 = $2,
+        apellido2 = $3,
+        email = $4,
+        telefono = $5,
+        fecha_nacimiento = $6,
+        genero = $7,
+        imagen = $8
+      WHERE id = $9
+      RETURNING *; 
+    `;
+      const response = await connectionPostgres.query(query, [nombre, apellido1, apellido2, email, telefono, fecha_nacimiento, genero, imagen, id]);
+      // Verificar si se actualizó algún registro
+      if (response.rowCount === 0) {
+        return { statusCode: 404, message: "Usuario no encontrado" };
+      }
+
+      return { statusCode: 200, data: response.rows[0], message: "Usuario actualizado con éxito" };
+    } catch (error) {
+      console.log("error: ", error);
+
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
   async getStadistic(id_usuario, id_equipo) {
     try {
-      let query = `SELECT *
-        FROM(
-        SELECT 
-            CountEventos.year,
-            CASE CountEventos.mes
-                WHEN 1 THEN 'Enero'
-                WHEN 2 THEN 'Febrero'
-                WHEN 3 THEN 'Marzo'
-                WHEN 4 THEN 'Abril'
-                WHEN 5 THEN 'Mayo'
-                WHEN 6 THEN 'Junio'
-                WHEN 7 THEN 'Julio'
-                WHEN 8 THEN 'Agosto'
-                WHEN 9 THEN 'Septiembre'
-                WHEN 10 THEN 'Octubre'
-                WHEN 11 THEN 'Noviembre'
-                WHEN 12 THEN 'Diciembre'
-            END AS mes,
-              CAST(COALESCE(countParticipacion.cantidad_participacion, 0) AS INTEGER) AS participation,
-            CAST(CountEventos.total_eventos AS INTEGER) AS total_eventos,
-                    PERCENT_RANK() OVER (ORDER BY cantidad_participacion) * 100 AS percentile,
-            CAST(COALESCE(CountParticipacion.id_usuario,0) AS INTEGER) AS id_usuario
-
-        FROM 
-            (SELECT 
+      let query = `
+        WITH asistencias AS (
+          SELECT id_evento, id_usuario
+          FROM "Asistencia"
+          WHERE id_usuario = $1
+          GROUP BY id_evento, id_usuario
+        ),
+        participacion_mensual AS (
+            SELECT 
+                EXTRACT(YEAR FROM "Evento".fecha) AS year,
+                EXTRACT(MONTH FROM "Evento".fecha) AS mes,
+                COUNT(*) AS cantidad_participacion
+            FROM 
+                "Evento"
+            INNER JOIN asistencias
+                ON "Evento".id = asistencias.id_evento
+            WHERE 
+                "Evento".id_equipo = $2
+                AND "Evento".fecha >= (CURRENT_DATE - INTERVAL '5 months')
+            GROUP BY 
+                EXTRACT(YEAR FROM "Evento".fecha), 
+                EXTRACT(MONTH FROM "Evento".fecha)
+        ),
+        total_eventos AS (
+            SELECT 
                 EXTRACT(YEAR FROM fecha) AS year,
                 EXTRACT(MONTH FROM fecha) AS mes,
                 COUNT(*) AS total_eventos
             FROM 
                 "Evento"
-            WHERE fecha >= (CURRENT_DATE - INTERVAL '5 months') AND id_equipo = $2
-            GROUP BY 
-                EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha)
-            ) countEventos
-        INNER JOIN 
-            (SELECT 
-                EXTRACT(YEAR FROM fecha) AS year,
-                EXTRACT(MONTH FROM fecha) AS mes,
-                COUNT(*) AS cantidad_participacion,
-                "Asistencia".id_usuario
-
+                WHERE fecha >= (CURRENT_DATE - INTERVAL '5 months') AND id_equipo = $2
+                GROUP BY 
+                    EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha)
+        )
+            SELECT 
+                participacion_mensual.year,
+                CASE participacion_mensual.mes
+                    WHEN 1 THEN 'Enero'
+                    WHEN 2 THEN 'Febrero'
+                    WHEN 3 THEN 'Marzo'
+                    WHEN 4 THEN 'Abril'
+                    WHEN 5 THEN 'Mayo'
+                    WHEN 6 THEN 'Junio'
+                    WHEN 7 THEN 'Julio'
+                    WHEN 8 THEN 'Agosto'
+                    WHEN 9 THEN 'Septiembre'
+                    WHEN 10 THEN 'Octubre'
+                    WHEN 11 THEN 'Noviembre'
+                    WHEN 12 THEN 'Diciembre'
+                END AS mes,
+                CAST(COALESCE(participacion_mensual.cantidad_participacion, 0) AS INTEGER) AS participation,
+                CAST(total_eventos.total_eventos AS INTEGER) AS total_eventos,
+                PERCENT_RANK() OVER (ORDER BY cantidad_participacion) * 100 AS percentile
             FROM 
-                "Asistencia"
-            JOIN "Miembros" ON "Asistencia".id_usuario = "Miembros".id_usuario
-            INNER JOIN "Evento" ON "Evento".id = "Asistencia".id_evento
-            WHERE "Evento".id_equipo = $2 
-              AND "Evento".fecha >= (CURRENT_DATE - INTERVAL '5 months')
-            GROUP BY 
-                EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha), "Asistencia".id_usuario
-            ) countParticipacion
-        ON CountEventos.year = countParticipacion.year AND CountEventos.mes = countParticipacion.mes
-        ORDER BY 
-            CountEventos.year, CountEventos.mes
-        ) AS dataParticipation
-        WHERE id_usuario = $1`;
+                participacion_mensual
+            INNER JOIN total_eventos ON participacion_mensual.year = total_eventos.year AND participacion_mensual.mes = total_eventos.mes
+            ORDER BY participacion_mensual.year, participacion_mensual.mes
+        `;
       const response = await connectionPostgres.query(query, [id_usuario, id_equipo]);
       console.log("response: ", response.rows);
       if (response.rowCount === 0) {

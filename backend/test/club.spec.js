@@ -99,7 +99,7 @@ describe("Test Clubes", () => {
   // TODO : GETmiembros
 });
 
-afterAll(async () => {
-  await connectionPostgres.end();
+afterAll(() => {
+  connectionPostgres.end();
   server.close();
 });

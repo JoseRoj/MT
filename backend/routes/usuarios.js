@@ -13,7 +13,7 @@ module.exports = (app) => {
             data: response.data,
           });
     } catch (error) {
-      res.status(500).send({ message: "Error interno del servidor" });
+      return res.status(500).send({ message: "Error interno del servidor" });
     }
   });
 
@@ -31,7 +31,7 @@ module.exports = (app) => {
     } catch (error) {
       console.log("error: ", error);
 
-      res.status(500).send({ message: "Error interno del servidor" });
+      return res.status(500).send({ message: "Error interno del servidor" });
     }
   });
 
@@ -48,7 +48,7 @@ module.exports = (app) => {
         : res.status(201).send({ data: response.data, message: response.message });
     } catch (error) {
       console.log("error: ", error);
-      res.status(500).send({ message: "Error interno del servidor" });
+      return res.status(500).send({ message: "Error interno del servidor" });
     }
   });
 
@@ -67,7 +67,7 @@ module.exports = (app) => {
           });
     } catch (error) {
       console.log("error: ", error);
-      res.status(500).send({ message: "Error interno del servidor" });
+      return res.status(500).send({ message: "Error interno del servidor" });
     }
   });
 
@@ -86,7 +86,7 @@ module.exports = (app) => {
           });
     } catch (error) {
       console.log("error: ", error);
-      res.status(500).send({ message: "Error interno del servidor" });
+      return res.status(500).send({ message: "Error interno del servidor" });
     }
   });
 
@@ -102,7 +102,7 @@ module.exports = (app) => {
         : res.status(200).send({ message: response.message });
     } catch (error) {
       console.log("error: ", error);
-      res.status(500).send({ message: "Error interno del servidor" });
+      return res.status(500).send({ message: "Error interno del servidor" });
     }
   });
 
@@ -122,6 +122,25 @@ module.exports = (app) => {
     } catch (error) {
       console.log("error: ", error);
       res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
+
+  app.put("/usuarios/update", async (req, res) => {
+    try {
+      const { nombre, apellido1, apellido2, email, telefono, fecha_nacimiento, genero, imagen, id } = req.body;
+
+      const response = await usuarioController.updateUser(id, nombre, apellido1, apellido2, email, telefono, fecha_nacimiento, genero, imagen);
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({
+            data: response.data,
+            message: response.message,
+          });
+    } catch (error) {
+      console.log("error: ", error);
+      return res.status(500).send({ message: "Error interno del servidor" });
     }
   });
 };

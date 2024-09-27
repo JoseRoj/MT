@@ -89,7 +89,7 @@ describe("Test -  Equipos", () => {
   });
 });
 
-afterAll(async () => {
-  await connectionPostgres.end();
+afterAll(() => {
+  connectionPostgres.end();
   server.close();
 });

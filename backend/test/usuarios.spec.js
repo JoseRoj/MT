@@ -31,7 +31,7 @@ describe("Test - Usuarios", () => {
   describe("Crear Usuario", () => {
     it("Crear un usuario", async () => {
       const response = await api.post("/usuarios/create").send(user);
-      id_usuario = response.body.data;
+      id_usuario = Number(response.body.data.user.id);
       expect(response.statusCode).toBe(201);
     });
 
@@ -109,7 +109,7 @@ describe("Test - Usuarios", () => {
   });
 });
 
-afterAll(async () => {
-  await connectionPostgres.end();
+afterAll(() => {
+  connectionPostgres.end();
   server.close();
 });

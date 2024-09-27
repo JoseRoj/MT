@@ -60,7 +60,7 @@ describe("Test - Eventos Recurrentes", () => {
     });
   });
 });
-afterAll(async () => {
-  await connectionPostgres.end();
+afterAll(() => {
+  connectionPostgres.end();
   server.close();
 });

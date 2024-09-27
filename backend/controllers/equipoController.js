@@ -100,48 +100,60 @@ module.exports = {
       console.log("fecha", fecha_inicio);
       console.log("fecha", fecha_final);
 
-      /* Obtener todos los eventos que se encuentran en la fecha */
-      let queryEvents = `SELECT * FROM "Evento"  WHERE "Evento".fecha >= $1 AND "Evento".fecha <= $2 AND "Evento".id_equipo = $3 ORDER BY "Evento".fecha ASC`;
-      const response = await connectionPostgres.query(queryEvents, [formattedTimeInitString, fecha_final, id_equipo]);
-
-      for (var event of response.rows) {
-        query = `SELECT "Usuarios".nombre, "Usuarios".apellido1, "Usuarios".apellido2, "Usuarios".id, "Usuarios".imagen FROM public."Usuarios" 
-        JOIN public."Asistencia" ON "Usuarios".id = "Asistencia".id_usuario
-        WHERE "Asistencia".id_evento = $1`;
-        const asistents = await connectionPostgres.query(query, [event.id]);
-        data.eventos.push({
-          ...event,
-          asistentes: asistents.rows,
-        });
-      }
-
-      /* obtener los posibles eventos recurrentes en caso de querer filtrar por estos */
-      var queryRecurrentes = `SELECT * FROM configevento WHERE (configevento.fecha_inicio >= $1 OR configevento.fecha_final <= $2) AND id_equipo = $3`;
-      const responseRecurrentes = await connectionPostgres.query(queryRecurrentes, [fecha_inicio, fecha_final, id_equipo]);
-      data.recurrentes = responseRecurrentes.rows;
-
-      var queryList = `
-      WITH UsuariosSeleccionados AS (
-        SELECT DISTINCT u.id
-        FROM "Miembros" m
-        JOIN "Usuarios" u ON u.id = m.id_usuario
-        WHERE m.id_equipo = $3
-        UNION
-        SELECT DISTINCT u.id
-        FROM "Administra" a
-        JOIN "Usuarios" u ON u.id = a.id_usuario
-        WHERE a.id_club = $4
+      // Consultas paralelas para obtener eventos y eventos recurrentes
+      const [response, responseRecurrentes, responseList] = await Promise.all([
+        // Obtener todos los eventos en el rango de fechas
+        connectionPostgres.query(
+          `SELECT e.*, COALESCE(
+           json_agg(
+             json_build_object(
+               'nombre', u.nombre, 
+               'apellido1', u.apellido1, 
+               'apellido2', u.apellido2, 
+               'id', CAST(u.id AS TEXT), 
+               'imagen', u.imagen
+             )
+           ) FILTER (WHERE u.id IS NOT NULL), '[]'
+         ) AS asistentes
+       FROM "Evento" e
+       LEFT JOIN "Asistencia" a ON e.id = a.id_evento
+       LEFT JOIN "Usuarios" u ON a.id_usuario = u.id
+       WHERE e.fecha >= $1 AND e.fecha <= $2 AND e.id_equipo = $3
+       GROUP BY e.id
+       ORDER BY e.fecha ASC`,
+          [fecha_inicio, fecha_final, id_equipo]
+        ),
+        // Obtener posibles eventos recurrentes
+        connectionPostgres.query(`SELECT * FROM configevento WHERE (fecha_inicio >= $1 OR fecha_final <= $2) AND id_equipo = $3`, [fecha_inicio, fecha_final, id_equipo]),
+        // Obtener lista de usuarios seleccionados
+        connectionPostgres.query(
+          `WITH UsuariosSeleccionados AS (
+         SELECT DISTINCT u.id
+         FROM "Miembros" m
+         JOIN "Usuarios" u ON u.id = m.id_usuario
+         WHERE m.id_equipo = $3
+         UNION
+         SELECT DISTINCT u.id
+         FROM "Administra" a
+         JOIN "Usuarios" u ON u.id = a.id_usuario
+         WHERE a.id_club = $4
       )
+      SELECT CONCAT_WS(' ', u.nombre, u.apellido1, u.apellido2) AS nombreCompleto, 
+             CAST(u.id AS TEXT) AS usuario_id, -- Aquí se convierte el id a string
+             COUNT(CASE WHEN (e.fecha >= $1 AND e.fecha <= $2) AND e.id_equipo = $3 THEN a.id ELSE NULL END) AS total_asistencias
+      FROM UsuariosSeleccionados us
+      JOIN "Usuarios" u ON u.id = us.id
+      LEFT JOIN "Asistencia" a ON u.id = a.id_usuario
+      LEFT JOIN "Evento" e ON a.id_evento = e.id
+      GROUP BY u.id, u.nombre, u.apellido1, u.apellido2
+      ORDER BY total_asistencias DESC`,
+          [fecha_inicio, fecha_final, id_equipo, id_club]
+        ),
+      ]);
 
-      SELECT CONCAT_WS(' ', u.nombre, u.apellido1, u.apellido2) AS nombreCompleto, COUNT(a.id) AS total_asistencias
-        FROM UsuariosSeleccionados us
-        JOIN "Usuarios" u ON u.id = us.id
-        LEFT JOIN "Asistencia" a ON u.id = a.id_usuario
-        LEFT JOIN "Evento" e ON a.id_evento = e.id
-        WHERE (e.fecha >= $1 AND e.fecha <= $2) AND e.id_equipo = $3
-        GROUP BY u.id, u.nombre, u.apellido1, u.apellido2
-      ORDER BY total_asistencias DESC`;
-      const responseList = await connectionPostgres.query(queryList, [fecha_inicio, fecha_final, id_equipo, id_club]);
+      // Asignar los resultados a los objetos correspondientes
+      data.eventos = response.rows;
+      data.recurrentes = responseRecurrentes.rows;
       data.userList = responseList.rows;
       return { statusCode: 200, data: data, message: "" };
     } catch (e) {

@@ -30,7 +30,7 @@ test("Test de actualizacion Token Firebase", async () => {
   expect(response.statusCode).toBe(200);
 });
 
-afterAll(async () => {
-  await connectionPostgres.end();
+afterAll(() => {
+  connectionPostgres.end();
   server.close(); // Llama a `done` cuando el servidor se haya cerrado
 });

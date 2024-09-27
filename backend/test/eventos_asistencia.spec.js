@@ -119,7 +119,7 @@ describe("Test Secuencia Evento - Asistencia ", () => {
   });
 });
 
-afterAll(async () => {
-  await connectionPostgres.end();
+afterAll(() => {
+  connectionPostgres.end();
   server.close();
 });

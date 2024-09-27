@@ -23,7 +23,7 @@ describe("Test Secuencia - Solicitud - Miembro", () => {
 
   it("Enviar solicitud y comprobar estado", async () => {
     const responseUser = await api.post("/usuarios/create").send(user);
-    id_usuario = responseUser.body.data;
+    id_usuario = Number(responseUser.body.data.user.id);
     console.log("Response User", responseUser.body);
     const responseSolicitud = await api.post("/solicitud/send").send({
       id_usuario: id_usuario,

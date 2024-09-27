@@ -4,7 +4,7 @@
   "description": "Backend Memoria de Titulo ",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test jest --verbose --runInBand "
+    "test": "NODE_ENV=test jest --verbose --silent --runInBand "
   },
   "author": "",
   "license": "ISC",

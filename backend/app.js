@@ -23,10 +23,10 @@ app.use(express.json());
 // Routes
 require("./routes")(app);
 
-/*cron.schedule("35 * * * *", async () => {
+cron.schedule("18 * * * *", async () => {
   console.log("Running a task every minute");
   await finishEvents();
-});*/
+});
 //Server
 const port = 3002; // Usa un puerto diferente para pruebas
 
