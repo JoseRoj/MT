@@ -616,17 +616,20 @@ class EventRecurrentesState extends ConsumerState<EventRecurrentes> {
                                 titulo: controllerTitleEdit.text,
                               );
 
-                              final response = type == "CREATE"
-                                  ? (await ref
-                                      .watch(clubConnectProvider)
-                                      .createConfigEvento(configEvento))
-                                  : (
-                                      configEvento.id = idConfig,
-                                      await ref
-                                          .watch(clubConnectProvider)
-                                          .editConfigEvento(configEvento)
-                                    );
+                              var response;
 
+                              if (type == "CREATE") {
+                                response = await ref
+                                    .watch(clubConnectProvider)
+                                    .createConfigEvento(configEvento);
+                              } else {
+                                configEvento.id = idConfig;
+                                response = await ref
+                                    .watch(clubConnectProvider)
+                                    .editConfigEvento(configEvento);
+                              }
+
+                              print(response);
                               if (response.statusCode == 201 ||
                                   response.statusCode == 200) {
                                 clearValues();

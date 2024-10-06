@@ -73,6 +73,11 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
+  Future<dynamic> updateUser(User usuario) async {
+    return await clubConnectDataSource.updateUser(usuario);
+  }
+
+  @override
   Future<String> getRole(int idusuario, int idclub, int? idequipo) async {
     return await clubConnectDataSource.getRole(idusuario, idclub, idequipo);
   }

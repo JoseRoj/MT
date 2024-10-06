@@ -314,10 +314,11 @@ class EventsActivesState extends ConsumerState<EventsActives> {
                               updateEventoSelectedCallback:
                                   updateEventoSelectedCallback,
                               dateSelected: dateSelected,
+                              rol: widget.role,
                               eventoSelected: eventoSelected,
                               idequipo: int.parse(widget.equipo.id!),
                               endDate: initfechaSeleccionada!,
-                            ),
+                            )
                     ],
                   );
                 }

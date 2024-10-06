@@ -11,6 +11,12 @@ class MonthYear {
   final int year;
 }
 
+List<String> generos = [
+  "Masculino",
+  "Femenino",
+  "Otro",
+];
+
 final List<String> daysOfWeek = [
   'Lunes',
   'Martes',

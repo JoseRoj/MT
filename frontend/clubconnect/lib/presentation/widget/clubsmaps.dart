@@ -9,8 +9,11 @@ import 'package:clubconnect/presentation/widget/bottonCardClub.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_cluster_manager_2/google_maps_cluster_manager_2.dart';
+
+import 'package:google_maps_flutter/google_maps_flutter.dart'
+    hide ClusterManager, Cluster;
+
 import '../../insfrastructure/models/club.dart';
 import '../providers/location_provider.dart';
 
@@ -79,7 +82,7 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
             if (cluster.isMultiple) {
               // Aquí podrías hacer zoom en la cámara si el cluster tiene múltiples elementos
               mapController.animateCamera(
-                CameraUpdate.newLatLngZoom(cluster.location, 17),
+                CameraUpdate.newLatLngZoom(cluster.location, 16),
               );
             } else {
               _mostrarInfoWindow(MarkerId(cluster.items.first.id));

@@ -20,13 +20,14 @@ class CardEvento extends ConsumerStatefulWidget {
   MonthYear dateSelected;
   EventoFull? eventoSelected;
   DateTime endDate;
+  final String rol;
   final Function(String id) updateEventoSelectedCallback;
   /*final Future<List<EventoFull>?> Function(String estado, bool? pullRefresh,
       DateTime? initDate, int month, int year) getEventosCallback;*/
   CardEvento({
     super.key,
     required this.updateEventoSelectedCallback,
-
+    required this.rol,
     //required this.eventos,
     required this.eventoSelected,
     required this.dateSelected,
@@ -219,79 +220,81 @@ class CardEventoState extends ConsumerState<CardEvento> {
               ],
             ),
             AttendeesList(asistentes: evento.asistentes),
-            Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              width: MediaQuery.of(context).size.width,
-              child: FilledButton.icon(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(
-                      buttonText == "Asistir"
-                          ? const Color.fromARGB(255, 117, 204, 124)
-                          : const Color.fromARGB(255, 237, 65, 65)),
-                ),
-                onPressed: () async {
-                  if (buttonText == "Cancelar") {
-                    var response = await ref
-                        .read(clubConnectProvider)
-                        .deleteAsistencia(int.parse(evento.evento.id!),
-                            ref.read(authProvider).id!);
-                    if (response) {
-                      buttonText = "Asistir";
-                      await ref
-                          .watch(eventosActivosProvider.notifier)
-                          .getEventosActivos(
-                              widget.idequipo,
-                              DateTime.now(),
-                              widget.dateSelected.month,
-                              widget.dateSelected
-                                  .year); /*List<EventoFull>? response =
+            (widget.rol != "Administrador")
+                ? Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    width: MediaQuery.of(context).size.width,
+                    child: FilledButton.icon(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all(
+                            buttonText == "Asistir"
+                                ? const Color.fromARGB(255, 117, 204, 124)
+                                : const Color.fromARGB(255, 237, 65, 65)),
+                      ),
+                      onPressed: () async {
+                        if (buttonText == "Cancelar") {
+                          var response = await ref
+                              .read(clubConnectProvider)
+                              .deleteAsistencia(int.parse(evento.evento.id!),
+                                  ref.read(authProvider).id!);
+                          if (response) {
+                            buttonText = "Asistir";
+                            await ref
+                                .watch(eventosActivosProvider.notifier)
+                                .getEventosActivos(
+                                    widget.idequipo,
+                                    DateTime.now(),
+                                    widget.dateSelected.month,
+                                    widget.dateSelected
+                                        .year); /*List<EventoFull>? response =
                           await widget.getEventosCallback(
                               EstadosEventos.activo,
                               false,
                               DateTime.now(),
                               widget.dateSelected.month,
                               widget.dateSelected.year);*/
-                      /*widget.eventoSelected = ref
+                            /*widget.eventoSelected = ref
                           .read(eventosActivosProvider)!
                           .firstWhere((element) {
                         return element.evento.id == evento.evento.id;
                       });*/
-                      setState(() {
-                        widget.updateEventoSelectedCallback(evento.evento.id);
+                            setState(() {
+                              widget.updateEventoSelectedCallback(
+                                  evento.evento.id);
 
-                        //widget.eventos = response;
-                        //eventos = response;
-                      });
-                      // ignore: use_build_context_synchronously
-                      customToast("Asistencia cancelada con éxito", context,
-                          "isSuccess");
-                      setState(() {});
-                    } else {
-                      customToast(
-                          "Error al cancelar asistencia", context, "isError");
-                    }
-                  } else {
-                    var response = await ref
-                        .read(clubConnectProvider)
-                        .addAsistencia(int.parse(evento.evento.id!),
-                            ref.read(authProvider).id!);
-                    if (response) {
-                      buttonText = "Cancelar";
-                      await ref
-                          .watch(eventosActivosProvider.notifier)
-                          .getEventosActivos(
-                              widget.idequipo,
-                              DateTime.now(),
-                              widget.dateSelected.month,
-                              widget.dateSelected.year);
-                      /*                    final response = await widget.getEventosCallback(
+                              //widget.eventos = response;
+                              //eventos = response;
+                            });
+                            // ignore: use_build_context_synchronously
+                            customToast("Asistencia cancelada con éxito",
+                                context, "isSuccess");
+                            setState(() {});
+                          } else {
+                            customToast("Error al cancelar asistencia", context,
+                                "isError");
+                          }
+                        } else {
+                          var response = await ref
+                              .read(clubConnectProvider)
+                              .addAsistencia(int.parse(evento.evento.id!),
+                                  ref.read(authProvider).id!);
+                          if (response) {
+                            buttonText = "Cancelar";
+                            await ref
+                                .watch(eventosActivosProvider.notifier)
+                                .getEventosActivos(
+                                    widget.idequipo,
+                                    DateTime.now(),
+                                    widget.dateSelected.month,
+                                    widget.dateSelected.year);
+                            /*                    final response = await widget.getEventosCallback(
                           EstadosEventos.activo,
                           false,
                           DateTime.now(),
                           widget.dateSelected.month,
                           widget.dateSelected.year);
 */
-                      /*final response = await ref
+                            /*final response = await ref
                           .read(clubConnectProvider)
                           .getEventos(
                               widget.idequipo,
@@ -299,33 +302,35 @@ class CardEventoState extends ConsumerState<CardEvento> {
                               DateTime.now(),
                               widget.dateSelected.month,
                               widget.dateSelected.year);*/
-                      setState(() {
-                        widget.updateEventoSelectedCallback(evento.evento.id);
-                        /*widget.eventoSelected = response!.firstWhere((element) {
+                            setState(() {
+                              widget.updateEventoSelectedCallback(
+                                  evento.evento.id);
+                              /*widget.eventoSelected = response!.firstWhere((element) {
                           return element.evento.id == evento.evento.id;
                         });
                         widget.eventos = response;*/
-                        //eventos = response;
-                      });
-                      // ignore: use_build_context_synchronously
-                      customToast("Asistencia registrada con éxito", context,
-                          "isSuccess");
-                    } else {
-                      customToast(
-                          "Error al registrar asistencia", context, "isError");
-                    }
-                  }
-                },
-                icon: buttonText == "Asistir"
-                    ? const Icon(Icons.check)
-                    : const Icon(Icons.cancel),
-                label: Text(buttonText,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    )),
-              ),
-            ),
+                              //eventos = response;
+                            });
+                            // ignore: use_build_context_synchronously
+                            customToast("Asistencia registrada con éxito",
+                                context, "isSuccess");
+                          } else {
+                            customToast("Error al registrar asistencia",
+                                context, "isError");
+                          }
+                        }
+                      },
+                      icon: buttonText == "Asistir"
+                          ? const Icon(Icons.check)
+                          : const Icon(Icons.cancel),
+                      label: Text(buttonText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          )),
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ],
         ),
       ),

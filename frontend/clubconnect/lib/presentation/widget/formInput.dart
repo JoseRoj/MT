@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 Widget formInput({
@@ -33,7 +31,7 @@ Widget formInput({
   );
 }
 
-Widget FormInputPass(
+Widget formInputPass(
     {required String label,
     required TextEditingController passwordController,
     required bool obcureText,
@@ -54,10 +52,12 @@ Widget FormInputPass(
                 BorderRadius.circular(14)), // Bordes del campo de entrada
         //hintText: hint,
         labelStyle:
-            const TextStyle(fontSize: 16), // Tamaño del texto de la etiqueta
+            const TextStyle(fontSize: 14), // Tamaño del texto de la etiqueta
         contentPadding: const EdgeInsets.symmetric(
             vertical: 10, horizontal: 10), // Altura del campo de entrada
       ),
+      style: const TextStyle(
+          fontSize: 14), // Tamaño del texto dentro del campo de entrada
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Ingresa tu password';

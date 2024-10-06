@@ -10,6 +10,7 @@ import 'package:clubconnect/presentation/providers/location_provider.dart';
 import 'package:clubconnect/presentation/providers/tipos_provider.dart';
 import 'package:clubconnect/presentation/views/newClub/modalMaps.dart';
 import 'package:clubconnect/presentation/widget.dart';
+import 'package:clubconnect/presentation/widget/ImagePicker.dart';
 import 'package:clubconnect/presentation/widget/OvalImage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,6 +69,7 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
     final clubData = await ref
         .read(clubConnectProvider)
         .getClub(int.parse(widget.club!.club.id!));
+
     logoClub = imagenFromBase64(clubData.club.logo);
     descriptionController.text = clubData.club.descripcion;
     return clubData;
@@ -88,6 +90,19 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
     });
   }
 
+  void onImageSelected(File? image, String base64) {
+    imagen = image; // Guarda la imagen selecciona
+    base64Image = base64;
+    if (base64 != "") {
+      logoClub = imagenFromBase64(base64);
+      club!.club.logo = base64;
+    } else {
+      logoClub = null;
+      club!.club.logo = base64;
+    }
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -95,7 +110,7 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
     club = widget.club;
 
     logoClub = imagenFromBase64(club!.club.logo);
-
+    base64Image = (club!.club.logo);
     descriptionController.text = club!.club.descripcion;
     descripcionControllerClub.text = club!.club.descripcion;
 
@@ -107,36 +122,6 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
 
     locationInitial = LatLng(club!.club.latitud, club!.club.longitud);
     locationSelected = LatLng(club!.club.latitud, club!.club.longitud);
-  }
-
-  Future _pickImageFromGallery() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      imagen = File(pickedFile.path);
-
-      base64Image = await toBase64C(pickedFile.path);
-      club!.club.logo = base64Image;
-      setState(() {
-        /*customToast(
-            "Foto de perfil cambiada con exito, actualiza tu lista de clubs, para verificar los cambios",
-            context,
-            "IsError");*/
-      });
-    }
-    Navigator.of(context).pop();
-  }
-
-  Future _pickImageFromCamera() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      imagen = File(pickedFile.path);
-      setState(() {
-        base64Image = toBase64C(pickedFile.path).toString();
-        club!.club.logo = base64Image;
-      });
-    }
-
-    Navigator.of(context).pop();
   }
 
   @override
@@ -159,6 +144,7 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
       child: Column(children: [
         Container(
           width: MediaQuery.of(context).size.width,
+          height: 150,
           child: Stack(
             children: [
               Positioned(
@@ -204,7 +190,7 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
                                   correo: correo,
                                   telefono: fono,
                                   descripcion: description,
-                                  logo: club!.club.logo,
+                                  logo: base64Image,
                                   facebook: club!.club.facebook,
                                   instagram: club!.club.instagram,
                                   tiktok: club!.club.tiktok,
@@ -260,71 +246,21 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
                 ),
               ),
               Center(
-                child: Stack(
-                  children: [
-                    ClipOval(
-                      child: InkWell(
-                        child: ImageOval(
-                          club!.club.logo,
-                          base64Image != ''
-                              ? imagenFromBase64(base64Image)
-                              : imagenFromBase64(club!.club.logo),
-                          100,
-                          100,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Selecciona una imagen'),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    ListTile(
-                                      leading: const Icon(Icons.photo),
-                                      title: const Text('Galería'),
-                                      onTap: () async {
-                                        await _pickImageFromGallery();
-                                      },
-                                    ),
-                                    ListTile(
-                                      leading: const Icon(Icons.camera),
-                                      title: const Text('Cámara'),
-                                      onTap: () async {
-                                        await _pickImageFromCamera();
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        },
-                        child: readOnly
-                            ? null
-                            : ClipOval(
-                                child: Container(
-                                  color: Colors.black,
-                                  width: 40,
-                                  height: 40,
-                                  child: const Icon(
-                                    Icons.add_a_photo,
-                                    size: 20,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
+                child: readOnly
+                    ? ClipOval(
+                        child: InkWell(
+                            child: ImageOval(
+                                club!.club.logo,
+                                base64Image != ""
+                                    ? imagenFromBase64(base64Image)
+                                    : imagenFromBase64(club!.club.logo),
+                                100,
+                                100)))
+                    : ImagePickerWidget(
+                        imageBase64: base64Image,
+                        onImageSelected: onImageSelected,
+                        memoryImage: logoClub,
+                        initialImage: null),
               ),
             ],
           ),

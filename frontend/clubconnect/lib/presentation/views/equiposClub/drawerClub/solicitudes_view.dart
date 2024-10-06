@@ -85,16 +85,14 @@ class _SolicitudesWidgetState extends ConsumerState<SolicitudesWidget> {
         setState(() {});
       },
       child: solicitudes.isEmpty
-          ? const Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.group, size: 100, color: Colors.grey),
-                    Text("No hay solicitudes ",
-                        style: TextStyle(fontSize: 20, color: Colors.grey)),
-                  ],
-                ),
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.group, size: 100, color: Colors.grey),
+                  Text("No hay solicitudes ",
+                      style: TextStyle(fontSize: 20, color: Colors.grey)),
+                ],
               ),
             )
           : ListView.builder(

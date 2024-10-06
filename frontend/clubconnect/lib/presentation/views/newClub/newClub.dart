@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/presentation/widget.dart';
+import 'package:clubconnect/presentation/widget/ImagePicker.dart';
 import 'package:clubconnect/presentation/widget/redSocial.dart';
 import 'package:flutter/material.dart';
 import 'package:clubconnect/config/theme/app_theme.dart';
@@ -71,30 +72,84 @@ class CreateClubState extends ConsumerState<CreateClub> {
     super.dispose();
   }
 
-  Future _pickImageFromGallery() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        imagen = File(pickedFile.path);
-      });
-      base64Image = await toBase64C(pickedFile.path);
-    }
-    print(base64Image);
-    Navigator.of(context).pop();
+  //* ------------- Funciones --------------------- *//
+
+  void onImageSelected(File? image, String base64) {
+    imagen = image; // Guarda la imagen selecciona
+    base64Image = base64;
+    setState(() {});
   }
 
-  Future _pickImageFromCamera() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      setState(() {
-        imagen = File(pickedFile.path);
-      });
+  void createClub() async {
+    setState(() {});
+    bool red =
+        redesSocialesSelected.any((element) => element!.nombre == "Instagram");
+    print("x $red");
+    if (_formKey.currentState!.validate()) {
+      // All fields are valid, submit the form
+      // Here you can process the form data
+      String name = _nameController.text;
+      String description = _descriptionController.text;
+      String correo = _correoController.text;
+      String fono = _fonoController.text;
+      print("name $id_user");
+      debugPrint(base64Image);
+      List<dynamic> us =
+          _controller.selectedOptions.map((e) => e.value).toList();
+
+      List<dynamic> tipo =
+          _controllerTipo.selectedOptions.map((e) => e.value).toList();
+      Club club = Club(
+        latitud: locationSelected!.latitude,
+        longitud: locationSelected!.longitude,
+        nombre: name,
+        descripcion: description,
+        idDeporte: _controllerDeporte.selectedOptions.first.value.toString(),
+        logo: base64Image,
+        correo: _correoController.text,
+        telefono: _fonoController.text,
+        facebook: redesSocialesSelected
+                .any((element) => element!.nombre == "Facebook")
+            ? redesSocialesSelected
+                .firstWhere((element) => element!.nombre == "Facebook")!
+                .url
+            : null,
+        instagram: redesSocialesSelected
+                .any((element) => element!.nombre == "Instagram")
+            ? redesSocialesSelected
+                .firstWhere((element) => element!.nombre == "Instagram")!
+                .url
+            : null,
+        tiktok:
+            redesSocialesSelected.any((element) => element!.nombre == "TikTok")
+                ? redesSocialesSelected
+                    .firstWhere((element) => element!.nombre == "TikTok")!
+                    .url
+                : null,
+      );
+
+      // Do something with the data, like saving it to a database
+      final resp =
+          await ref.read(clubConnectProvider).addClub(club, us, tipo, id_user);
+      print("resp $resp");
+      resp == true
+          ? {
+              // ignore: use_build_context_synchronously
+              customToast("Club creado", context, "isSucess"),
+              Navigator.of(context).pop()
+            }
+          // ignore: use_build_context_synchronously
+          : customToast("Ha ocurrido un error", context, "isError");
     }
-    Navigator.of(context).pop();
   }
 
   void addNewRedSocial(String name, String perfil) {
     redesSocialesSelected.add(RedSocial(nombre: name, url: perfil));
+  }
+
+  void deleteRedSocial(int index) {
+    redesSocialesSelected.removeAt(index);
+    setState(() {});
   }
 
   @override
@@ -109,11 +164,20 @@ class CreateClubState extends ConsumerState<CreateClub> {
       appBar: AppBar(
         centerTitle: false,
         shadowColor: Color.fromARGB(255, 0, 0, 0),
-        elevation: 0.01,
         backgroundColor: Colors.white,
-        title: Text(
-          "Nuevo Club",
-        ),
+        actions: [
+          Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: TextButton(
+                onPressed: () async {
+                  createClub();
+                },
+                child: const Text(
+                  "Crear Club",
+                  style: TextStyle(fontSize: 14),
+                ),
+              ))
+        ],
       ),
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
@@ -124,60 +188,10 @@ class CreateClubState extends ConsumerState<CreateClub> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Selecciona una imagen'),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              ListTile(
-                                leading: const Icon(Icons.photo),
-                                title: const Text('Galería'),
-                                onTap: () async {
-                                  await _pickImageFromGallery();
-                                },
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.camera),
-                                title: const Text('Cámara'),
-                                onTap: () async {
-                                  await _pickImageFromCamera();
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  child: ClipOval(
-                    child: InkWell(
-                        child: imagen == null
-                            ? ClipOval(
-                                child: Container(
-                                  color: Colors.black54,
-                                  width: 130,
-                                  height: 130,
-                                  child: const Icon(
-                                    Icons.add_a_photo,
-                                    size: 25,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              )
-                            : ClipOval(
-                                child: Image.file(
-                                  imagen!,
-                                  width: 130,
-                                  height: 130,
-                                  fit: BoxFit.cover,
-                                ),
-                              )),
-                  ),
+                ImagePickerWidget(
+                  initialImage: imagen,
+                  onImageSelected: onImageSelected,
+                  imageBase64: base64Image,
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.9,
@@ -315,14 +329,18 @@ class CreateClubState extends ConsumerState<CreateClub> {
                           style: textTheme.labelMedium,
                         ),
                         Container(
-                          margin: EdgeInsets.only(left: 20),
+                          width: 30,
+                          height: 30,
+                          margin: EdgeInsets.only(left: 15, top: 5, bottom: 5),
                           child: IconButton.filled(
                             iconSize: 20,
                             padding: EdgeInsets
                                 .zero, // Ajusta el padding para reducir el tamaño total
                             onPressed: () async {
                               var response = await addRedSocialModalBottom(
-                                  context, addNewRedSocial);
+                                  context,
+                                  addNewRedSocial,
+                                  redesSocialesSelected);
                               setState(() {});
                             },
                             icon: Icon(
@@ -343,8 +361,15 @@ class CreateClubState extends ConsumerState<CreateClub> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Column(children: [
-                          for (var red in redesSocialesSelected)
-                            containerRedSocial(red!.nombre, red.url!)
+                          for (int index = 0;
+                              index < redesSocialesSelected.length;
+                              index++)
+                            containerRedSocial(
+                              redesSocialesSelected[index]!.nombre,
+                              redesSocialesSelected[index]!.url!,
+                              () => deleteRedSocial(
+                                  index), // Pasas el índice al método deleteRedSocial
+                            ),
                         ])),
                   ],
                 ),
@@ -409,82 +434,7 @@ class CreateClubState extends ConsumerState<CreateClub> {
                         ),
                       )
                     : Container(),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      setState(() {});
-                      bool red = redesSocialesSelected
-                          .any((element) => element!.nombre == "Instagram");
-                      print("x $red");
-                      if (_formKey.currentState!.validate()) {
-                        // All fields are valid, submit the form
-                        // Here you can process the form data
-                        String name = _nameController.text;
-                        String description = _descriptionController.text;
-                        String correo = _correoController.text;
-                        String fono = _fonoController.text;
-                        print("name $id_user");
-                        debugPrint(base64Image);
-                        List<dynamic> us = _controller.selectedOptions
-                            .map((e) => e.value)
-                            .toList();
 
-                        List<dynamic> tipo = _controllerTipo.selectedOptions
-                            .map((e) => e.value)
-                            .toList();
-                        Club club = Club(
-                          latitud: locationSelected!.latitude,
-                          longitud: locationSelected!.longitude,
-                          nombre: name,
-                          descripcion: description,
-                          idDeporte: _controllerDeporte
-                              .selectedOptions.first.value
-                              .toString(),
-                          logo: base64Image,
-                          correo: _correoController.text,
-                          telefono: _fonoController.text,
-                          facebook: redesSocialesSelected.any(
-                                  (element) => element!.nombre == "Facebook")
-                              ? redesSocialesSelected
-                                  .firstWhere((element) =>
-                                      element!.nombre == "Facebook")!
-                                  .url
-                              : null,
-                          instagram: redesSocialesSelected.any(
-                                  (element) => element!.nombre == "Instagram")
-                              ? redesSocialesSelected
-                                  .firstWhere((element) =>
-                                      element!.nombre == "Instagram")!
-                                  .url
-                              : null,
-                          tiktok: redesSocialesSelected
-                                  .any((element) => element!.nombre == "Tiktok")
-                              ? redesSocialesSelected
-                                  .firstWhere(
-                                      (element) => element!.nombre == "Tiktok")!
-                                  .url
-                              : null,
-                        );
-
-                        // Do something with the data, like saving it to a database
-                        final resp = await ref
-                            .read(clubConnectProvider)
-                            .addClub(club, us, tipo, id_user);
-                        print("resp $resp");
-                        resp == true
-                            ? {
-                                // ignore: use_build_context_synchronously
-                                customToast("Club creado", context, "isSucess"),
-                                Navigator.of(context).pop()
-                              }
-                            // ignore: use_build_context_synchronously
-                            : customToast(
-                                "Ha ocurrido un error", context, "isError");
-                      }
-                    },
-                    child: Text('Crear club', style: textTheme.labelMedium),
-                  ),
-                ),
                 //Set an animation
               ],
             ),

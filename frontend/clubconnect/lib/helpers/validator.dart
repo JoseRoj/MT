@@ -1,6 +1,6 @@
 bool validarCorreo(String correo) {
-  // Expresión regular para validar el formato de correo electrónico
-  RegExp regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  // Expresión regular para validar el formato de correo electrónico, incluyendo la "ñ" y "Ñ"
+  RegExp regex = RegExp(r"^[a-zA-Z0-9._%+-ñÑ]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
   return regex.hasMatch(correo);
 }
 

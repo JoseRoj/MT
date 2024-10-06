@@ -202,6 +202,23 @@ class EquipoSpecificState extends ConsumerState<EquipoSpecific> {
             //FavoritesView(),
           ];
         });
+      } else {
+        viewRoutes = [
+          EventsActives(
+            equipo: widget.team,
+            //fechaSeleccionada: fechaSeleccionada,
+            //dateSelected: dateSelected,
+            //eventoSelected: eventoSelected,
+            role: role,
+            idClub: widget.idclub,
+            /*updateEventoSelectedCallback: (evento) =>
+                  updateEventoSelected(evento),
+              updateFechaActivosCallback: (fecha) => updateFechaActivos(fecha),
+              getEventosCallback: (estado, pullRefresh, initDate, month,
+                      year) =>
+                  getEventos(estado, pullRefresh, DateTime.now(), month, year),*/
+          )
+        ];
       }
     } catch (e) {
       print(e);

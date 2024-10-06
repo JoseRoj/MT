@@ -6,7 +6,7 @@ class MonthStadisticUser {
   int participation;
   int totalEventos;
   double percentile;
-  int idUsuario;
+  int? idUsuario;
 
   MonthStadisticUser({
     required this.year,

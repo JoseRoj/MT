@@ -11,6 +11,7 @@ import 'package:clubconnect/presentation/widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ClubView extends ConsumerStatefulWidget {
   static const name = 'club-view';
@@ -242,10 +243,9 @@ class ClubViewState extends ConsumerState<ClubView>
                                               await launchUrlSiteBrowser(
                                                   uriInstagram);
                                             },
-                                            icon: Icon(
-                                              Icons.facebook,
-                                              color: const Color.fromARGB(
-                                                  255, 145, 134, 39),
+                                            icon: FaIcon(
+                                              FontAwesomeIcons.squareFacebook,
+                                              color: Colors.blue,
                                               size: 30,
                                             ),
                                           ),
@@ -260,12 +260,11 @@ class ClubViewState extends ConsumerState<ClubView>
                                               await launchUrlSiteBrowser(
                                                   uriInstagram);
                                             },
-                                            icon: Icon(
-                                              Icons.tiktok,
-                                              color: const Color.fromARGB(
-                                                  255, 145, 134, 39),
-                                              size: 30,
-                                            ),
+                                            icon: FaIcon(
+                                                FontAwesomeIcons.instagram,
+                                                size: 30,
+                                                color: Colors
+                                                    .purple), // Cambia el color y tamaño si lo deseas
                                           ),
                                     club!.club.tiktok == ""
                                         ? Container()
@@ -278,11 +277,10 @@ class ClubViewState extends ConsumerState<ClubView>
                                               await launchUrlSiteBrowser(
                                                   uriInstagram);
                                             },
-                                            icon: Icon(
-                                              Icons.tiktok,
-                                              color: const Color.fromARGB(
-                                                  255, 145, 134, 39),
-                                              size: 30,
+                                            icon: FaIcon(
+                                              FontAwesomeIcons.tiktok,
+                                              color: Colors.black,
+                                              size: 28,
                                             ),
                                           ),
                                   ],

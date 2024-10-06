@@ -40,6 +40,7 @@ class ListClubViewState extends ConsumerState<ListClubView> {
 
   @override
   Widget build(BuildContext context) {
+    clubs = ref.watch(clubesUserProvider);
     var decoration = BoxDecoration(
       color: AppTheme().getTheme().colorScheme.onPrimary,
       borderRadius: BorderRadius.circular(10),

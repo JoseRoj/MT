@@ -90,7 +90,7 @@ class HomeViewState extends ConsumerState<HomeView> {
   Widget build(BuildContext context) {
     print("Rebuild");
     final id = ref.watch(authProvider).id;
-    final user = ref.watch(UsuarioProvider(id!));
+    final user = ref.watch(usuarioProvider);
     deportes = ref.watch(deportesProvider);
 
     TextTheme StyleText = AppTheme().getTheme().textTheme;

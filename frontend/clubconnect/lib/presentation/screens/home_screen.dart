@@ -42,7 +42,6 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
             ref.read(deportesProvider).map((e) => int.parse(e.id)).toList()));*/
 
     //      final deportes = ref.watch(deportesProvider);
-
     await ref.read(tiposProvider.notifier).getTipos();
     setState(() {});
   }

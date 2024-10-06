@@ -1,4 +1,5 @@
 // ignore: file_names
+
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/validator.dart';
@@ -18,8 +19,8 @@ List<RedSocial> redes = [
   RedSocial(nombre: "TikTok"),
 ];
 
-Future<bool?> addRedSocialModalBottom(
-    BuildContext context, Function(String, String) add) async {
+Future<bool?> addRedSocialModalBottom(BuildContext context,
+    Function(String, String) add, List<dynamic> redesSelected) async {
   final MultiSelectController _perfilController = MultiSelectController();
   final TextEditingController controllerInstagram = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -108,7 +109,8 @@ Future<bool?> addRedSocialModalBottom(
       });
 }
 
-Widget containerRedSocial(String redSocial, String perfil) {
+Widget containerRedSocial(
+    String redSocial, String perfil, Function deleteRedSocial) {
   return Container(
     height: 40,
     margin: const EdgeInsets.symmetric(vertical: 5),
@@ -119,6 +121,9 @@ Widget containerRedSocial(String redSocial, String perfil) {
       borderRadius: BorderRadius.circular(14),
     ),
     child: Row(
+      mainAxisSize:
+          MainAxisSize.min, // Hace que el Row use solo el espacio necesario
+
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -137,11 +142,34 @@ Widget containerRedSocial(String redSocial, String perfil) {
           ),
           height: 40,
           width: 100,
-          child: Text(redSocial),
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: redSocial,
+                  style: const TextStyle(fontSize: 10, color: Colors.black),
+                ),
+                WidgetSpan(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 5),
+                    child: GestureDetector(
+                      onTap: () {
+                        deleteRedSocial();
+                      },
+                      child: Icon(
+                        Icons.close,
+                        size: 10,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
         Expanded(
             child: Container(
-          padding: const EdgeInsets.only(bottom: 20),
+          padding: const EdgeInsets.only(bottom: 28),
           child: TextFormField(
             textAlignVertical: TextAlignVertical.center,
             style: const TextStyle(fontSize: 14),

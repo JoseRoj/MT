@@ -192,6 +192,7 @@ class SupabdDatasource extends ClubConnectDataSource {
 
   @override
   Future<bool?> createUser(User usuario) async {
+    print("Entre");
     try {
       final dio = Dio(BaseOptions(headers: {}));
       final response = await dio.post(
@@ -212,6 +213,26 @@ class SupabdDatasource extends ClubConnectDataSource {
     );
     User user = User.fromJson(response.data["data"][0]);
     return user;
+  }
+
+  @override
+  Future<dynamic> updateUser(User usuario) async {
+    try {
+      final response = await dio.put('${dotenv.env["API_URL"]}/usuarios/update',
+          data: usuario.toJson());
+      return response;
+    } catch (e) {
+      if (e is DioException) {
+        // Si es un error de Dio, puedes acceder a la respuesta del servidor
+        if (e.response != null) {
+          return e.response;
+        }
+      } else {
+        // Para otros errores que no sean de Dio
+        print("Unknown Error: $e");
+      }
+      return null;
+    }
   }
 
   @override
@@ -694,7 +715,7 @@ class SupabdDatasource extends ClubConnectDataSource {
           },
         ),
       );
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         return true;
       } else {
         return false;
@@ -754,9 +775,9 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
-  Future<dynamic> deleteConfigEvento(int idConfig) {
+  Future<dynamic> deleteConfigEvento(int idConfig) async {
     final dio = Dio(BaseOptions(headers: {}));
-    final response = dio.delete(
+    final response = await dio.delete(
       '${dotenv.env["API_URL"]}/configEvento',
       queryParameters: {'id_config': idConfig},
     );
@@ -764,9 +785,9 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
-  Future<dynamic> editConfigEvento(ConfigEventos configEvento) {
+  Future<dynamic> editConfigEvento(ConfigEventos configEvento) async {
     final dio = Dio(BaseOptions(headers: {}));
-    final response = dio.put(
+    final response = await dio.put(
       '${dotenv.env["API_URL"]}/configEvento',
       data: jsonEncode(configEvento.toJson()),
     );

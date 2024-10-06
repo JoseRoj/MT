@@ -1,10 +1,7 @@
-import 'dart:async';
-
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
-import 'package:clubconnect/presentation/providers/usuario_provider.dart';
 import 'package:clubconnect/presentation/widget/formInput.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -109,10 +106,10 @@ class LoginScreenState extends ConsumerState<LoginScreen> {
                   ? CircularProgressIndicator()
                   : FilledButton(
                       style: ButtonStyle(
-                        elevation: MaterialStateProperty.all(2),
-                        backgroundColor: MaterialStateProperty.all(
+                        elevation: WidgetStateProperty.all(2),
+                        backgroundColor: WidgetStateProperty.all(
                             Color.fromARGB(255, 114, 255, 74)),
-                        padding: MaterialStateProperty.all(
+                        padding: WidgetStateProperty.all(
                             const EdgeInsets.symmetric(
                                 horizontal: 50, vertical: 10)),
                       ),
@@ -129,13 +126,11 @@ class LoginScreenState extends ConsumerState<LoginScreen> {
                         if (responde != null) {
                           //* Save user data in the provider
                           final id = ref.read(authProvider).id;
-                          final tokenfb =
-                              await ref.read(authProvider).tokenDispositivo;
-
+                          ref.read(authProvider).tokenDispositivo;
                           await ref
                               .read(clubConnectProvider)
                               .updateToken(id!, "tokenfb");
-                          print("tokenfb: $tokenfb");
+
                           context.go('/home/1');
                           //ref.watch(UsuarioProvider(responde.id as int));
                         } else {

@@ -45,6 +45,7 @@ abstract class ClubConnectDataSource {
   Future<bool> sendSolicitud(int idusuario, int idclub);
   Future<bool?> createUser(User usuario);
   Future<bool?> updateImageUser(String image, int usuario);
+  Future<dynamic> updateUser(User usuario);
 
   //* --------------- SOLICITUDES  ----------- *//
   Future<List<Solicitud>> getSolicitudes(int idclub);

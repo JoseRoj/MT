@@ -4,11 +4,16 @@ import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
+import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
+import 'package:clubconnect/presentation/providers/deporte_provider.dart';
+import 'package:clubconnect/presentation/widget/ImagePicker.dart';
 import 'package:clubconnect/presentation/widget/formInput.dart';
 import 'package:clubconnect/presentation/widget/modalCarga.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 import 'package:go_router/go_router.dart';
@@ -47,27 +52,77 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     "Otro",
   ];
 
-  Future _pickImageFromGallery() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        imagen = File(pickedFile.path);
-      });
-      base64Image = await toBase64C(pickedFile.path);
-    }
-    print(base64Image);
-    Navigator.of(context).pop();
+  //* Funciones **/
+  void onImageSelected(File? image, String base64) {
+    imagen = image; // Guarda la imagen selecciona
+    base64Image = base64;
+    setState(() {});
   }
 
-  Future _pickImageFromCamera() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      setState(() {
-        imagen = File(pickedFile.path);
-      });
-      base64Image = await toBase64C(pickedFile.path);
+  void register() async {
+    FocusScope.of(context).unfocus();
+
+    if (_formKey.currentState!.validate()) {
+      if (_passwordController.text != _reppasswordController.text) {
+        customToast("Contraseñas no coinciden", context, "isError");
+      } else if (_controller.selectedOptions.isEmpty) {
+        customToast("Selecciona un género", context, "isError");
+      } else if (_dateController.text.isEmpty) {
+        customToast("Selecciona tu fecha de nacimiento", context, "isError");
+      } else {
+        DateFormat formato = DateFormat('dd/MM/yyyy');
+        User user = User(
+          nombre: _nameController.text,
+          email: _correoController.text,
+          telefono: _phoneController.text,
+          genero: _controller.selectedOptions[0].value,
+          fechaNacimiento: transformarAFecha(_dateController.text),
+          contrasena: _passwordController.text,
+          apellido1: _apellido1Controller.text,
+          apellido2: _apellido2Controller.text,
+          imagen: base64Image,
+        );
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return modalCarga("Creando cuenta, espera un momento .... ");
+          },
+        );
+        final dio = Dio(BaseOptions(headers: {}));
+
+        try {
+          final response = await dio.post(
+              '${dotenv.env["API_URL"]}/usuarios/create',
+              data: user.toJson());
+
+          if (response.statusCode == 201) {
+            final responde = await ref
+                .read(authProvider.notifier)
+                .saveToken(user.email, user.contrasena!);
+
+            if (responde != null) {
+              //* Save user data in the provider
+              final id = ref.read(authProvider).id;
+              final tokenfb = ref.read(authProvider).tokenDispositivo;
+
+              await ref.read(clubConnectProvider).updateToken(id!, "tokenfb");
+              print("tokenfb: $tokenfb");
+              context.go('/home/1');
+              //ref.watch(UsuarioProvider(responde.id as int));
+              customToast("Registrado con éxito", context, "isSuccess");
+            }
+          }
+        } catch (error) {
+          customToast(
+              "Ocurrió un error al completar registro", context, "isError");
+        } finally {
+          Navigator.of(context).pop();
+        }
+
+        //FocusScope.of(context).unfocus();
+      }
     }
-    Navigator.of(context).pop();
   }
 
   bool obcureText = true;
@@ -82,70 +137,31 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
 //         ,
           },
         ),
-        title: const Text("Crear Cuenta"),
+        actions: [
+          Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: TextButton(
+                onPressed: () async {
+                  register();
+                },
+                child: const Text(
+                  "Registrarse",
+                  style: TextStyle(fontSize: 14),
+                ),
+              ))
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.all(15),
+          padding: EdgeInsets.zero,
           child: Form(
             key: _formKey,
             child: Column(
               children: [
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Selecciona una imagen'),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              ListTile(
-                                leading: const Icon(Icons.photo),
-                                title: const Text('Galería'),
-                                onTap: () async {
-                                  await _pickImageFromGallery();
-                                },
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.camera),
-                                title: const Text('Cámara'),
-                                onTap: () async {
-                                  await _pickImageFromCamera();
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  child: ClipOval(
-                    child: InkWell(
-                      child: imagen == null
-                          ? ClipOval(
-                              child: Container(
-                                color: Colors.black54,
-                                width: 130,
-                                height: 130,
-                                child: const Icon(
-                                  Icons.add_a_photo,
-                                  size: 25,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            )
-                          : ClipOval(
-                              child: Image.file(
-                                imagen!,
-                                width: 130,
-                                height: 130,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                    ),
-                  ),
+                ImagePickerWidget(
+                  initialImage: imagen,
+                  onImageSelected: onImageSelected,
+                  imageBase64: base64Image,
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.9,
@@ -255,15 +271,17 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                             child: CupertinoDatePicker(
                               mode: CupertinoDatePickerMode.date,
                               backgroundColor: Colors.white,
-
                               maximumDate: DateTime.now(),
-                              initialDateTime: DateTime(2003, 3, 10),
+                              initialDateTime: _dateController.text.isEmpty
+                                  ? DateTime(2024)
+                                  : DateFormat("dd/MM/yyyy")
+                                      .parse(_dateController.text),
                               //                                  initialDateTime: .now(),
                               onDateTimeChanged: (DateTime value) {
                                 DateTime fecha =
                                     DateTime.parse(value.toString());
                                 String nuevaFecha =
-                                    DateFormat('MM/dd/yyyy').format(fecha);
+                                    DateFormat('dd/MM/yyyy').format(fecha);
 
                                 _dateController.text = nuevaFecha;
                               },
@@ -284,7 +302,7 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.9,
-                  child: FormInputPass(
+                  child: formInputPass(
                     label: "Contraseña",
                     passwordController: _reppasswordController,
                     obcureText: obcureText,
@@ -297,7 +315,7 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.9,
-                  child: FormInputPass(
+                  child: formInputPass(
                     label: "Repetir Contraseña",
                     passwordController: _passwordController,
                     obcureText: obcureText,
@@ -308,65 +326,12 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                     },
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    FocusScope.of(context).unfocus();
-                    /*showDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      builder: (BuildContext context) {
-                        return modalCarga(
-                            "Creando cuenta, espera un momento .... ");
-                      },
-                    );*/
-                    // Navigator.of(context).pop();
-
-                    if (_formKey.currentState!.validate()) {
-                      if (_passwordController.text !=
-                          _reppasswordController.text) {
-                        customToast(
-                            "Contraseñas no coinciden", context, "isError");
-                      } else if (_controller.selectedOptions.isEmpty) {
-                        customToast("Selecciona un género", context, "isError");
-                      } else if (_dateController.text.isEmpty) {
-                        customToast("Selecciona tu fecha de nacimiento",
-                            context, "isError");
-                      } else {
-                        DateFormat formato = DateFormat('dd/MM/yyyy');
-                        User user = User(
-                          nombre: _nameController.text,
-                          email: _correoController.text,
-                          telefono: _phoneController.text,
-                          genero: _controller.selectedOptions[0].value,
-                          fechaNacimiento:
-                              transformarAFecha(_dateController.text),
-                          contrasena: _passwordController.text,
-                          apellido1: _apellido1Controller.text,
-                          apellido2: _apellido2Controller.text,
-                          imagen: base64Image,
-                        );
-                        showDialog(
-                          context: context,
-                          barrierDismissible: true,
-                          builder: (BuildContext context) {
-                            return modalCarga(
-                                "Creando cuenta, espera un momento .... ");
-                          },
-                        );
-                        await ref.read(clubConnectProvider).createUser(user);
-                        Navigator.of(context).pop();
-                        //FocusScope.of(context).unfocus();
-
-                        customToast(
-                            "Registrado con éxito", context, "isSuccess");
-                      }
-                    }
-                  },
-                  child: Text(
+                /*ElevatedButton(
+                 child: Text(
                     "Registrarse",
                     style: AppTheme().getTheme().textTheme.bodyMedium,
                   ),
-                )
+                )*/
               ],
             ),
           ),

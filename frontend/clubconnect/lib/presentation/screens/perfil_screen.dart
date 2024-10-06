@@ -6,10 +6,13 @@ import 'package:clubconnect/insfrastructure/models/user.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/providers/usuario_provider.dart';
+import 'package:clubconnect/presentation/views/editPerfil.dart';
+import 'package:clubconnect/presentation/widget/listile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Perfil extends ConsumerStatefulWidget {
   const Perfil({super.key});
@@ -21,6 +24,14 @@ class Perfil extends ConsumerStatefulWidget {
 Future<void> logout(BuildContext context) async {
   context.go('/login');
   try {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    final Map<String, dynamic> data = {};
+
+    for (var key in keys) {
+      data[key] = prefs.get(key);
+    }
+    print(data);
     /*final response = await http.post(
       Uri.parse('http://${dotenv.env['BASE_URL']}:5000/user/logout'),
       headers: <String, String>{
@@ -41,7 +52,7 @@ Future<void> logout(BuildContext context) async {
 }
 
 class PerfilState extends ConsumerState<Perfil> {
-  late Future<User?> _futureuser;
+  late Future<void> _futureuser;
   late User? user;
   final picker = ImagePicker();
   File? imagen;
@@ -52,13 +63,8 @@ class PerfilState extends ConsumerState<Perfil> {
     // TODO: implement initState
     super.initState();
     _futureuser = ref
-        .read(clubConnectProvider)
-        .getUsuario(ref.read(authProvider).id!)
-        .then((value) {
-      user = value;
-      print("User: $user");
-      setState(() {});
-    });
+        .read(usuarioProvider.notifier)
+        .getUsuario(ref.read(authProvider).id!.toString());
   }
 
   Future _pickImageFromGallery() async {
@@ -94,6 +100,7 @@ class PerfilState extends ConsumerState<Perfil> {
 
   @override
   Widget build(BuildContext context) {
+    user = ref.watch(usuarioProvider);
     print('Perfil');
     return Scaffold(
       appBar: AppBar(
@@ -121,81 +128,30 @@ class PerfilState extends ConsumerState<Perfil> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Stack(
-                          children: [
-                            ClipOval(
-                              child: InkWell(
-                                child: user!.imagen == ""
-                                    ? ClipOval(
-                                        child: Container(
-                                          color: Colors.black54,
-                                          width: 130,
-                                          height: 130,
-                                          child: const Icon(
-                                            Icons.add_a_photo,
-                                            size: 25,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )
-                                    : ClipOval(
-                                        child: Image.memory(
-                                          imagenFromBase64(user!.imagen!),
-                                          fit: BoxFit.cover,
-                                          width: 130,
-                                          height: 130,
-                                        ),
+                        ClipOval(
+                          child: InkWell(
+                            child: user!.imagen == ""
+                                ? ClipOval(
+                                    child: Container(
+                                      color: Colors.black54,
+                                      width: 130,
+                                      height: 130,
+                                      child: const Icon(
+                                        Icons.photo,
+                                        size: 25,
+                                        color: Colors.white,
                                       ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title:
-                                            const Text('Selecciona una imagen'),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: <Widget>[
-                                            ListTile(
-                                              leading: const Icon(Icons.photo),
-                                              title: const Text('Galería'),
-                                              onTap: () async {
-                                                await _pickImageFromGallery();
-                                              },
-                                            ),
-                                            ListTile(
-                                              leading: const Icon(Icons.camera),
-                                              title: const Text('Cámara'),
-                                              onTap: () async {
-                                                await _pickImageFromCamera();
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                                child: ClipOval(
-                                  child: Container(
-                                    color: Colors.black,
-                                    width: 50,
-                                    height: 50,
-                                    child: const Icon(
-                                      Icons.add_a_photo,
-                                      color: Colors.white,
+                                    ),
+                                  )
+                                : ClipOval(
+                                    child: Image.memory(
+                                      imagenFromBase64(user!.imagen!),
+                                      fit: BoxFit.cover,
+                                      width: 130,
+                                      height: 130,
                                     ),
                                   ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                         Container(
                           margin: const EdgeInsets.only(top: 20),
@@ -207,7 +163,26 @@ class PerfilState extends ConsumerState<Perfil> {
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        Container(
+                        RowTile(
+                          title: "Información Personal",
+                          icon: const Icon(Icons.person),
+                          onTap: () => {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => InformacionUser()))
+                          },
+                        ),
+                        RowTile(
+                          title: "Configuración",
+                          icon: const Icon(Icons.settings),
+                          onTap: () => {},
+                        ),
+                        RowTile(
+                            title: "Cerrar Sesion",
+                            icon: Icon(Icons.exit_to_app),
+                            onTapFuture: () => logout(context)),
+                        /*Container(
                           padding: EdgeInsets.only(left: 10),
                           alignment: Alignment.centerLeft,
                           width: MediaQuery.of(context).size.width * 0.8,
@@ -234,7 +209,7 @@ class PerfilState extends ConsumerState<Perfil> {
                               backgroundColor: Colors.red,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10))),
-                        ),
+                        ),*/
                       ],
                     ),
                   ),

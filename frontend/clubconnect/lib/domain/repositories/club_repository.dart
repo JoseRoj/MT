@@ -45,6 +45,7 @@ abstract class ClubConnectRepository {
   Future<bool?> createUser(User usuario);
   Future<User> getUsuario(int id);
   Future<bool?> updateImageUser(String image, int usuario);
+  Future<dynamic> updateUser(User usuario);
 
   //* --------------- SOLICITUDES  ----------- *//
   Future<bool> sendSolicitud(int idusuario, int idclub);
