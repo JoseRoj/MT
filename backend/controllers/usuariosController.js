@@ -224,63 +224,99 @@ module.exports = {
   async getStadistic(id_usuario, id_equipo) {
     try {
       let query = `
-        WITH asistencias AS (
-          SELECT id_evento, id_usuario
-          FROM "Asistencia"
-          WHERE id_usuario = $1
-          GROUP BY id_evento, id_usuario
-        ),
-        participacion_mensual AS (
-            SELECT 
-                EXTRACT(YEAR FROM "Evento".fecha) AS year,
-                EXTRACT(MONTH FROM "Evento".fecha) AS mes,
-                COUNT(*) AS cantidad_participacion
-            FROM 
-                "Evento"
-            INNER JOIN asistencias
-                ON "Evento".id = asistencias.id_evento
-            WHERE 
-                "Evento".id_equipo = $2
-                AND "Evento".fecha >= (CURRENT_DATE - INTERVAL '5 months')
-            GROUP BY 
-                EXTRACT(YEAR FROM "Evento".fecha), 
-                EXTRACT(MONTH FROM "Evento".fecha)
-        ),
-        total_eventos AS (
-            SELECT 
+WITH asistencias AS (
+    SELECT id_evento, id_usuario
+    FROM "Asistencia"
+    WHERE id_usuario = $1
+    GROUP BY id_evento, id_usuario
+),
+
+percentil AS (
+       SELECT 
                 EXTRACT(YEAR FROM fecha) AS year,
                 EXTRACT(MONTH FROM fecha) AS mes,
-                COUNT(*) AS total_eventos
+                COUNT(*) AS cantidad_participacion,
+                "Asistencia".id_usuario
+
             FROM 
-                "Evento"
-                WHERE fecha >= (CURRENT_DATE - INTERVAL '5 months') AND id_equipo = $2
-                GROUP BY 
-                    EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha)
-        )
-            SELECT 
-                participacion_mensual.year,
-                CASE participacion_mensual.mes
-                    WHEN 1 THEN 'Enero'
-                    WHEN 2 THEN 'Febrero'
-                    WHEN 3 THEN 'Marzo'
-                    WHEN 4 THEN 'Abril'
-                    WHEN 5 THEN 'Mayo'
-                    WHEN 6 THEN 'Junio'
-                    WHEN 7 THEN 'Julio'
-                    WHEN 8 THEN 'Agosto'
-                    WHEN 9 THEN 'Septiembre'
-                    WHEN 10 THEN 'Octubre'
-                    WHEN 11 THEN 'Noviembre'
-                    WHEN 12 THEN 'Diciembre'
-                END AS mes,
-                CAST(COALESCE(participacion_mensual.cantidad_participacion, 0) AS INTEGER) AS participation,
-                CAST(total_eventos.total_eventos AS INTEGER) AS total_eventos,
-                PERCENT_RANK() OVER (ORDER BY cantidad_participacion) * 100 AS percentile
-            FROM 
-                participacion_mensual
-            INNER JOIN total_eventos ON participacion_mensual.year = total_eventos.year AND participacion_mensual.mes = total_eventos.mes
-            ORDER BY participacion_mensual.year, participacion_mensual.mes
-        `;
+                "Asistencia"
+            JOIN "Miembros" ON "Asistencia".id_usuario = "Miembros".id_usuario
+            INNER JOIN "Evento" ON "Evento".id = "Asistencia".id_evento
+            WHERE "Evento".id_equipo = $2
+              AND "Evento".fecha >= (CURRENT_DATE - INTERVAL '5 months')
+            GROUP BY 
+                EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha), "Asistencia".id_usuario
+            
+ ),
+
+participacion_mensual AS (
+    SELECT 
+        EXTRACT(YEAR FROM "Evento".fecha) AS year,
+        EXTRACT(MONTH FROM "Evento".fecha) AS mes,
+        COUNT(*) AS cantidad_participacion
+    FROM 
+        "Evento"
+    INNER JOIN asistencias
+        ON "Evento".id = asistencias.id_evento
+    WHERE 
+        "Evento".id_equipo = $2
+        AND "Evento".fecha >= (CURRENT_DATE - INTERVAL '5 months')
+    GROUP BY 
+        EXTRACT(YEAR FROM "Evento".fecha), 
+        EXTRACT(MONTH FROM "Evento".fecha)
+),
+total_eventos AS (
+    SELECT 
+        EXTRACT(YEAR FROM fecha) AS year,
+        EXTRACT(MONTH FROM fecha) AS mes,
+        COUNT(*) AS total_eventos
+    FROM 
+        "Evento"
+        WHERE fecha >= (CURRENT_DATE - INTERVAL '5 months') AND id_equipo = $2
+        GROUP BY 
+            EXTRACT(YEAR FROM fecha), EXTRACT(MONTH FROM fecha)
+),
+percentiles_calculados AS (
+    SELECT 
+        participacion_mensual.year,
+        participacion_mensual.mes,
+        percentil.id_usuario,
+        participacion_mensual.cantidad_participacion,
+        total_eventos.total_eventos,
+        PERCENT_RANK() OVER (ORDER BY percentil.cantidad_participacion) * 100 AS percentile
+    FROM 
+        percentil
+    INNER JOIN participacion_mensual 
+        ON participacion_mensual.year = percentil.year AND participacion_mensual.mes = percentil.mes
+    INNER JOIN total_eventos 
+        ON participacion_mensual.year = total_eventos.year AND participacion_mensual.mes = total_eventos.mes
+)
+SELECT 
+    percentiles_calculados.year,
+    CASE percentiles_calculados.mes
+        WHEN 1 THEN 'Enero'
+        WHEN 2 THEN 'Febrero'
+        WHEN 3 THEN 'Marzo'
+        WHEN 4 THEN 'Abril'
+        WHEN 5 THEN 'Mayo'
+        WHEN 6 THEN 'Junio'
+        WHEN 7 THEN 'Julio'
+        WHEN 8 THEN 'Agosto'
+        WHEN 9 THEN 'Septiembre'
+        WHEN 10 THEN 'Octubre'
+        WHEN 11 THEN 'Noviembre'
+        WHEN 12 THEN 'Diciembre'
+    END AS mes,
+    CAST(percentiles_calculados.cantidad_participacion AS INTEGER) AS participation, 
+    CAST(percentiles_calculados.total_eventos AS INTEGER) AS total_eventos,           
+    percentiles_calculados.percentile
+FROM 
+    percentiles_calculados
+WHERE 
+    percentiles_calculados.id_usuario = $1 -- Filtro por id_usuario
+ORDER BY 
+    percentiles_calculados.year, percentiles_calculados.mes;
+ `;
       const response = await connectionPostgres.query(query, [id_usuario, id_equipo]);
       console.log("response: ", response.rows);
       if (response.rowCount === 0) {
