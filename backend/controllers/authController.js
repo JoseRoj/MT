@@ -21,7 +21,7 @@ module.exports = {
             // token with data
             usuario: {
               id: response.rows[0].id,
-              nombre: response.rows[0].nombre,
+              nombre: response.rows[0].nombre ?? "",
               email: response.rows[0].email,
             },
           },
@@ -36,6 +36,12 @@ module.exports = {
               id: response.rows[0].id,
               nombre: response.rows[0].nombre,
               email: response.rows[0].email,
+              telefono: response.rows[0].telefono,
+              fecha_nacimiento: response.rows[0].fecha_nacimiento,
+              apellido1: response.rows[0].apellido1 ?? "",
+              genero: response.rows[0].genero,
+              apellido2: response.rows[0].apellido2 ?? "",
+              imagen: response.rows[0].imagen ?? "",
             },
             token: jwtoken,
           },
