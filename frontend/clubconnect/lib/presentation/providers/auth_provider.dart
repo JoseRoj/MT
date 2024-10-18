@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:clubconnect/insfrastructure/models/user.dart';
 import 'package:clubconnect/insfrastructure/repositories/club_repository_impl.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:dio/dio.dart';
@@ -28,7 +29,7 @@ class Login {
 }
 
 class Data {
-  usuario user;
+  User user;
   String token;
 
   Data({
@@ -41,7 +42,7 @@ class Data {
   String toRawJson() => json.encode(toJson());
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-        user: usuario.fromJson(json["user"]),
+        user: User.fromJson(json["user"]),
         token: json["token"],
       );
 
@@ -51,7 +52,7 @@ class Data {
       };
 }
 
-class usuario {
+/*class usuario {
   String id;
   String nombre;
   String email;
@@ -78,7 +79,7 @@ class usuario {
         "email": email,
       };
 }
-
+*/
 final authProvider = ChangeNotifierProvider<AuthProvider>((ref) {
   return AuthProvider();
 });
@@ -87,15 +88,17 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider() : super();
   String? _token;
   String? _tokenDispositivo;
-
+  User? _user;
   int? _id;
+  //String? _imagen;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   String? get token => _token;
   String? get tokenDispositivo => _tokenDispositivo;
-
+  User? get usuario => _user;
+  //String? get imagen => _imagen;
   int? get id => _id;
 
-  Future<usuario?> saveToken(String email, String contrasena) async {
+  Future<dynamic> saveToken(String email, String contrasena) async {
     Login res;
     try {
       final dio = Dio(BaseOptions(headers: {}));
@@ -106,7 +109,10 @@ class AuthProvider extends ChangeNotifier {
         res = Login.fromJson(response.data);
         Data? resToken = res.data;
         _token = resToken.token;
-        _id = int.parse(resToken.user.id);
+        _user = resToken.user;
+        _id = int.parse(resToken.user.id!);
+        //_imagen = resToken.user.imagen;
+
         await _secureStorage.write(
           key: 'token',
           value: resToken.token,

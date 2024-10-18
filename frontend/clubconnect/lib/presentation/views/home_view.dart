@@ -150,7 +150,7 @@ class HomeViewState extends ConsumerState<HomeView> {
                       ],
                     ),
                     const Spacer(),
-                    Container(
+                    /*Container(
                       decoration: decoration,
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: const Icon(
@@ -158,7 +158,7 @@ class HomeViewState extends ConsumerState<HomeView> {
                         color: Color.fromARGB(255, 255, 230, 3),
                         size: 30,
                       ),
-                    ),
+                    ),*/
                   ],
                 ),
               ),

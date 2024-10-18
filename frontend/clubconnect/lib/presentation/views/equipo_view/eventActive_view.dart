@@ -3,6 +3,7 @@ import 'package:clubconnect/domain/repositories/club_repository.dart';
 import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/evento.dart';
+import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/providers/eventosActivos_provider.dart';
 import 'package:clubconnect/presentation/widget/Cardevento.dart';
@@ -163,35 +164,49 @@ class EventsActivesState extends ConsumerState<EventsActives> {
       key: _scaffoldKey,
       // Asociar la GlobalKey al Scaffold
       appBar: AppBar(
-        centerTitle: false,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Eventos ',
-                style: styleText.titleSmall, textAlign: TextAlign.center),
-            Text(
-              widget.equipo.nombre,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
-            )
-          ],
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            context.pop();
-          },
-        ),
-        actions: widget.role == "Administrador" || widget.role == "Entrenador"
-            ? <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () {
-                    _scaffoldKey.currentState!.openDrawer();
-                  },
-                ),
-              ]
-            : null,
-      ),
+          centerTitle: false,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Eventos ',
+                  style: styleText.titleSmall, textAlign: TextAlign.center),
+              Text(
+                widget.equipo.nombre,
+                style:
+                    const TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
+              )
+            ],
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              context.pop();
+            },
+          ),
+          actions: widget.role == "Administrador" || widget.role == "Entrenador"
+              ? <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () {
+                      _scaffoldKey.currentState!.openDrawer();
+                    },
+                  ),
+                ]
+              : <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.stacked_bar_chart_outlined),
+                    onPressed: () {
+                      context.go(
+                          '/home/0/club/${widget.idClub}/0/${widget.equipo.id}/0/${ref.watch(authProvider).id}',
+                          extra: {
+                            'team': widget.equipo,
+                            'usuario': ref
+                                .watch(authProvider)
+                                .usuario, //ef.watch(authProvider)
+                          });
+                    },
+                  ),
+                ]),
       drawer: widget.role == "Administrador" || widget.role == "Entrenador"
           ? CustomDrawer(
               equipo: widget.equipo,

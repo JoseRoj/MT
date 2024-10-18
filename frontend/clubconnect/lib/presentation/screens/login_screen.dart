@@ -20,6 +20,7 @@ class LoginScreenState extends ConsumerState<LoginScreen> {
   final controllerCorreo = TextEditingController();
   final controllerContrasena = TextEditingController();
   final styleTextTheme = AppTheme().getTheme().textTheme;
+  bool obcureText = true;
 
   Data? token;
   bool isLoading = false; // Flag to indicate login button state
@@ -81,10 +82,16 @@ class LoginScreenState extends ConsumerState<LoginScreen> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10)),
                       width: 300,
-                      child: formInput(
-                          label: "Contraseña",
-                          controller: controllerContrasena,
-                          validator: (value) {}),
+                      child: formInputPass(
+                        obcureText: obcureText,
+                        updateVisibility: () {
+                          setState(() {
+                            obcureText = !obcureText;
+                          });
+                        },
+                        label: "Contraseña",
+                        passwordController: controllerContrasena,
+                      ),
                     )
                   ],
                 ),
@@ -126,10 +133,10 @@ class LoginScreenState extends ConsumerState<LoginScreen> {
                         if (responde != null) {
                           //* Save user data in the provider
                           final id = ref.read(authProvider).id;
-                          ref.read(authProvider).tokenDispositivo;
+                          final token = ref.read(authProvider).tokenDispositivo;
                           await ref
                               .read(clubConnectProvider)
-                              .updateToken(id!, "tokenfb");
+                              .updateToken(id!, token != null ? token : "null");
 
                           context.go('/home/1');
                           //ref.watch(UsuarioProvider(responde.id as int));

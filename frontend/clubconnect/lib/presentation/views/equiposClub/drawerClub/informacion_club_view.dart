@@ -65,6 +65,14 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
 
   final MultiSelectController controllerTipoClub = MultiSelectController();
 
+  final TextEditingController instaController = TextEditingController();
+  final TextEditingController instaControllerClub = TextEditingController();
+
+  final TextEditingController tiktokController = TextEditingController();
+  final TextEditingController tiktokControllerClub = TextEditingController();
+
+  final TextEditingController facebookController = TextEditingController();
+  final TextEditingController facebookControllerClub = TextEditingController();
   Future<ClubEspecifico> fetchClub() async {
     final clubData = await ref
         .read(clubConnectProvider)
@@ -85,6 +93,13 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
       correoControllerClub.text = club.correo;
       fonoController.text = club.telefono;
       fonoControllerClub.text = club.telefono;
+      instaController.text = club.instagram ?? "";
+      instaControllerClub.text = club.instagram ?? "";
+      tiktokController.text = club.tiktok ?? "";
+      tiktokControllerClub.text = club.tiktok ?? "";
+      facebookController.text = club.facebook ?? "";
+      facebookControllerClub.text = club.facebook ?? "";
+
       locationInitial = LatLng(club.latitud, club.longitud);
       locationSelected = LatLng(club.latitud, club.longitud);
     });
@@ -120,6 +135,14 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
     fonoController.text = club!.club.telefono;
     fonoControllerClub.text = club!.club.telefono;
 
+    instaController.text = club?.club.instagram ?? "";
+    instaControllerClub.text = club?.club.instagram ?? "";
+
+    tiktokController.text = club?.club.tiktok ?? "";
+    tiktokControllerClub.text = club?.club.tiktok ?? "";
+
+    facebookController.text = club?.club.facebook ?? "";
+    facebookControllerClub.text = club?.club.facebook ?? "";
     locationInitial = LatLng(club!.club.latitud, club!.club.longitud);
     locationSelected = LatLng(club!.club.latitud, club!.club.longitud);
   }
@@ -174,6 +197,7 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
                                 String description = descriptionController.text;
                                 String correo = correoController.text;
                                 String fono = fonoController.text;
+
                                 List<dynamic> us = usController.selectedOptions
                                     .map((e) => e.value)
                                     .toList();
@@ -191,9 +215,9 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
                                   telefono: fono,
                                   descripcion: description,
                                   logo: base64Image,
-                                  facebook: club!.club.facebook,
-                                  instagram: club!.club.instagram,
-                                  tiktok: club!.club.tiktok,
+                                  facebook: facebookController.text,
+                                  instagram: instaController.text,
+                                  tiktok: tiktokController.text,
                                   /* correo: _correoController.text,
                           telefono: _fonoController.text,
                           facebook: redesSocialesSelected.any(
@@ -332,6 +356,33 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
                         validator: (value) => emptyOrNullPhone(value),
                       ),
                     ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9,
+                child: formInput(
+                    readOnly: readOnly,
+                    label: "Instagram",
+                    controller:
+                        readOnly ? instaControllerClub : instaController,
+                    validator: (value) {}),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9,
+                child: formInput(
+                    readOnly: readOnly,
+                    label: "TikTok",
+                    controller:
+                        readOnly ? tiktokControllerClub : tiktokController,
+                    validator: (value) {}),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9,
+                child: formInput(
+                    readOnly: readOnly,
+                    label: "Facebook",
+                    controller:
+                        readOnly ? facebookControllerClub : facebookController,
+                    validator: (value) {}),
+              ),
               readOnly
                   ? Column(
                       children: [

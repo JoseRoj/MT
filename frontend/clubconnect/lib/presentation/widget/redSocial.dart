@@ -167,18 +167,17 @@ Widget containerRedSocial(
             ),
           ),
         ),
-        Expanded(
+        Flexible(
             child: Container(
-          padding: const EdgeInsets.only(bottom: 28),
           child: TextFormField(
             textAlignVertical: TextAlignVertical.center,
-            style: const TextStyle(fontSize: 14),
+            style: const TextStyle(fontSize: 12),
             readOnly: true,
             initialValue: perfil,
             decoration: const InputDecoration(
               fillColor: Colors.red,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              contentPadding: EdgeInsets.only(bottom: 12, left: 5),
             ),
           ),
         )

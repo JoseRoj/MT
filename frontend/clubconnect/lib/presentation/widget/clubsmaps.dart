@@ -57,7 +57,11 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
       [],
       _updateMarkers,
       markerBuilder: markerBuilder,
-      stopClusteringZoom: 16,
+      levels: [1, 4.25, 6.75, 8.25, 11.5, 13, 14.5, 16.0, 16.5, 20.0],
+      extraPercent:
+          0.2, // Optional : This number represents the percentage (0.2 for 20%) of latitude and longitude (in each direction) to be considered on top of the visible map bounds to render clusters. This way, clusters don't "pop out" when you cross the map.
+
+      //stopClusteringZoom: 13,
     );
     selectDeporte = ref.read(deportesProvider).map((e) => e).toList();
     super.initState();

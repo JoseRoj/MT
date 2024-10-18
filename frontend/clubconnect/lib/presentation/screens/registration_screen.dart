@@ -106,7 +106,9 @@ class RegistrationScreenState extends ConsumerState<RegistrationScreen> {
               final id = ref.read(authProvider).id;
               final tokenfb = ref.read(authProvider).tokenDispositivo;
 
-              await ref.read(clubConnectProvider).updateToken(id!, "tokenfb");
+              await ref
+                  .read(clubConnectProvider)
+                  .updateToken(id!, tokenfb != null ? tokenfb : "tokenfb");
               print("tokenfb: $tokenfb");
               context.go('/home/1');
               //ref.watch(UsuarioProvider(responde.id as int));

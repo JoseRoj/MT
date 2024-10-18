@@ -59,18 +59,27 @@ module.exports = (app) => {
           const registrationTokens = responsetokens.rows.map((token) => {
             return token.tokenfb;
           });
-          console.log(registrationTokens);
+          console.log("TK", registrationTokens);
           //* Obtener nombre del club y del Equipo **/
           query = `SELECT "Club".nombre AS club, "Equipo".nombre AS equipo FROM public."Club"
         JOIN public."Equipo" ON "Club".id = "Equipo".id_club
         WHERE "Equipo".id = $2 AND "Club".id = $1`;
           const response2 = await connectionPostgres.query(query, [id_club, id_equipo]);
-          console.log("Responde2", response2);
+
           if (fechas.length == 1) {
+            const fecha = new Date(fechas);
+
+            // Obtener los componentes de la fecha
+            const dia = String(fecha.getDate()).padStart(2, "0"); // Obtener el día y asegurarse que tenga 2 dígitos
+            const mes = String(fecha.getMonth() + 1).padStart(2, "0"); // Obtener el mes (0-11) y sumar 1
+            const anio = fecha.getFullYear(); // Obtener el año
+
+            // Formatear la fecha como 'dd/mm/yyyy'
+            const fechaFormateada = `${dia}/${mes}/${anio}`;
             const message = {
               notification: {
                 title: `Se ha creado un nuevo evento en ${response2.rows[0].equipo}`,
-                body: `Nuevo evento creado para el ${fechas}: ${titulo}`,
+                body: `Nuevo evento creado para el ${fechaFormateada}: ${titulo}`,
               },
               data: {
                 route: `/home/0/club/${id_club}/equipos/${id_equipo}`,
@@ -83,7 +92,7 @@ module.exports = (app) => {
             const message = {
               notification: {
                 title: `Se han creado eventos en ${response2.rows[0].equipo}`,
-                body: `Revisa en en clubConnect los eventos creados`,
+                body: `Revisa en ClubConnect los eventos creados`,
               },
               data: {
                 route: `/home/0/club/${id_club}/equipos/${id_equipo}`,

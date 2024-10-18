@@ -11,24 +11,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
+  await dotenv.load(fileName: '.env');
+
   WidgetsFlutterBinding.ensureInitialized();
   await _initializeFirebase();
+
   await LocalNotification.initializeLocalNotification();
   //FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgrounHandler);
 
-  await dotenv.load(fileName: '.env');
-
   runApp(const ProviderScope(child: MainApp()));
 }
+
+/*Future<void> _initializeFirebase() async {
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp();
+  }
+}*/
 
 Future<void> _initializeFirebase() async {
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
         options: FirebaseOptions(
-            apiKey: "AIzaSyBa6yV6q3NRgauqF8ww2Zit4E7YNyebClQ",
-            appId: "1:244455361948:ios:0ad346b9d0968df68dcc59",
-            messagingSenderId: "244455361948",
-            projectId: "clubconnect-5bd71"));
+            apiKey: dotenv.env["apiKey"]!,
+            appId: dotenv.env["appId"]!,
+            messagingSenderId: dotenv.env["messagingSenderId"]!,
+            projectId: dotenv.env["projectId"]!));
   }
 }
 
