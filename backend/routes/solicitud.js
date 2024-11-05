@@ -1,4 +1,6 @@
 const solicitudController = require("../controllers/solicitudController");
+const connectionPostgres = require("../database/db");
+
 const { getMessaging } = require("firebase-admin/messaging");
 module.exports = (app) => {
   // Enviar Solicitud a un club
@@ -6,6 +8,46 @@ module.exports = (app) => {
     const { id_usuario, id_club } = req.body;
     try {
       const response = await solicitudController.sendSolicitud(id_usuario, id_club);
+      if (response.statusCode === 200) {
+        //* -- ENVIAR NOTIFICACION A TODOS LOS MIMEBORS DEL EQUIPO -- /
+
+        //* Obtener todos los token de los usuarios del equipo **/
+        try {
+          let query = `SELECT "Usuarios".tokenfb
+            FROM public."Usuarios"
+            JOIN public."Administra" ON "Administra".id_usuario = "Usuarios".id AND "Administra".id_club = $1
+            `;
+
+          const responsetokens = await connectionPostgres.query(query, [id_club]);
+          const registrationTokens = responsetokens.rows.map((token) => {
+            return token.tokenfb;
+          });
+          console.log("TK", responsetokens.rows[0].tokenfb);
+          //* Obtener nombre del club y del Equipo **/
+          query = `SELECT "Club".nombre AS club 
+            FROM public."Club"
+            WHERE "Club".id = $1`;
+          const response2 = await connectionPostgres.query(query, [id_club]);
+
+          const message = {
+            notification: {
+              title: `Solicitud de unión`,
+              body: `Revisa las Solicitudes de ${response2.rows[0].club}`,
+            },
+
+            tokens: registrationTokens,
+          };
+          const notification = await getMessaging().sendEachForMulticast(message);
+          console.log("Successfully sent message:", notification);
+          return res.status(200).send({
+            data: response.data,
+          });
+        } catch (e) {
+          console.log("Error: ", e);
+          return res.status(201).send({ data: response.data, message: response.message });
+        }
+      }
+
       return response.statusCode === 400
         ? res.status(400).send({ message: response.message })
         : response.statusCode === 500

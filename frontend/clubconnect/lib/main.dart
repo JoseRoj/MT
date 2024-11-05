@@ -1,4 +1,6 @@
 import 'package:clubconnect/config/router/app_router.dart';
+import 'dart:io' show Platform;
+
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -22,13 +24,26 @@ void main() async {
   runApp(const ProviderScope(child: MainApp()));
 }
 
-/*Future<void> _initializeFirebase() async {
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp();
-  }
-}*/
-
 Future<void> _initializeFirebase() async {
+  if (Platform.isAndroid) {
+    // Si la plataforma es Android
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
+    }
+  } else if (Platform.isIOS) {
+    // Si la plataforma es iOS
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+          options: FirebaseOptions(
+              apiKey: dotenv.env["apiKey"]!,
+              appId: dotenv.env["appId"]!,
+              messagingSenderId: dotenv.env["messagingSenderId"]!,
+              projectId: dotenv.env["projectId"]!));
+    }
+  }
+}
+
+/*Future<void> _initializeFirebase() async {
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
         options: FirebaseOptions(
@@ -37,7 +52,7 @@ Future<void> _initializeFirebase() async {
             messagingSenderId: dotenv.env["messagingSenderId"]!,
             projectId: dotenv.env["projectId"]!));
   }
-}
+}*/
 
 class MainApp extends ConsumerStatefulWidget {
   const MainApp({super.key});

@@ -11,10 +11,10 @@ const admin = require("firebase-admin");
 //const { initializeApp } = require("firebase-admin/app");
 const { initializeApp, applicationDefault } = require("firebase-admin/app");
 
-//const serviceAccount = require("../backend/utils/clubconnect-5bd71-firebase-adminsdk-vz3iv-4fe7a6549e.json");
+const serviceAccount = require("../backend/utils/clubconnect-5bd71-firebase-adminsdk-vz3iv-4fe7a6549e.json");
 
 initializeApp({
-  credential: applicationDefault(), //admin.credential.cert(serviceAccount),
+  credential: applicationDefault(), //  admin.credential.cert(serviceAccount),
   projectID: "clubconnect-5bd71",
 });
 // middleware

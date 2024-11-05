@@ -58,6 +58,9 @@ dependencies:
   shimmer: ^3.0.0
   google_maps_cluster_manager_2: ^3.2.0
   shared_preferences: ^2.3.2
+  font_awesome_flutter: ^10.3.0  # Revisa la última versión en pub.dev
+  flutter_launcher_icons: ^0.14.1
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -73,7 +76,14 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
 
-# For information on the generic Dart part of this file, see the
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"
+  min_sdk_android: 16 # android min sdk min:16, default 21
+  adaptive_icon_background: "#FFFFFF"  # Fondo para Android adaptativo
+  adaptive_icon_foreground: "assets/logo.png"  # Primer plano para Android
+
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
