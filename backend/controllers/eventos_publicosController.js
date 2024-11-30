@@ -11,7 +11,7 @@ module.exports = {
       console.log("Clubes", clubes);
       // Construimos una lista de placeholders dinámicamente para cada elemento
       const placeholders = clubes.map((_, index) => `$${index + 1}`).join(", ");
-      const positionOfset = Number(page) * 8;
+      const positionOfset = Number(page) * 2;
       console.log(clubes.length);
       var query = `   
         SELECT 
