@@ -3,7 +3,9 @@ import 'package:clubconnect/domain/repositories/club_repository.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/categoria.dart';
 import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
+import 'package:clubconnect/insfrastructure/models/local_video_model.dart';
 import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
+import 'package:clubconnect/insfrastructure/models/post.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 
@@ -258,5 +260,10 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
       DateTime initDate, DateTime endDate, int idequipo, int idClub) async {
     return await clubConnectDataSource.getEventoStadistic(
         initDate, endDate, idequipo, idClub);
+  }
+
+  @override
+  Future<List<Post>> getFeedByPage(List<int> clubes, int page) async {
+    return await clubConnectDataSource.getFeedByPage(clubes, page);
   }
 }

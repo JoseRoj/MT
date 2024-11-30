@@ -1,92 +1,102 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  ThemeData getTheme() => ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Color.fromARGB(255, 91, 180, 174),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
+  /// Función para determinar el color del texto según el fondo
+  Color getContrastingTextColor(Color backgroundColor) {
+    final double luminance = backgroundColor.computeLuminance();
+    return luminance > 0.4 ? Colors.black : Colors.white;
+  }
+
+  ThemeData getTheme({Color? scaffold}) {
+    final Color backgroundColor = Color.fromARGB(0, 255, 255, 255);
+    final Color textColor = getContrastingTextColor(
+        scaffold ?? const Color.fromARGB(255, 255, 255, 255));
+    return ThemeData(
+      useMaterial3: true,
+      colorSchemeSeed: backgroundColor,
+      textTheme: TextTheme(
+        bodyLarge: TextStyle(
+          color: textColor,
+          fontSize: 20,
+        ),
+        bodyMedium: TextStyle(
+          color: textColor,
+          fontSize: 16,
+        ),
+        bodySmall: TextStyle(
+          color: textColor,
+          fontSize: 12,
+        ),
+        titleLarge: TextStyle(
+          color: textColor,
+          fontSize: 24,
+          fontFamily: 'Roboto',
+          fontWeight: FontWeight.bold,
+          shadows: [
+            Shadow(
+              color: Colors.black,
+              offset: Offset(0, 1),
+              blurRadius: 1,
+            ),
+          ],
+        ),
+        titleMedium: TextStyle(
+          color: textColor,
+          fontSize: 24,
+          overflow: TextOverflow.clip,
+          fontFamily: 'Roboto',
+          fontWeight: FontWeight.bold,
+        ),
+        titleSmall: TextStyle(
+          color: textColor,
+          fontSize: 20,
+          overflow: TextOverflow.clip,
+          fontWeight: FontWeight.bold,
+        ),
+        labelLarge: TextStyle(
+          color: textColor,
+          fontSize: 24,
+        ),
+        labelMedium: TextStyle(
+          color: textColor,
+          fontSize: 15,
+          overflow: TextOverflow.ellipsis,
+        ),
+        labelSmall: TextStyle(
+          color: textColor,
+          fontSize: 12,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      // Configuración del tema del TimePicker
+      timePickerTheme: TimePickerThemeData(
+        confirmButtonStyle: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all<Color>(
+            Color.fromARGB(255, 69, 223, 58),
           ),
-          bodyMedium: TextStyle(
-            color: Colors.black,
-            fontSize: 16,
-          ),
-          bodySmall: TextStyle(
-            color: Colors.black,
-            fontSize: 12,
-          ),
-          titleLarge: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontFamily: 'Roboto',
-            fontWeight: FontWeight.bold,
-            shadows: [
-              Shadow(
-                color: Colors.black,
-                offset: Offset(0, 1),
-                blurRadius: 1,
-              ),
-            ],
-          ),
-          titleMedium: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            overflow: TextOverflow.clip,
-            fontFamily: 'Roboto',
-            fontWeight: FontWeight.bold,
-          ),
-          titleSmall: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            overflow: TextOverflow.clip,
-            fontWeight: FontWeight.bold,
-          ),
-          labelLarge: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-          ),
-          labelMedium: TextStyle(
-            color: Colors.black,
-            fontSize: 15,
-            overflow: TextOverflow.ellipsis,
-          ),
-          labelSmall: TextStyle(
-            color: Colors.black,
-            fontSize: 12,
-            overflow: TextOverflow.ellipsis,
+          foregroundColor: MaterialStateProperty.all<Color>(
+            getContrastingTextColor(Color.fromARGB(255, 69, 223, 58)),
           ),
         ),
-        // Definir el tema del TimePicker aquí
-        timePickerTheme: TimePickerThemeData(
-          confirmButtonStyle: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(
-              Color.fromARGB(255, 69, 223, 58),
-            ),
-            foregroundColor: MaterialStateProperty.all<Color>(
-              Color.fromARGB(255, 15, 16, 17),
-            ),
-          ),
-          hourMinuteTextStyle: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color.fromARGB(255, 61, 255, 47),
-            fontFamily: 'Roboto', // Cambia esto por la fuente que desees
-          ),
-          dayPeriodTextStyle: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: const Color.fromARGB(255, 15, 16, 17),
-            fontFamily: 'Roboto', // Cambia esto por la fuente que desees
-          ),
-          helpTextStyle: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.normal,
-            color: Colors.grey,
-            fontFamily: 'Roboto', // Cambia esto por la fuente que desees
-          ),
-          // Otros estilos pueden ser configurados aquí
+        hourMinuteTextStyle: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: textColor,
+          fontFamily: 'Roboto',
         ),
-      );
+        dayPeriodTextStyle: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: textColor,
+          fontFamily: 'Roboto',
+        ),
+        helpTextStyle: TextStyle(
+          fontSize: 40,
+          fontWeight: FontWeight.normal,
+          color: Colors.grey,
+          fontFamily: 'Roboto',
+        ),
+      ),
+    );
+  }
 }

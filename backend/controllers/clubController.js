@@ -41,16 +41,19 @@ module.exports = {
         club: null,
         categorias: [],
         tipo: [],
+        eventos: [],
       };
       //* Get Club
       let query = `SELECT "Club".*, "Deporte".nombre AS deporte
       FROM public."Club"
       JOIN public."Deporte" ON "Club".id_deporte = "Deporte".id
       WHERE "Club".id = $1;`;
+
       const response = await connectionPostgres.query(query, [id]);
       if (response.rowCount === 0) {
         return { statusCode: 400, message: "Club no encontrado" };
       }
+
       //* Get Categorias
       let query2 = `SELECT "Categoria".nombre AS categoria
       FROM public."ClubCategoria"
@@ -73,6 +76,14 @@ module.exports = {
       });
       result.club = response.rows[0];
 
+      //*Get EventosPublicos
+      const queryEventosPublicos = ` SELECT "EventosPublicos".*
+      FROM "EventosPublicos"
+      WHERE "EventosPublicos".club_id = $1;`;
+      const responseEventosPublicos = await connectionPostgres.query(queryEventosPublicos, [id]);
+      responseEventosPublicos.rows.forEach((row) => {
+        result.eventos.push(row);
+      });
       return { statusCode: 200, data: result, message: "" };
     } catch (e) {
       console.log("Error: ", e);

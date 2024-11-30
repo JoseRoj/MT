@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 Widget formInput({
   required String label,
+  bool? dark = false,
   String? hint,
   int? maxLines,
   bool readOnly = false,
@@ -25,8 +26,10 @@ Widget formInput({
           contentPadding: const EdgeInsets.symmetric(
               vertical: 10, horizontal: 10), // Altura del campo de entrada
         ),
-        style: const TextStyle(
-            fontSize: 14), // Tamaño del texto dentro del campo de entrada
+        style: TextStyle(
+            fontSize: 14,
+            color:
+                (dark ?? false) ? Colors.white : Colors.black), // Verifica null
         validator: validator),
   );
 }

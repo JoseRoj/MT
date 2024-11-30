@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clubconnect/insfrastructure/models/post.dart';
 import 'package:google_maps_cluster_manager_2/google_maps_cluster_manager_2.dart';
 import 'package:google_maps_flutter_platform_interface/src/types/location.dart';
 
@@ -7,11 +8,13 @@ class ClubEspecifico {
   Club club;
   List<String> categorias;
   List<String> tipo;
+  List<Post> eventos;
 
   ClubEspecifico({
     required this.club,
     required this.categorias,
     required this.tipo,
+    required this.eventos,
   });
 
   factory ClubEspecifico.fromRawJson(String str) =>
@@ -23,12 +26,14 @@ class ClubEspecifico {
         club: Club.fromJson(json["club"]),
         categorias: List<String>.from(json["categorias"].map((x) => x)),
         tipo: List<String>.from(json["tipo"].map((x) => x)),
+        eventos: List<Post>.from(json["eventos"].map((x) => Post.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
         "club": club.toJson(),
         "categorias": List<dynamic>.from(categorias.map((x) => x)),
         "tipo": List<dynamic>.from(tipo.map((x) => x)),
+        "eventos": List<dynamic>.from(eventos.map((evento) => evento.toJson())),
       };
 }
 

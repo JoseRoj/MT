@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/intl.dart';
 
 void main() async {
   await dotenv.load(fileName: '.env');
@@ -70,6 +71,8 @@ class MainAppState extends ConsumerState<MainApp> {
 
   @override
   Widget build(BuildContext context) {
+    Intl.defaultLocale = 'es_ES';
+
     return MaterialApp.router(
       routerConfig: appRouter,
       locale: Locale('es'), // Cambia 'es' por el código del idioma deseado
@@ -83,6 +86,7 @@ class MainAppState extends ConsumerState<MainApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+
       debugShowCheckedModeBanner: false,
       theme: AppTheme().getTheme(),
     );

@@ -17,6 +17,8 @@ List<String> generos = [
   "Otro",
 ];
 
+List<String> estados = ["Activo", "Finalizado"];
+
 final List<String> daysOfWeek = [
   'Lunes',
   'Martes',

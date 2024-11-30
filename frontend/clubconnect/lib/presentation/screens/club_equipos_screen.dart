@@ -8,10 +8,12 @@ import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/views/equiposClub/drawerClub/all_miembros_view.dart';
 import 'package:clubconnect/presentation/views/equiposClub/drawerClub/all_teams_view.dart';
+import 'package:clubconnect/presentation/views/equiposClub/drawerClub/eventosPublicos/eventos_publicos.dart';
 import 'package:clubconnect/presentation/views/equiposClub/drawerClub/informacion_club_view.dart';
 import 'package:clubconnect/presentation/views/equiposClub/drawerClub/solicitudes_view.dart';
 import 'package:clubconnect/presentation/widget.dart';
 import 'package:clubconnect/presentation/widget/OvalImage.dart';
+import 'package:clubconnect/presentation/widget/modalDelete.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -97,7 +99,8 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
               solicitudes: solicitudes,
               equipos: equipos,
             ),
-            InformacionClubWidget(club: club)
+            InformacionClubWidget(club: club),
+            EventosPublicosWidget(club: club),
             //FavoritesView(),
           ];
         });
@@ -156,82 +159,119 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
   //* DRAWER
   Widget? drawer(Color color) {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: <Widget>[
-          DrawerHeader(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            decoration: BoxDecoration(color: color),
-            child: Column(
-              children: [
-                ImageOval(
-                  club!.club.logo,
-                  imagenFromBase64(club!.club.logo),
-                  80,
-                  80,
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Text(
-                    club!.club.nombre,
-                    style: styleText.titleSmall,
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: <Widget>[
+                DrawerHeader(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                  decoration: BoxDecoration(color: color),
+                  child: Column(
+                    children: [
+                      ImageOval(
+                        club!.club.logo,
+                        imagenFromBase64(club!.club.logo),
+                        80,
+                        80,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          club!.club.nombre,
+                          style: styleText.titleSmall,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.group_add),
+                  title: Text('Crear Equipo', style: styleText.bodyMedium),
+                  onTap: () {
+                    _scaffoldKey.currentState!.closeDrawer();
+                    _showCreateTeamModal(context, controllername,
+                        (value) => emptyOrNull(value, "nombre"), addEquipo);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.list),
+                  title: Text(
+                    'Todos los equipos',
+                    style: styleText.bodyMedium,
+                  ),
+                  onTap: () {
+                    _scaffoldKey.currentState!.closeDrawer();
+                    context.go('/home/0/club/${widget.idclub}/0');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.groups_3),
+                  title: Text(
+                    'Todos los Miembros',
+                    style: styleText.bodyMedium,
+                  ),
+                  onTap: () {
+                    _scaffoldKey.currentState!.closeDrawer();
+                    context.go('/home/0/club/${widget.idclub}/1');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.notification_add),
+                  title: Text('Solicitudes',
+                      style: AppTheme().getTheme().textTheme.bodyMedium),
+                  onTap: () {
+                    _scaffoldKey.currentState!.closeDrawer();
+                    context.go('/home/0/club/${widget.idclub}/2');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.info),
+                  title: Text(
+                    'Información del Club',
+                    style: styleText.bodyMedium,
+                  ),
+                  onTap: () {
+                    _scaffoldKey.currentState!.closeDrawer();
+                    context.go('/home/0/club/${widget.idclub}/3');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.feed),
+                  title: Text(
+                    'Eventos Públicos',
+                    style: styleText.bodyMedium,
+                  ),
+                  onTap: () {
+                    _scaffoldKey.currentState!.closeDrawer();
+                    context.go('/home/0/club/${widget.idclub}/4');
+                  },
                 ),
               ],
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.group_add),
-            title: Text('Crear Equipo', style: styleText.bodyMedium),
-            onTap: () {
-              _scaffoldKey.currentState!.closeDrawer();
-              _showCreateTeamModal(context, controllername,
-                  (value) => emptyOrNull(value, "nombre"), addEquipo);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.list),
-            title: Text(
-              'Todos los equipos',
-              style: styleText.bodyMedium,
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+            child: ElevatedButton(
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.all<Color>(
+                  Colors.red,
+                ), // Cambia 'Colors.blue' al color que desees
+              ),
+              onPressed: () async {
+                final response = await modalDelete(
+                    context, "¿Está seguro que desea eliminar este club?");
+                response == true ? null : null;
+              },
+              child: Text(
+                'Eliminar Club',
+                style: styleText.bodyMedium,
+              ),
             ),
-            onTap: () {
-              _scaffoldKey.currentState!.closeDrawer();
-              context.go('/home/0/club/${widget.idclub}/0');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.groups_3),
-            title: Text(
-              'Todos los Miembros',
-              style: styleText.bodyMedium,
-            ),
-            onTap: () {
-              _scaffoldKey.currentState!.closeDrawer();
-              context.go('/home/0/club/${widget.idclub}/1');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.notification_add),
-            title: Text('Solicitudes',
-                style: AppTheme().getTheme().textTheme.bodyMedium),
-            onTap: () {
-              _scaffoldKey.currentState!.closeDrawer();
-              context.go('/home/0/club/${widget.idclub}/2');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.info),
-            title: Text(
-              'Información del Club',
-              style: styleText.bodyMedium,
-            ),
-            onTap: () {
-              _scaffoldKey.currentState!.closeDrawer();
-              context.go('/home/0/club/${widget.idclub}/3');
-            },
           ),
         ],
       ),
@@ -246,7 +286,9 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
             ? 'Miembros'
             : widget.pageIndex == 2
                 ? 'Solicitudes'
-                : 'Información del Club';
+                : widget.pageIndex == 3
+                    ? 'Información del Club'
+                    : 'Eventos Publicados';
 
     return FutureBuilder(
       future: _initializationFuture,
@@ -258,7 +300,7 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
               appBar: AppBar(
                 centerTitle: false,
                 title: Text(title,
-                    style: AppTheme().getTheme().textTheme.titleSmall),
+                    style: AppTheme().getTheme().textTheme.titleLarge),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () {

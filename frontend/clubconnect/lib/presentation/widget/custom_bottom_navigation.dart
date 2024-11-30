@@ -20,6 +20,9 @@ class CustomBottomNavigation extends StatelessWidget {
       case 2:
         context.go('/home/2');
         break;
+      case 3:
+        context.go('/home/3');
+        break;
     }
   }
 
@@ -28,12 +31,15 @@ class CustomBottomNavigation extends StatelessWidget {
     return BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (value) => onItemTapped(context, value),
-        elevation: 0,
+        elevation: 1,
+        type: BottomNavigationBarType.fixed, // Agrega esta línea
+
         items: const [
           BottomNavigationBarItem(
               icon: Icon(Icons.home_max), label: 'Mis Clubes'),
           BottomNavigationBarItem(
               icon: Icon(Icons.search_sharp), label: 'Explorar'),
+          BottomNavigationBarItem(icon: Icon(Icons.feed), label: 'Feed'),
           BottomNavigationBarItem(
               icon: Icon(Icons.person_outline), label: 'Perfil'),
         ]);

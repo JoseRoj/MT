@@ -1,6 +1,8 @@
 import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
+import 'package:clubconnect/insfrastructure/models/local_video_model.dart';
 import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
+import 'package:clubconnect/insfrastructure/models/post.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 
@@ -90,4 +92,7 @@ abstract class ClubConnectDataSource {
   Future<dynamic> createConfigEvento(ConfigEventos configEvento);
   Future<dynamic> deleteConfigEvento(int idConfig);
   Future<dynamic> editConfigEvento(ConfigEventos configEvento);
+
+  //* ------------ VIDEOS ------------------------*//
+  Future<List<Post>> getFeedByPage(List<int> clubes, int page);
 }

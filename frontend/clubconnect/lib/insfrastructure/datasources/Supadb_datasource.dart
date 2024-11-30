@@ -6,7 +6,7 @@ import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'package:clubconnect/insfrastructure/models/deporte.dart';
 import 'package:clubconnect/insfrastructure/models/eventoStadistic.dart';
 import 'package:clubconnect/insfrastructure/models/monthStadistic.dart';
-import 'package:clubconnect/presentation/providers/auth_provider.dart';
+import 'package:clubconnect/insfrastructure/models/post.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -810,5 +810,24 @@ class SupabdDatasource extends ClubConnectDataSource {
     EventoStadistic stadistic = EventoStadistic.fromJson(response.data["data"]);
 
     return stadistic;
+  }
+
+  @override
+  Future<List<Post>> getFeedByPage(List<int> clubes, int page) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response =
+          await dio.get('${dotenv.env["API_URL"]}/publicos', data: {
+        "clubes": clubes,
+        "page": page,
+      });
+      if (response.data["data"].length <= 0) return [];
+      List<Post> posts = response.data["data"].map<Post>((post) {
+        return Post.fromJson(post);
+      }).toList();
+      return posts;
+    } catch (e) {
+      return [];
+    }
   }
 }

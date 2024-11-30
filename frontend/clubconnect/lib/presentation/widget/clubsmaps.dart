@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:clubconnect/config/theme/app_theme.dart';
+import 'package:clubconnect/helpers/loadEventPublic.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/providers/deporte_provider.dart';
+import 'package:clubconnect/presentation/providers/discover_provider.dart';
 import 'package:clubconnect/presentation/widget/bottonCardClub.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -68,7 +70,6 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
   }
 
   //* ------------- Funciones ------------- */
-
   void _updateMarkers(Set<Marker> newMarkers) {
     setState(() {
       markers = newMarkers;
@@ -224,6 +225,10 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
                             _visibleRegion!.southwest.longitude,
                           );
 
+                  await ref
+                      .read(discoverProvider)
+                      .loadNextPage(getIdClubes(clubes));
+
                   // Establece los ítems del manager
                   manager.setItems(clubes.map((club) {
                     return Place(
@@ -376,20 +381,18 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
                 child: const Icon(Icons.location_searching),
               ),
             ),
-            clubSelected != null
-                ? Positioned(
-                    bottom: 16.0,
-                    left: 16.0,
-                    right: 16.0,
-                    child: bottomCardClub(
-                      clubs.firstWhere(
-                          (element) => element.id == clubSelected.toString()),
-                      deportes,
-                      context,
-                      closeWindow,
-                    ),
-                  )
-                : Container(),
+            if (clubSelected != null)
+              Positioned(
+                bottom: 16.0,
+                left: 16.0,
+                right: 16.0,
+                child: BottomCardClub(
+                  club: clubs.firstWhere(
+                      (element) => element.id == clubSelected.toString()),
+                  deportes: deportes,
+                  closeWindow: closeWindow,
+                ),
+              ),
             /*IconButton(
                 icon: const Icon(Icons.refresh),
                 onPressed: () async {
@@ -425,6 +428,7 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
                   _visibleRegion!.northeast.longitude,
                   _visibleRegion!.southwest.latitude,
                   _visibleRegion!.southwest.longitude);
+          await ref.read(discoverProvider).loadNextPage(getIdClubes(clubes));
           manager.setItems(clubes.map((club) {
             // Aquí deberías crear un nuevo objeto Place con los datos del club
             return Place(

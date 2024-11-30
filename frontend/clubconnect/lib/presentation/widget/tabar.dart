@@ -9,35 +9,37 @@ class TabBarWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       child: TabBar(
-        isScrollable: false,
+        isScrollable: true,
         controller: tabController,
-        tabs: [
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-            ),
-            child: Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Descripción',
-                    style: TextStyle(color: Colors.black),
-                  ),
-                ],
-              ),
+        tabs: const [
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Descripción',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ],
             ),
           ),
-          Container(
-            child: Tab(
-                child: Row(
+          Tab(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.location_on),
                 Text('Ubicación'),
               ],
-            )),
+            ),
+          ),
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.event),
+                Text('Eventos Publicados'),
+              ],
+            ),
           ),
         ],
       ),

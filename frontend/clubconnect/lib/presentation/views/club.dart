@@ -2,13 +2,17 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/insfrastructure/models/club.dart';
+import 'package:clubconnect/insfrastructure/models/local_video_model.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
+import 'package:clubconnect/presentation/screens/public_events.dart';
+import 'package:clubconnect/presentation/views/feed/feedScrollable.dart';
 import 'package:clubconnect/presentation/widget/OvalImage.dart';
 import 'package:flutter/material.dart';
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/presentation/widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -22,6 +26,25 @@ class ClubView extends ConsumerStatefulWidget {
   @override
   ClubViewState createState() => ClubViewState();
 }
+
+List<Map<String, dynamic>> videoPosts = [
+  {
+    "estado": "Activo",
+    "club": "Club Mewlen Angol",
+    "fecha_evento": "2024-08-15T00:00:00.000Z",
+    "url":
+        "https://instagram.fccp3-1.fna.fbcdn.net/v/t51.29350-15/435621030_889264159666636_3458351929489774934_n.webp?stp=dst-jpg_e35&efg=eyJ2ZW5jb2RlX3RhZyI6ImltYWdlX3VybGdlbi4xMDgweDEwODAuc2RyLmYyOTM1MC5kZWZhdWx0X2ltYWdlIn0&_nc_ht=instagram.fccp3-1.fna.fbcdn.net&_nc_cat=104&_nc_ohc=MqFV-oeK4X8Q7kNvgFjYFgj&_nc_gid=3efa323e0cc74cfdb0673287e7de9bb8&edm=APoiHPcBAAAA&ccb=7-5&ig_cache_key=MzM0MTI1ODMwMTY3Njc4Mjk5OQ%3D%3D.3-ccb7-5&oh=00_AYD94M-u7eBLB8uPctZaQ-grDLteZW7iF2h5TQ4etI4BEw&oe=6741C299&_nc_sid=22de04",
+    "fecha_publicacion": "2024-08-15T00:00:00.000Z"
+  },
+  {
+    "estado": "Finalizado",
+    "club": "Tralkan",
+    "fecha_evento": "2024-08-15T00:00:00.000Z",
+    "url":
+        "https://instagram.fccp3-1.fna.fbcdn.net/v/t51.29350-15/435621030_889264159666636_3458351929489774934_n.webp?stp=dst-jpg_e35&efg=eyJ2ZW5jb2RlX3RhZyI6ImltYWdlX3VybGdlbi4xMDgweDEwODAuc2RyLmYyOTM1MC5kZWZhdWx0X2ltYWdlIn0&_nc_ht=instagram.fccp3-1.fna.fbcdn.net&_nc_cat=104&_nc_ohc=MqFV-oeK4X8Q7kNvgFjYFgj&_nc_gid=3efa323e0cc74cfdb0673287e7de9bb8&edm=APoiHPcBAAAA&ccb=7-5&ig_cache_key=MzM0MTI1ODMwMTY3Njc4Mjk5OQ%3D%3D.3-ccb7-5&oh=00_AYD94M-u7eBLB8uPctZaQ-grDLteZW7iF2h5TQ4etI4BEw&oe=6741C299&_nc_sid=22de04",
+    "fecha_publicacion": "2024-08-15T00:00:00.000Z"
+  }
+];
 
 var decoration = BoxDecoration(
   color: AppTheme().getTheme().colorScheme.onPrimary,
@@ -53,7 +76,7 @@ class ClubViewState extends ConsumerState<ClubView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
 
     _futureEstado = ref
         .read(clubConnectProvider)
@@ -318,6 +341,67 @@ class ClubViewState extends ConsumerState<ClubView>
                   /*
                         ),*/
                 ),
+                GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 5,
+                    crossAxisSpacing: 5,
+                  ),
+                  itemCount: videoPosts.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    LocalVideoModel evento =
+                        LocalVideoModel.fromJson(videoPosts[index]);
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EventsPublicClub(
+                              club: club!,
+                              videos:
+                                  videoPosts.map<LocalVideoModel>((videoPost) {
+                                return LocalVideoModel.fromJson(videoPost);
+                              }).toList(),
+                              initialIndex: index,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        color: Colors.black,
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Image.network(
+                                  'https://marketplace.canva.com/EAGGE1BZbhA/1/0/1131w/canva-cartel-vertical-moderno-para-promoci%C3%B3n-de-festival-musical-amarillo-SOF81hXuW50.jpg',
+                                  fit: BoxFit.cover),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    color: evento.estado == "Activo"
+                                        ? Colors.green
+                                        : Colors.red,
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(5))),
+                                width: 80,
+                                child: Text(
+                                  evento.estado,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ]),
         ),
       ],
@@ -326,7 +410,7 @@ class ClubViewState extends ConsumerState<ClubView>
 
   @override
   Widget build(BuildContext context) {
-    print("Estado: $estado");
+    print("Estado: $club");
     return club == null
         ? FutureBuilder<void>(
             future: Future.wait([_futureClub, _futureEstado]),

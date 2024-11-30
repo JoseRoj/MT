@@ -1,4 +1,7 @@
 import 'package:clubconnect/presentation/providers.dart';
+import 'package:clubconnect/presentation/providers/discover_provider.dart';
+import 'package:clubconnect/presentation/screens/feed_events.dart';
+import 'package:clubconnect/presentation/views/feed/feedScrollable.dart';
 import 'package:clubconnect/presentation/views/listclubs_view.dart';
 import 'package:clubconnect/presentation/views/home_view.dart';
 import 'package:clubconnect/presentation/screens/perfil_screen.dart';
@@ -43,16 +46,17 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
 
     //      final deportes = ref.watch(deportesProvider);
     await ref.read(tiposProvider.notifier).getTipos();
+
     setState(() {});
   }
 
   final viewRoutes = const <Widget>[
     ListClubView(), // <--- Hom
     HomeView(),
+    DiscoverScreen(),
     Perfil(), // <--
     //FavoritesView(),
   ];
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
