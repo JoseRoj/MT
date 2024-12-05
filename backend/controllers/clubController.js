@@ -110,7 +110,7 @@ module.exports = {
       let query = `SELECT COUNT(*) 
       FROM public."Club"
       WHERE nombre = $1 OR correo = $2`;
-      //await connectionPostgres.query("BEGIN"); // Inicia la transacción
+      await connectionPostgres.query("BEGIN"); // Inicia la transacción
 
       let response = await connectionPostgres.query(query, [nombre, correo]);
       if (response.rows[0].count > 0) {
@@ -133,11 +133,11 @@ module.exports = {
       // Asociar al creador del Club como administrador del club
       query = `INSERT INTO public."Administra" (id_club, id_usuario) VALUES ($1, $2)`;
       await connectionPostgres.query(query, [id_club, id_usuario]);
-      //await connectionPostgres.query("COMMIT"); // Confirma la transacción
+      await connectionPostgres.query("COMMIT"); // Confirma la transacción
       return { statusCode: 200, data: id_club, message: "Club creado con éxito" };
     } catch (e) {
       console.log("Error: ", e);
-      //await connectionPostgres.query("ROLLBACK");
+      await connectionPostgres.query("ROLLBACK");
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },
@@ -295,6 +295,20 @@ module.exports = {
       response = await connectionPostgres.query(query);
 
       return { statusCode: 200, message: "Club actualizado con éxito" };
+    } catch (e) {
+      console.log("Error: ", e);
+      return { statusCode: 500, message: "Error al realizar petición" };
+    }
+  },
+
+  async deleteClub(id_club) {
+    try {
+      let query = `
+        DELETE
+        FROM public."Club"
+        WHERE id = $1`;
+      const response = await connectionPostgres.query(query, [id_club]);
+      return { statusCode: 200, message: "Club eliminado con éxito" };
     } catch (e) {
       console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };

@@ -103,6 +103,22 @@ module.exports = (app) => {
     }
   });
 
+  // Eliminar Club
+  app.delete("/club", async (req, res) => {
+    const { id_club } = req.query;
+    try {
+      const response = await clubController.deleteClub(id_club);
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({ message: response.message });
+    } catch (error) {
+      console.log("Error: ", error);
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
+
   app.patch("/club/updateImage", async (req, res) => {
     const { id, imagen } = req.body;
     try {

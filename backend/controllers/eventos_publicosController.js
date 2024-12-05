@@ -34,6 +34,14 @@ module.exports = {
       return { statusCode: 500, message: "Error al realizar la solicitud" };
     }
   },
+
+  async createEventoPublico(post) {
+    var createQuery = `
+      INSERT INTO "EventosPublicos" (fecha_publicacion, fecha_evento, estado, club_id, image) VALUES ($1, $2, $3, $4, $5) RETURNING id`;
+    response = await connectionPostgres.query(createQuery, [post.fecha_publicacion, post.fecha_evento, post.estado, post.club_id, post.image]);
+    console.log(response.rows[0].id);
+    return { statusCode: 200, data: response.rows[0].id, message: "" };
+  },
 };
 /*INNER JOIN 
             "Club" ON "Club".id = "EventosPublicos".club_id*/
