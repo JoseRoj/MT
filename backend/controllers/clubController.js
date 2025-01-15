@@ -259,7 +259,7 @@ module.exports = {
         }
       }
 
-      connectionPostgres.query("BEGIN"); // Inicia la transacción
+      await connectionPostgres.query("BEGIN"); // Inicia la transacción
       //* obtener todos los equipos de un club //*
       const queryEquipos = `SELECT * FROM public."Equipo" WHERE id_club = $1`;
       const equipos = await connectionPostgres.query(queryEquipos, [id_club]);
@@ -276,7 +276,7 @@ module.exports = {
       //* Eliminar la solicitud del usuario //*
       const queryDeleteSolicitud = `DELETE FROM public."Solicitud" WHERE id_usuario = $1 AND id_club = $2`;
       await connectionPostgres.query(queryDeleteSolicitud, [id_usuario, id_club]);
-      connectionPostgres.query("COMMIT"); // Inicia la transacción
+      await connectionPostgres.query("COMMIT"); // Inicia la transacción
       console.log("Realizado");
       return { statusCode: 200, message: "Usuario expulsado con éxito" };
     } catch (e) {
