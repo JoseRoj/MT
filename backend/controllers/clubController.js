@@ -1,3 +1,4 @@
+const { Query } = require("pg");
 const connectionPostgres = require("../database/db");
 const { deleteSolicitud } = require("./solicitudController");
 module.exports = {
@@ -246,6 +247,19 @@ module.exports = {
   // TODO : TEASTEAR
   async expulsarMiembros(id_club, id_usuario) {
     try {
+      // COomprobar que el id del usuario sea de un administrador
+      const queryIsAdmin = `SELECT COUNT(*) FROM public."Administra" WHERE "Administra".id_club = $1 AND "Administra".id_usuario = $2`;
+      let responseIsAdmin = await connectionPostgres.query(queryIsAdmin, [id_club, id_usuario]);
+      if (responseIsAdmin.rows[0].count == 1) {
+        //* Comprobar que la cantidad de administradores sea mayor a 1
+        const queryAdmin = `SELECT COUNT(*) FROM public."Administra" WHERE id_club = $1`;
+        let responseAdmin = await connectionPostgres.query(queryAdmin, [id_club]);
+        if (responseAdmin.rows[0].count <= 1) {
+          return { statusCode: 400, message: "Solo existe un administrador, no es posible realizar la petición" };
+        }
+      }
+
+      connectionPostgres.query("BEGIN"); // Inicia la transacción
       //* obtener todos los equipos de un club //*
       const queryEquipos = `SELECT * FROM public."Equipo" WHERE id_club = $1`;
       const equipos = await connectionPostgres.query(queryEquipos, [id_club]);
@@ -253,16 +267,21 @@ module.exports = {
       //* Eliminar al usuario de todos los equipos del club //*
       const queryDeleteMiembro = `DELETE FROM public."Miembros" WHERE id_usuario = $1 AND id_equipo = $2`;
       equipos.rows.forEach(async (equipo) => {
-        await connectionPostgres.query(queryDeleteMiembro, [id_usuario, equipo.id]);
-        await deleteSolicitud(id_usuario, id_club);
+        const response = await connectionPostgres.query(queryDeleteMiembro, [id_usuario, equipo.id]);
+        console.log("Equipo", equipo.id, response);
+
+        // await deleteSolicitud(id_usuario, id_club);
       });
 
       //* Eliminar la solicitud del usuario //*
       const queryDeleteSolicitud = `DELETE FROM public."Solicitud" WHERE id_usuario = $1 AND id_club = $2`;
       await connectionPostgres.query(queryDeleteSolicitud, [id_usuario, id_club]);
+      connectionPostgres.query("COMMIT"); // Inicia la transacción
+      console.log("Realizado");
       return { statusCode: 200, message: "Usuario expulsado con éxito" };
     } catch (e) {
       console.log("Error: ", e);
+      await connectionPostgres.query("ROLLBACK");
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },
@@ -270,8 +289,8 @@ module.exports = {
   async editClub(id, nombre, descripcion, latitud, longitud, id_deporte, logo, correo, telefono, categorias, tipos, facebook, instagram, tiktok) {
     try {
       let query = `SELECT COUNT(*)
-      FROM public."Club"
-      WHERE (nombre = $1 OR correo = $2) AND id != $3`;
+        FROM public."Club"
+        WHERE (nombre = $1 OR correo = $2) AND id != $3`;
       let response = await connectionPostgres.query(query, [nombre, correo, id]);
       if (response.rows[0].count > 0) {
         return { statusCode: 400, message: "Nombre existente" };

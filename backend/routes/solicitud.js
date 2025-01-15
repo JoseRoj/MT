@@ -79,6 +79,24 @@ module.exports = (app) => {
     }
   });
 
+  // Obtener estado de una solicitud
+  app.delete("/solicitud", async (req, res) => {
+    const { id_usuario, id_club } = req.query;
+    try {
+      const response = await solicitudController.deleteSolicitud(id_usuario, id_club);
+      return response.statusCode === 400
+        ? res.status(400).send({ message: response.message })
+        : response.statusCode === 500
+        ? res.status(500).send({ message: response.message })
+        : res.status(200).send({
+            data: response.data,
+          });
+    } catch (error) {
+      console.log("Error: ", error);
+      res.status(500).send({ message: "Error interno del servidor" });
+    }
+  });
+
   app.get("/solicitud/getPendientes", async (req, res) => {
     const { id_club } = req.query;
     try {

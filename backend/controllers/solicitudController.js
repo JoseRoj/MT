@@ -1,7 +1,7 @@
 const connectionPostgres = require("../database/db");
 const estado = {
   Pendiente: "Pendiente",
-  Aceptado: "Aceptada",
+  Aceptado: "Aceptado",
   Rechazado: "Rechazada",
 };
 module.exports = {
@@ -15,11 +15,7 @@ module.exports = {
       let query = `INSERT INTO public."Solicitud" (id_usuario, id_club, estado) VALUES ($1, $2, $3)
           ON CONFLICT (id_usuario, id_club) 
           DO UPDATE SET estado = EXCLUDED.estado`;
-      const response = await connectionPostgres.query(query, [
-        id_usuario,
-        id_club,
-        estado.Pendiente,
-      ]);
+      const response = await connectionPostgres.query(query, [id_usuario, id_club, estado.Pendiente]);
       return { statusCode: 200, data: response.rows, message: "" };
     } catch (e) {
       console.log("Error: ", e);
@@ -36,10 +32,7 @@ module.exports = {
     try {
       /** Comprobar si es el admin */
       let query = `SELECT COUNT (*) FROM "Administra" WHERE id_usuario = $1 AND id_club = $2;`;
-      var response = await connectionPostgres.query(query, [
-        id_usuario,
-        id_club,
-      ]);
+      var response = await connectionPostgres.query(query, [id_usuario, id_club]);
       if (response.rows[0].count > 0) {
         return {
           statusCode: 200,
@@ -73,10 +66,7 @@ module.exports = {
             FROM public."Solicitud"
             JOIN public."Usuarios" ON "Solicitud".id_usuario = "Usuarios".id
             WHERE "Solicitud".id_club = $1 AND "Solicitud".estado = $2;`;
-      const response = await connectionPostgres.query(query, [
-        id_club,
-        estado.Pendiente,
-      ]);
+      const response = await connectionPostgres.query(query, [id_club, estado.Pendiente]);
       return { statusCode: 200, data: response.rows, message: "" };
     } catch (e) {
       console.log("Error: ", e);
@@ -93,11 +83,7 @@ module.exports = {
   async updateSolicitud(id_usuario, id_club, estado) {
     try {
       let query = `UPDATE public."Solicitud" SET estado = $3 WHERE id_usuario = $1 AND id_club = $2;`;
-      const response = await connectionPostgres.query(query, [
-        id_usuario,
-        id_club,
-        estado,
-      ]);
+      const response = await connectionPostgres.query(query, [id_usuario, id_club, estado]);
       return { statusCode: 200, data: response.rows, message: "" };
     } catch (e) {
       console.log("Error: ", e);
@@ -112,12 +98,11 @@ module.exports = {
   */
 
   async deleteSolicitud(id_usuario, id_club) {
+    console.log("Query", id_usuario, id_club);
     try {
       let query = `DELETE FROM public."Solicitud" WHERE id_usuario = $1 AND id_club = $2;`;
-      const response = await connectionPostgres.query(query, [
-        id_usuario,
-        id_club,
-      ]);
+      const response = await connectionPostgres.query(query, [id_usuario, id_club]);
+      console.log("Response", response);
       return { statusCode: 200, data: response.rows, message: "" };
     } catch (e) {
       console.log("Error: ", e);
