@@ -102,7 +102,7 @@ class NotificationFirebase {
     if (settings.authorizationStatus != AuthorizationStatus.authorized) {
       return;
     }
-    final token = await messaging.getToken();
+    final token = await messaging.getAPNSToken();
     if (token != null) {
       ref.read(authProvider).saveTokenDispositivo(token);
       // Almacenar token en variables de estado

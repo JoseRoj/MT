@@ -26,12 +26,17 @@ class DiscoverProvider extends ChangeNotifier {
 
   DiscoverProvider({required this.clubConnectRepository, required this.ref});
 
-  Future<void> loadNextPage(List<int> clubes) async {
+  Future<void> loadNextPage(List<int> clubes, bool? searching) async {
     // await Future.delayed( const Duration(seconds: 2) );
 
     // final List<VideoPost> newVideos = videoPosts.map(
     //   ( video ) => LocalVideoModel.fromJson(video).toVideoPostEntity()
     // ).toList();
+    if (searching == true) {
+      videos = [];
+      page = 0;
+      noMore = false;
+    }
     final clubesNear = ref.read(clubesRegisterProvider);
     final newVideos = await clubConnectRepository.getFeedByPage(clubes, page);
     for (var post in newVideos) {

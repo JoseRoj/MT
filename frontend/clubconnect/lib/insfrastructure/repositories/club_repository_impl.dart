@@ -22,7 +22,7 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   }
 
   @override
-  Future<ClubEspecifico> getClub(int id) async {
+  Future<MapEntry<ClubEspecifico?, String>> getClub(int id) async {
     return await clubConnectDataSource.getClub(id);
   }
 
@@ -265,5 +265,10 @@ class SupaDBRepositoryImpl extends ClubConnectRepository {
   @override
   Future<List<Post>> getFeedByPage(List<int> clubes, int page) async {
     return await clubConnectDataSource.getFeedByPage(clubes, page);
+  }
+
+  @override
+  Future<dynamic> createEventPublic(Post post) async {
+    return await clubConnectDataSource.createEventPublic(post);
   }
 }

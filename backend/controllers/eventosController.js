@@ -72,7 +72,6 @@ module.exports = {
 
   // Crear Evento
   async createEvento(fechas, id_equipo, descripcion, horaInicio, horaFin, titulo, lugar, id_config) {
-    console.log("Horas" + fechas.length + " " + id_config);
     try {
       let query = `INSERT INTO public."Evento" (fecha, id_equipo, descripcion, hora_inicio, hora_final, titulo, estado, Lugar, id_config) VALUES `;
       const values = [];
@@ -83,18 +82,17 @@ module.exports = {
           console.log(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, '${estados.activo}' , $${offset + 7},$${offset + 8})`
           )*/
           values.push(fecha, id_equipo, descripcion, horaInicio, horaFin, titulo, lugar, id_config ? id_config : null);
-          return fechas.length > 0
+          return fechas.length > 1
             ? `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, '${estados.activo}' , $${offset + 7},$${offset + 8})`
             : `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, '${estados.activo}' , $${offset + 7},$${offset + 8}) RETURNING id`;
         })
         .join(", ");
-
       query += valueInserts;
       const response = await connectionPostgres.query(query, values);
-      console.log(response);
+
       return {
         statusCode: 201,
-        data: fechas.length > 0 ? "" : response.rows[0].id,
+        data: fechas.length > 1 ? "" : response.rows[0].id,
         message: "Evento creado con éxito",
       };
     } catch (e) {

@@ -326,90 +326,93 @@ class AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
     ThemeData theme = AppTheme().getTheme();
     return GestureDetector(
       onTap: () => modalEventDetails(allEventos[index]),
-      child: Stack(children: [
-        Container(
-            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 35),
-            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-            constraints: const BoxConstraints(
-              minWidth: 100, // Tamaño mínimo en ancho
-              maxWidth:
-                  double.infinity, // Tamaño máximo en ancho (autoajustable)
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              gradient: LinearGradient(
-                colors: [
-                  theme.colorScheme.primaryContainer,
-                  Color.fromARGB(255, 255, 255, 255)
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+      child: Stack(
+        children: [
+          Container(
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 35),
+              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+              constraints: const BoxConstraints(
+                minWidth: 100, // Tamaño mínimo en ancho
+                maxWidth:
+                    double.infinity, // Tamaño máximo en ancho (autoajustable)
               ),
-              // Background color
-              borderRadius: BorderRadius.circular(20), // Rounded corners
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26, // Shadow color
-                  blurRadius: 10, // Blur radius
-                  offset: Offset(0, 4), // Shadow position
+              decoration: BoxDecoration(
+                color: Colors.white,
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primaryContainer,
+                    Color.fromARGB(255, 255, 255, 255)
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Text(
-                          "${allEventos[index].evento.fecha.day} ${Months.where((element) => element.value == allEventos[index].evento.fecha.month).first.mes} ${allEventos[index].evento.fecha.year}",
-                          style: styleText.displayMedium,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          maxLines: 1),
-                      Container(
-                        child: Text("${allEventos[index].evento.titulo} ",
-                            style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 2),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Row(
-                        children: [
-                          Icon(Icons.group),
-                          const SizedBox(width: 10),
-                          Text(
-                              "Asistentes: ${allEventos[index].asistentes.length}",
-                              style: styleText.labelSmall),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Icon(
-                            Icons.circle,
-                            size: 15,
-                            color:
-                                allEventos[index].evento.estado.toLowerCase() ==
-                                        "activo"
-                                    ? colorAsistir
-                                    : colorCancelar,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(allEventos[index].evento.estado,
-                              style: styleText.labelSmall),
-                        ],
-                      ),
-                    ],
+                // Background color
+                borderRadius: BorderRadius.circular(20), // Rounded corners
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26, // Shadow color
+                    blurRadius: 10, // Blur radius
+                    offset: Offset(0, 4), // Shadow position
                   ),
-                ),
-              ],
-            )),
-        Positioned(
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Text(
+                            "${allEventos[index].evento.fecha.day} ${Months.where((element) => element.value == allEventos[index].evento.fecha.month).first.mes} ${allEventos[index].evento.fecha.year}",
+                            style: styleText.displayMedium,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            maxLines: 1),
+                        Container(
+                          child: Text("${allEventos[index].evento.titulo} ",
+                              style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2),
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Row(
+                          children: [
+                            Icon(Icons.group),
+                            const SizedBox(width: 10),
+                            Text(
+                                "Asistentes: ${allEventos[index].asistentes.length}",
+                                style: styleText.labelSmall),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Icon(
+                              Icons.circle,
+                              size: 15,
+                              color: allEventos[index]
+                                          .evento
+                                          .estado
+                                          .toLowerCase() ==
+                                      "activo"
+                                  ? colorAsistir
+                                  : colorCancelar,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(allEventos[index].evento.estado,
+                                style: styleText.labelSmall),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )),
+          Positioned(
             top: 10,
             right: 20,
             child: PopupMenuButton<Menu>(
@@ -520,8 +523,10 @@ class AllEventsWidgetState extends ConsumerState<AllEventsWidget> {
                   ),
                 ),
               ],
-            ))
-      ]),
+            ),
+          )
+        ],
+      ),
     );
   }
 

@@ -1,13 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/globales.dart';
 import 'package:clubconnect/helpers/transformation.dart';
-import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/insfrastructure/models/post.dart';
-import 'package:clubconnect/presentation/widget/formInput.dart';
-import 'package:clubconnect/presentation/widget/video/fullscreen_player.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -18,7 +14,11 @@ import 'package:intl/intl.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
 
 class EventPublicEditCreate extends ConsumerStatefulWidget {
+  final String idClub;
+  final Future<void> Function(Post newPost) addEvent;
   const EventPublicEditCreate({
+    required this.addEvent,
+    required this.idClub,
     super.key,
   });
 
@@ -80,11 +80,18 @@ class EventPublicEditCreateWidgetState
           actions: [
             TextButton(
               onPressed: () async {
+                final Post newPost = new Post(
+                    fechaPublicacion: DateTime.now(),
+                    fechaEvento: transformarAFecha(_dateController.text),
+                    estado: true,
+                    clubId: widget.idClub,
+                    image: imageBase64);
+                await widget.addEvent(newPost);
                 context.pop();
               },
-              child: Text(
+              child: const Text(
                 "Agregar",
-                style: const TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 14),
               ),
             )
           ],
@@ -133,7 +140,7 @@ class EventPublicEditCreateWidgetState
                           child: CupertinoDatePicker(
                             mode: CupertinoDatePickerMode.date,
                             backgroundColor: Colors.white,
-                            maximumDate: DateTime.now(),
+                            //maximumDate: DateTime.now(),
                             initialDateTime: _dateController.text.isEmpty
                                 ? DateTime(2024)
                                 : DateFormat("dd/MM/yyyy")

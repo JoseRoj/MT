@@ -4,6 +4,8 @@ import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+enum Menu { eliminar, informacion }
+
 class CardClub extends StatelessWidget {
   final Club club;
   const CardClub({super.key, required this.club});
@@ -89,14 +91,48 @@ class CardClub extends StatelessWidget {
             ),
           ),
           Positioned(
-            child: IconButton(
-              onPressed: () {
-                context.go('/home/0/club/${club.id}');
-              },
-              icon: Icon(Icons.info_outline),
-            ),
             right: 10,
             top: 0,
+            child: PopupMenuButton<Menu>(
+              //popUpAnimationStyle: _animationStyle,
+              icon: const Icon(Icons.more_vert),
+              onSelected: (Menu item) {},
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<Menu>>[
+                PopupMenuItem<Menu>(
+                  value: Menu.eliminar,
+                  child: ListTile(
+                    dense: true,
+                    leading: const Icon(
+                      Icons.exit_to_app,
+                      color: Colors.red,
+                    ),
+                    title: const Text('Abandonar Club'),
+                    onTap: () async {
+                      //Navigator.of(context).pop();
+                      //confirmDeleteEvent(index);
+                    },
+                  ),
+                ),
+                PopupMenuItem<Menu>(
+                  value: Menu.eliminar,
+                  child: ListTile(
+                    dense: true,
+                    leading: const Icon(
+                      Icons.info_outline,
+                      color: Colors.black,
+                    ),
+                    title: const Text('Información'),
+                    onTap: () async {
+                      Navigator.of(context).pop();
+                      context.go('/home/0/club/${club.id}');
+
+                      //Navigator.of(context).pop();
+                      //confirmDeleteEvent(index);
+                    },
+                  ),
+                ),
+              ],
+            ),
           )
         ],
       ),

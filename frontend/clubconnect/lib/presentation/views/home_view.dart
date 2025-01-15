@@ -75,11 +75,20 @@ class HomeViewState extends ConsumerState<HomeView> {
   Future<void> initData() async {
     try {
       var longlat = await ref.read(locationProvider);
+
       var direction = await Dio().get(
           'https://maps.googleapis.com/maps/api/geocode/json?latlng=${longlat.latitude},${longlat.longitude}&result_type=locality&key=${dotenv.env["API_KEY"]}');
       setState(() {
         location = longlat;
-        address = direction.data['results'][0]['formatted_address'];
+        address = "undefined";
+        if (direction.data['results'].length > 0) {
+          address = direction.data['results'][0]['formatted_address'];
+        } else {
+          address = direction.data["plus_code"]["compound_code"]
+              .split(" ")
+              .sublist(1)
+              .join(" ");
+        }
       });
     } catch (e) {
       print(e);

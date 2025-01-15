@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'package:clubconnect/insfrastructure/models/local_video_model.dart';
+import 'package:clubconnect/insfrastructure/models/post.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
 import 'package:clubconnect/presentation/screens/public_events.dart';
@@ -63,8 +64,9 @@ class ClubViewState extends ConsumerState<ClubView>
     with TickerProviderStateMixin {
   late Future<String?> _futureEstado;
   String? estado;
-  late Future<ClubEspecifico> _futureClub;
+  late Future<dynamic> _futureClub;
   ClubEspecifico? club = null;
+  String message = "";
   Uint8List? logoClub;
   get items => null;
   final Completer<GoogleMapController> _controller =
@@ -73,6 +75,7 @@ class ClubViewState extends ConsumerState<ClubView>
   List<String> categorias = ['Sub-8', 'Sub-10', 'Todo Competidor', 'Senior'];
   List<String> tipo = ['Recreativo', 'Competitivo', 'Formativo'];
   Set<Marker> markers = {};
+  bool isLoading = true;
   @override
   void initState() {
     super.initState();
@@ -84,15 +87,18 @@ class ClubViewState extends ConsumerState<ClubView>
         .then((value) => estado = value);
     _futureClub = ref.read(clubConnectProvider).getClub(widget.id);
     _futureClub.then((value) {
-      club = value;
-      logoClub = imagenFromBase64(club!.club.logo);
-      markers = {
-        Marker(
-          markerId: MarkerId(club!.club.id!),
-          position: LatLng(club!.club.latitud, club!.club.longitud),
-          //infoWindow: InfoWindow(title: 'Club Deportivo Mewlen'),
-        ),
-      };
+      club = value.key;
+      if (club != null) {
+        logoClub = imagenFromBase64(club!.club.logo);
+        markers = {
+          Marker(
+            markerId: MarkerId(club!.club.id!),
+            position: LatLng(club!.club.latitud, club!.club.longitud),
+            //infoWindow: InfoWindow(title: 'Club Deportivo Mewlen'),
+          ),
+        };
+      }
+      message = value.value;
     });
   }
 
@@ -347,10 +353,9 @@ class ClubViewState extends ConsumerState<ClubView>
                     mainAxisSpacing: 5,
                     crossAxisSpacing: 5,
                   ),
-                  itemCount: videoPosts.length,
+                  itemCount: club?.eventos.length ?? 0,
                   itemBuilder: (BuildContext context, int index) {
-                    LocalVideoModel evento =
-                        LocalVideoModel.fromJson(videoPosts[index]);
+                    Post? evento = club?.eventos[index];
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(
@@ -358,10 +363,6 @@ class ClubViewState extends ConsumerState<ClubView>
                           MaterialPageRoute(
                             builder: (context) => EventsPublicClub(
                               club: club!,
-                              videos:
-                                  videoPosts.map<LocalVideoModel>((videoPost) {
-                                return LocalVideoModel.fromJson(videoPost);
-                              }).toList(),
                               initialIndex: index,
                             ),
                           ),
@@ -372,23 +373,26 @@ class ClubViewState extends ConsumerState<ClubView>
                         child: Stack(
                           children: [
                             Center(
-                              child: Image.network(
-                                  'https://marketplace.canva.com/EAGGE1BZbhA/1/0/1131w/canva-cartel-vertical-moderno-para-promoci%C3%B3n-de-festival-musical-amarillo-SOF81hXuW50.jpg',
-                                  fit: BoxFit.cover),
+                              child: Image.memory(
+                                imagenFromBase64(evento!.image),
+                                fit: BoxFit.cover,
+                              ),
                             ),
                             Positioned(
                               top: 0,
                               right: 0,
                               child: Container(
                                 decoration: BoxDecoration(
-                                    color: evento.estado == "Activo"
+                                    color: evento.estado
                                         ? Colors.green
                                         : Colors.red,
                                     borderRadius:
                                         BorderRadius.all(Radius.circular(5))),
                                 width: 80,
                                 child: Text(
-                                  evento.estado,
+                                  evento.estado == true
+                                      ? "Activo"
+                                      : "Finalizado",
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12),
@@ -411,7 +415,69 @@ class ClubViewState extends ConsumerState<ClubView>
   @override
   Widget build(BuildContext context) {
     print("Estado: $club");
-    return club == null
+    return FutureBuilder(
+      future: Future.wait([_futureClub, _futureEstado]),
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.waiting:
+            return Scaffold(
+              appBar: AppBar(
+                shadowColor: const Color.fromARGB(255, 0, 0, 0),
+                elevation: 1,
+                backgroundColor: Colors.white,
+                title: Text(
+                  snapshot.connectionState == ConnectionState.waiting
+                      ? ""
+                      : (club?.club.nombre ?? "Club"),
+                  style: AppTheme().getTheme().textTheme.titleSmall,
+                ),
+              ),
+              body: snapshot.connectionState == ConnectionState.waiting
+                  ? const Center(child: CircularProgressIndicator())
+                  : snapshot.hasError
+                      ? const Center(child: Text('Error loading data'))
+                      : bodyContent(),
+            );
+          case ConnectionState.done:
+            if (club == null) {
+              return Scaffold(
+                appBar: AppBar(),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off, size: 100, color: Colors.grey),
+                      Text(
+                        message,
+                        style: TextStyle(fontSize: 20, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return Scaffold(
+              appBar: AppBar(
+                shadowColor: const Color.fromARGB(255, 0, 0, 0),
+                elevation: 1,
+                backgroundColor: Colors.white,
+                title: Text(
+                  club!.club.nombre,
+                  style: AppTheme().getTheme().textTheme.titleSmall,
+                ),
+              ),
+              body: bodyContent(),
+            );
+
+          case ConnectionState.none:
+            return const Text('none');
+          case ConnectionState.active:
+            return const Text('active');
+        }
+      },
+    );
+
+    /* club == null
         ? FutureBuilder<void>(
             future: Future.wait([_futureClub, _futureEstado]),
             builder: (context, snapshot) {
@@ -446,7 +512,7 @@ class ClubViewState extends ConsumerState<ClubView>
               ),
             ),
             body: bodyContent(),
-          );
+          );*/
     /*return Container(
       decoration:
           const BoxDecoration(color: Color.fromARGB(255, 255, 255, 255)),

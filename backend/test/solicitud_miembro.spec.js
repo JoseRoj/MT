@@ -29,7 +29,7 @@ describe("Test Secuencia - Solicitud - Miembro", () => {
       id_usuario: id_usuario,
       id_club: id_club,
     });
-    expect(responseSolicitud.statusCode).toBe(200);
+    expect(responseSolicitud.statusCode).toBe(201);
     const responsestadoSolicitudes = await api.get("/solicitud/getEstado").query({
       id_usuario: id_usuario,
       id_club: id_club,

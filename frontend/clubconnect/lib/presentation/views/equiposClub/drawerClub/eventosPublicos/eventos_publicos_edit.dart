@@ -1,5 +1,10 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:clubconnect/config/theme/app_theme.dart';
 import 'package:clubconnect/globales.dart';
+import 'package:clubconnect/helpers/datetotext.dart';
+import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/insfrastructure/models/local_video_model.dart';
 import 'package:clubconnect/insfrastructure/models/post.dart';
@@ -9,15 +14,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
 
 class EventPublicEdit extends ConsumerStatefulWidget {
-  final LocalVideoModel? video;
-
+  final Post? post;
+  final Future<void> Function(Post newPost) editEvent;
   const EventPublicEdit({
     super.key,
-    required this.video,
+    required this.post,
+    required this.editEvent,
   });
 
   @override
@@ -25,14 +33,51 @@ class EventPublicEdit extends ConsumerStatefulWidget {
 }
 
 class EventPublicEditWidgetState extends ConsumerState<EventPublicEdit> {
-  bool readOnly = false;
+  bool readOnly = true;
   final _dateController = TextEditingController();
   final MultiSelectController _controller = MultiSelectController();
-
   final _estadoController = TextEditingController();
+  final picker = ImagePicker();
+  File? initialImage; // Imagen inicial (puede ser null)
+  String imageBase64 = "";
+  Uint8List? memoryImage;
+
+  Future<void> _pickImageFromGallery() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      initialImage = File(pickedFile.path);
+      imageBase64 = await toBase64C(pickedFile.path);
+      memoryImage = imagenFromBase64(imageBase64);
+    }
+    setState(() {});
+    //widget.onImageSelected(widget.initialImage, widget.imageBase64);
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      initialImage = File(pickedFile.path);
+      imageBase64 = await toBase64C(pickedFile.path);
+      memoryImage = imagenFromBase64(imageBase64);
+    }
+    setState(() {});
+    //widget.onImageSelected(widget.initialImage, widget.imageBase64);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _dateController.text = DateToString(widget.post!.fechaEvento);
+    _estadoController.text =
+        widget.post!.estado == true ? "Activo" : "Finalizado";
+    imageBase64 = widget.post!.image;
+    memoryImage = imagenFromBase64(widget.post!.image);
+  }
 
   @override
   Widget build(BuildContext context) {
+    print("Estado ${_estadoController.text}");
     return Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -54,6 +99,15 @@ class EventPublicEditWidgetState extends ConsumerState<EventPublicEdit> {
                   setState(() {
                     readOnly = !readOnly;
                   });
+                  final Post post = new Post(
+                      id: widget.post!.id,
+                      fechaPublicacion: widget.post!.fechaPublicacion,
+                      estado: _estadoController.text == "Activo" ? true : false,
+                      fechaEvento: transformarAFecha(_dateController.text),
+                      clubId: widget.post!.clubId,
+                      image: imageBase64);
+                  await widget.editEvent(post);
+                  context.pop();
                 } else {
                   setState(() {
                     readOnly = !readOnly;
@@ -123,7 +177,6 @@ class EventPublicEditWidgetState extends ConsumerState<EventPublicEdit> {
                                 child: CupertinoDatePicker(
                                   mode: CupertinoDatePickerMode.date,
                                   backgroundColor: Colors.white,
-                                  maximumDate: DateTime.now(),
                                   initialDateTime: _dateController.text.isEmpty
                                       ? DateTime(2024)
                                       : DateFormat("dd/MM/yyyy")
@@ -149,9 +202,10 @@ class EventPublicEditWidgetState extends ConsumerState<EventPublicEdit> {
                   ? SizedBox(
                       width: MediaQuery.of(context).size.width * 0.9,
                       child: formInput(
-                          label: "Género",
+                          label: "Estado",
                           controller: _estadoController,
-                          validator: (value) => emptyOrNull(value, "Genero"),
+                          dark: true,
+                          validator: (value) => emptyOrNull(value, "Estado"),
                           readOnly: true),
                     )
                   : Container(
@@ -216,16 +270,81 @@ class EventPublicEditWidgetState extends ConsumerState<EventPublicEdit> {
                       CrossAxisAlignment.start, // Alinea el contenido arriba
 
                   children: [
-                    Image.network(
-                      widget
-                          .video!.url, // Aquí el `url` es la ruta de la imagen
-                      fit: BoxFit
-                          .contain, // Ajusta la imagen dentro del contenedor
+                    GestureDetector(
+                      onTap: () {
+                        if (!readOnly) {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Selecciona una imagen'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    ListTile(
+                                      leading: const Icon(Icons.photo),
+                                      title: const Text('Galería'),
+                                      onTap: () async {
+                                        await _pickImageFromGallery();
+                                        Navigator.of(context)
+                                            .pop(); // Cierra el diálogo
+                                      },
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.camera),
+                                      title: const Text('Cámara'),
+                                      onTap: () async {
+                                        await _pickImageFromCamera();
+                                        Navigator.of(context)
+                                            .pop(); // Cierra el diálogo
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        }
+                      },
+                      child: memoryImage == null
+                          ? Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                    color: Colors.white, // Color del borde
+                                    width: 2.0, // Ancho del borde
+                                    strokeAlign: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              width: 200,
+                              height: 200,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.add_a_photo,
+                                    color: Colors.white,
+                                  ),
+                                  Text(
+                                    "Agrega tu evento",
+                                    style: AppTheme()
+                                        .getTheme(scaffold: Colors.black)
+                                        .textTheme
+                                        .bodyMedium,
+                                  )
+                                ],
+                              ),
+                            )
+                          : Image.memory(
+                              memoryImage!,
+                              fit: BoxFit.contain,
+                            ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Text(
-                        "Publicado el 18/05/2024",
+                        dateToText(
+                            "Publicado el ", widget.post!.fechaPublicacion),
                         style: AppTheme()
                             .getTheme(scaffold: Colors.black)
                             .textTheme

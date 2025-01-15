@@ -14,7 +14,8 @@ module.exports = {
       query = `INSERT INTO public."Asistencia" (id_usuario, id_evento) VALUES ($1, $2)`;
       response = await connectionPostgres.query(query, [id_usuario, id_evento]);
       return { statusCode: 201, data: response.rows, message: "Asistencia confirmada con éxito" };
-    } catch {
+    } catch (e) {
+      console.log("Errror", e);
       return { statusCode: 500, message: "Error al realizar petición" };
     }
   },

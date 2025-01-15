@@ -1,7 +1,5 @@
 import 'package:clubconnect/insfrastructure/models/club.dart';
-import 'package:clubconnect/insfrastructure/models/local_video_model.dart';
-import 'package:clubconnect/insfrastructure/models/post.dart';
-import 'package:clubconnect/presentation/providers/discover_provider.dart';
+
 import 'package:clubconnect/presentation/views/feed/feedScrollable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,11 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class EventsPublicClub extends ConsumerWidget {
   final ClubEspecifico club;
-  final List<LocalVideoModel> videos;
   final int initialIndex; // Índice inicial
   const EventsPublicClub({
     super.key,
-    required this.videos,
     required this.club,
     this.initialIndex = 0, // Valor predeterminado para el índice inicial
   });
@@ -45,12 +41,16 @@ class EventsPublicClub extends ConsumerWidget {
         ),
       ),
       backgroundColor: Colors.black,
-      body: videos.isEmpty
+      body: club.eventos.isEmpty
           ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
           : SafeArea(
-              child:
-                  Container() //FeedScrollable(posts: videos, initialIndex: initialIndex),
-              ), // Pasa el valor del provider a FeedScrollable
+              child: FeedScrollable(
+                posts: club.eventos,
+                initialIndex: initialIndex,
+                loadMore: () async => {},
+                isFeed: false,
+              ),
+            ), // Pasa el valor del provider a FeedScrollable
     );
   }
 }

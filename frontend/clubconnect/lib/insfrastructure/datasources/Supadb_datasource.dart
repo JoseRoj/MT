@@ -42,14 +42,28 @@ class SupabdDatasource extends ClubConnectDataSource {
   }
 
   @override
-  Future<ClubEspecifico> getClub(int id) async {
-    final dio = Dio(BaseOptions(headers: {}));
-    final response = await dio.get(
-      '${dotenv.env["API_URL"]}/club/getClub',
-      queryParameters: {'id': id},
-    );
-    ClubEspecifico club = ClubEspecifico.fromJson(response.data["data"]);
-    return club;
+  Future<MapEntry<ClubEspecifico?, String>> getClub(int id) async {
+    try {
+      final dio = Dio(BaseOptions(headers: {}));
+      final response = await dio.get(
+        '${dotenv.env["API_URL"]}/club/getClub',
+        queryParameters: {'id': id},
+      );
+      ClubEspecifico club = ClubEspecifico.fromJson(response.data["data"]);
+      return MapEntry(club, response.data["message"] ?? "");
+    } catch (e) {
+      if (e is DioException) {
+        // Si es un error de Dio, puedes acceder a la respuesta del servidor
+        if (e.response != null) {
+          return MapEntry(null, e.response!.data["message"]);
+        }
+      } else {
+        // Para otros errores que no sean de
+        // Dio
+        return MapEntry(null, "jojo");
+      }
+      return MapEntry(null, "jojo");
+    }
   }
 
   @override
@@ -828,6 +842,17 @@ class SupabdDatasource extends ClubConnectDataSource {
       return posts;
     } catch (e) {
       return [];
+    }
+  }
+
+  @override
+  Future<dynamic> createEventPublic(Post post) async {
+    try {
+      final response = await dio.post('${dotenv.env["API_URL"]}/publicos',
+          data: post.toJson());
+      return response.data["data"];
+    } catch (e) {
+      return null;
     }
   }
 }

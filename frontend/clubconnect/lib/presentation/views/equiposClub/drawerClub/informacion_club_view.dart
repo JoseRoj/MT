@@ -78,9 +78,9 @@ class _InformacionClubWidgetState extends ConsumerState<InformacionClubWidget> {
         .read(clubConnectProvider)
         .getClub(int.parse(widget.club!.club.id!));
 
-    logoClub = imagenFromBase64(clubData.club.logo);
-    descriptionController.text = clubData.club.descripcion;
-    return clubData;
+    logoClub = imagenFromBase64(clubData.key!.club.logo);
+    descriptionController.text = clubData.key!.club.descripcion;
+    return clubData.key!;
   }
 
   void resetClub(Club club) {

@@ -45,6 +45,8 @@ module.exports = (app) => {
     const { fechas, id_equipo, descripcion, horaInicio, horaFin, titulo, lugar, id_club } = req.body;
     try {
       const response = await EventosController.createEvento(fechas, id_equipo, descripcion, horaInicio, horaFin, titulo, lugar);
+      console.log("req.body", response);
+
       if (response.statusCode === 201) {
         //* -- ENVIAR NOTIFICACION A TODOS LOS MIMEBORS DEL EQUIPO -- /
 
@@ -59,7 +61,7 @@ module.exports = (app) => {
           const registrationTokens = responsetokens.rows.map((token) => {
             return token.tokenfb;
           });
-          console.log("TK", registrationTokens);
+          //console.log("TK", registrationTokens);
           //* Obtener nombre del club y del Equipo **/
           query = `SELECT "Club".nombre AS club, "Equipo".nombre AS equipo FROM public."Club"
         JOIN public."Equipo" ON "Club".id = "Equipo".id_club
@@ -104,7 +106,7 @@ module.exports = (app) => {
             return res.status(201).send({ data: response.data, message: response.message });
           }
         } catch (e) {
-          console.log("Error: ", e);
+          //console.log("Error: ", e);
           return res.status(201).send({ data: response.data, message: response.message });
         }
         /*try {

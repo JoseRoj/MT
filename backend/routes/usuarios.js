@@ -2,7 +2,7 @@ const usuarioController = require("../controllers/usuariosController");
 
 module.exports = (app) => {
   // ? NO TEST - NO SE USA
-  app.get("/usuarios/getUsuarios", async (req, res) => {
+  /*app.get("/usuarios/getUsuarios", async (req, res) => {
     try {
       const response = await usuarioController.getUsuarios();
       return response.statusCode === 400
@@ -16,7 +16,7 @@ module.exports = (app) => {
       return res.status(500).send({ message: "Error interno del servidor" });
     }
   });
-
+*/
   // Obtener inforamcion de un usuario
   app.get("/usuarios/getUser", async (req, res) => {
     try {
@@ -91,7 +91,7 @@ module.exports = (app) => {
   });
 
   // ? NO TEST - NO SE USA
-  app.patch("/usuarios/updateImage", async (req, res) => {
+  /*app.patch("/usuarios/updateImage", async (req, res) => {
     const { id, imagen } = req.body;
     try {
       const response = await usuarioController.updateImage(id, imagen);
@@ -104,7 +104,7 @@ module.exports = (app) => {
       console.log("error: ", error);
       return res.status(500).send({ message: "Error interno del servidor" });
     }
-  });
+  });*/
 
   // Obtener estadisticas del Usuario en un equipo respectivo
   app.get("/usuarios/stadistic", async (req, res) => {
@@ -144,3 +144,4 @@ module.exports = (app) => {
     }
   });
 };
+//44

@@ -68,7 +68,7 @@ describe("Test -  Equipos", () => {
     });
 
     it("Obtener Estadisticas de un equipo no existente o sin estadisticas", async () => {
-      const response = await api.get("/equipo/stadistic").query({ fecha_inicio: "2024-08-22", id_equipo: idEquipo, id_club: 110, fecha_final: "2024-08-31" });
+      const response = await api.get("/equipo/stadistic").query({ fecha_inicio: "2024-08-22", id_equipo: 10000, id_club: 1102, fecha_final: "2024-08-31" });
       expect(response.statusCode).toBe(200);
       expect(response.body.data["eventos"].length).toBe(0);
       expect(response.body.data["userList"].length).toBe(0);

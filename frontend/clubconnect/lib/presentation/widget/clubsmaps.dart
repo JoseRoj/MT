@@ -227,7 +227,7 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
 
                   await ref
                       .read(discoverProvider)
-                      .loadNextPage(getIdClubes(clubes));
+                      .loadNextPage(getIdClubes(clubes), false);
 
                   // Establece los ítems del manager
                   manager.setItems(clubes.map((club) {
@@ -428,7 +428,9 @@ class ClubsMapState extends ConsumerState<ClubsMap> {
                   _visibleRegion!.northeast.longitude,
                   _visibleRegion!.southwest.latitude,
                   _visibleRegion!.southwest.longitude);
-          await ref.read(discoverProvider).loadNextPage(getIdClubes(clubes));
+          await ref
+              .read(discoverProvider)
+              .loadNextPage(getIdClubes(clubes), true);
           manager.setItems(clubes.map((club) {
             // Aquí deberías crear un nuevo objeto Place con los datos del club
             return Place(

@@ -18,7 +18,7 @@ module.exports = (app) => {
   });
 
   // ? NO TESTEABLE - NO SE USA
-  app.get("/equipo/getEquipoById", async (req, res) => {
+  /*app.get("/equipo/getEquipoById", async (req, res) => {
     const { id_usuario, id_club } = req.query;
     try {
       const response = await equipo.getEquipobyId(id_club);
@@ -32,7 +32,7 @@ module.exports = (app) => {
       res.status(500).send({ message: "Error interno del servidor" });
     }
   });
-
+*/
   // Obtener equipos de un Usuario
   app.get("/equipo/getEquiposByUser", async (req, res) => {
     const { id_usuario, id_club } = req.query;
@@ -50,7 +50,7 @@ module.exports = (app) => {
   });
 
   // ? NO TESTEABLE - NO SE USA
-  app.get("/equipo/getEquipo", async (req, res) => {
+  /*app.get("/equipo/getEquipo", async (req, res) => {
     const { id_equipo } = req.query;
     try {
       const response = await equipo.getEquipo(id_equipo);
@@ -63,7 +63,7 @@ module.exports = (app) => {
       console.log("Error: ", error);
       res.status(500).send({ message: "Error interno del servidor" });
     }
-  });
+  });*/
 
   // Crear Equipo
   app.post("/equipo/createEquipo", async (req, res) => {
@@ -135,3 +135,4 @@ module.exports = (app) => {
     }
   });
 };
+//24

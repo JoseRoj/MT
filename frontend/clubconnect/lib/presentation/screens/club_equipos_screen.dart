@@ -1,11 +1,13 @@
 import 'dart:typed_data';
 import 'package:clubconnect/config/theme/app_theme.dart';
+import 'package:clubconnect/helpers/toast.dart';
 import 'package:clubconnect/helpers/transformation.dart';
 import 'package:clubconnect/helpers/validator.dart';
 import 'package:clubconnect/insfrastructure/models.dart';
 import 'package:clubconnect/insfrastructure/models/userTeam.dart';
 import 'package:clubconnect/presentation/providers/auth_provider.dart';
 import 'package:clubconnect/presentation/providers/club_provider.dart';
+import 'package:clubconnect/presentation/providers/clubesUser_provider.dart';
 import 'package:clubconnect/presentation/views/equiposClub/drawerClub/all_miembros_view.dart';
 import 'package:clubconnect/presentation/views/equiposClub/drawerClub/all_teams_view.dart';
 import 'package:clubconnect/presentation/views/equiposClub/drawerClub/eventosPublicos/eventos_publicos.dart';
@@ -37,6 +39,7 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
   final controllername = TextEditingController();
   String role = '';
   late ClubEspecifico? club;
+  String message = "";
   late List<Equipo> equipos;
   late List<Solicitud> solicitudes;
   late List<UserTeam> miembros;
@@ -46,10 +49,13 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
   Uint8List? logoClub;
   late Future<void> _initializationFuture;
 
-  Future<ClubEspecifico> fetchClub() async {
+  Future<ClubEspecifico?> fetchClub() async {
     final clubData = await ref.read(clubConnectProvider).getClub(widget.idclub);
-    logoClub = imagenFromBase64(clubData.club.logo);
-    return clubData;
+    if (clubData.key != null) {
+      logoClub = imagenFromBase64(clubData.key!.club.logo);
+    }
+    message = clubData.value;
+    return clubData.key;
   }
 
   var viewRoutes = <Widget>[];
@@ -265,7 +271,15 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
               onPressed: () async {
                 final response = await modalDelete(
                     context, "¿Está seguro que desea eliminar este club?");
-                response == true ? null : null;
+                if (response == true) {
+                  ref
+                      .watch(clubesUserProvider.notifier)
+                      .deleteClub(widget.idclub);
+                  customToast("Club eliminado con éxito", context, "isSuccess");
+                  context.go(
+                    '/home/0',
+                  );
+                }
               },
               child: Text(
                 'Eliminar Club',
@@ -313,6 +327,23 @@ class ClubEquiposState extends ConsumerState<ClubEquipos> {
               ),
             );
           case ConnectionState.done:
+            if (club == null) {
+              return Scaffold(
+                appBar: AppBar(),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off, size: 100, color: Colors.grey),
+                      Text(
+                        message,
+                        style: TextStyle(fontSize: 20, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
             return Scaffold(
               key: _scaffoldKey,
               appBar: AppBar(

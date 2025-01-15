@@ -36,11 +36,28 @@ module.exports = {
   },
 
   async createEventoPublico(post) {
-    var createQuery = `
+    try {
+      var createQuery = `
       INSERT INTO "EventosPublicos" (fecha_publicacion, fecha_evento, estado, club_id, image) VALUES ($1, $2, $3, $4, $5) RETURNING id`;
-    response = await connectionPostgres.query(createQuery, [post.fecha_publicacion, post.fecha_evento, post.estado, post.club_id, post.image]);
-    console.log(response.rows[0].id);
-    return { statusCode: 200, data: response.rows[0].id, message: "" };
+      response = await connectionPostgres.query(createQuery, [post.fecha_publicacion, post.fecha_evento, post.estado, post.club_id, post.image]);
+      console.log(response.rows[0].id);
+      return { statusCode: 200, data: response.rows[0].id, message: "" };
+    } catch (e) {
+      return { statusCode: 500, message: "Error al realizar la solicitud" };
+    }
+  },
+
+  async updateEventoPublico(post) {
+    try {
+      var updateQuery = `
+      UPDATE INTO "EventosPublicos"
+      SET fecha_publicacion = $1 , fecha_evento = $2, estado = $3, image = $4
+      WHERE id = $5`;
+      response = await connectionPostgres.query(updateQuery, [post.fecha_publicacion, post.fecha_evento, post.estado, post.image, post.id]);
+      return { statusCode: 200, data: [], message: "Evento Actualizado" };
+    } catch (e) {
+      return { statusCode: 500, message: "Error al realizar la solicitud" };
+    }
   },
 };
 /*INNER JOIN 

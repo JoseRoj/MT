@@ -4,7 +4,7 @@ import 'package:clubconnect/insfrastructure/models/club.dart';
 import 'dart:convert';
 
 class Post {
-  String id;
+  String? id;
   DateTime fechaPublicacion;
   DateTime fechaEvento;
   bool estado;
@@ -14,7 +14,7 @@ class Post {
   String image;
 
   Post({
-    required this.id,
+    this.id,
     required this.fechaPublicacion,
     required this.fechaEvento,
     required this.estado,
@@ -28,7 +28,7 @@ class Post {
   String toRawJson() => json.encode(toJson());
 
   factory Post.fromJson(Map<String, dynamic> json) => Post(
-        id: json["id"],
+        id: json["id"] ?? "",
         fechaPublicacion: DateTime.parse(json["fecha_publicacion"]),
         fechaEvento: DateTime.parse(json["fecha_evento"]),
         //club: json["club"] ? Club.fromJson(json["club"]) : null,

@@ -17,7 +17,7 @@ class DiscoverScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       body: disco.initialLoading
-          ? Center(
+          ? const Center(
               child: SizedBox(
                 width: 50, // Tamaño deseado del indicador de progreso
                 height: 50,
@@ -32,8 +32,9 @@ class DiscoverScreen extends ConsumerWidget {
                 posts: disco.videos,
                 loadMore: () async {
                   await discoverNotifier.loadNextPage(
-                      getIdClubes(ref.watch(clubesRegisterProvider)));
+                      getIdClubes(ref.watch(clubesRegisterProvider)), false);
                 },
+                isFeed: true,
                 isLoading: disco.initialLoading,
               ),
             ),

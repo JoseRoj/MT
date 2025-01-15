@@ -10,7 +10,7 @@ abstract class ClubConnectDataSource {
   //* --------------- CLUBS  ----------- *//
   Future<List<Club>> getClubs(List<int> deportes, double northeastLat,
       double northeastLng, double southwestLat, double southwestLng);
-  Future<ClubEspecifico> getClub(int id);
+  Future<MapEntry<ClubEspecifico?, String>> getClub(int id);
   Future<List<Deporte>> getDeportes();
   Future<List<Categoria>> getCategorias();
   Future<List<Tipo>> getTipos();
@@ -95,4 +95,5 @@ abstract class ClubConnectDataSource {
 
   //* ------------ VIDEOS ------------------------*//
   Future<List<Post>> getFeedByPage(List<int> clubes, int page);
+  Future<dynamic> createEventPublic(Post post);
 }

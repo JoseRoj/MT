@@ -16,4 +16,10 @@ class ClubesUser extends StateNotifier<List<Club>> {
     final clubesUser = await _supaDBRepositoryImpl.getClubsUser(idUser);
     state = clubesUser;
   }
+
+  Future<void> deleteClub(dynamic clubId) async {
+    final clubes =
+        state.where((club) => int.parse(club.id!) != clubId).toList();
+    state = clubes;
+  }
 }
