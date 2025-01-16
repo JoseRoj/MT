@@ -101,7 +101,7 @@ module.exports = {
       console.log("fecha", fecha_final);
 
       // Consultas paralelas para obtener eventos y eventos recurrentes
-      const [response, responseRecurrentes, responseList] = await Promise.all([
+      const [response, responseList] = await Promise.all([
         // Obtener todos los eventos en el rango de fechas
         connectionPostgres.query(
           `SELECT e.*, COALESCE(
@@ -123,8 +123,6 @@ module.exports = {
        ORDER BY e.fecha ASC`,
           [fecha_inicio, fecha_final, id_equipo]
         ),
-        // Obtener posibles eventos recurrentes
-        connectionPostgres.query(`SELECT * FROM configevento WHERE (fecha_inicio >= $1 OR fecha_final <= $2) AND id_equipo = $3`, [fecha_inicio, fecha_final, id_equipo]),
         // Obtener lista de usuarios seleccionados
         connectionPostgres.query(
           `WITH UsuariosSeleccionados AS (
@@ -132,11 +130,6 @@ module.exports = {
          FROM "Miembros" m
          JOIN "Usuarios" u ON u.id = m.id_usuario
          WHERE m.id_equipo = $3
-         UNION
-         SELECT DISTINCT u.id
-         FROM "Administra" a
-         JOIN "Usuarios" u ON u.id = a.id_usuario
-         WHERE a.id_club = $4
       )
       SELECT CONCAT_WS(' ', u.nombre, u.apellido1, u.apellido2) AS nombreCompleto, 
              CAST(u.id AS TEXT) AS usuario_id, -- Aquí se convierte el id a string
@@ -147,13 +140,29 @@ module.exports = {
       LEFT JOIN "Evento" e ON a.id_evento = e.id
       GROUP BY u.id, u.nombre, u.apellido1, u.apellido2
       ORDER BY total_asistencias DESC`,
-          [fecha_inicio, fecha_final, id_equipo, id_club]
+          [fecha_inicio, fecha_final, id_equipo]
         ),
       ]);
+      // Obtener posibles eventos recurrentes
+      //connectionPostgres.query(`SELECT * FROM configevento WHERE (fecha_inicio >= $1 OR fecha_final <= $2) AND id_equipo = $3`, [fecha_inicio, fecha_final, id_equipo]),
 
       // Asignar los resultados a los objetos correspondientes
       data.eventos = response.rows;
-      data.recurrentes = responseRecurrentes.rows;
+
+      // Obtener todos los id's diferentes de los eventos,
+
+      // Filtrar y obtener valores únicos
+      const uniqueIdConfigs = Array.from(new Set(response.rows.filter((item) => item.id_config !== null).map((item) => item.id_config)));
+      console.log(uniqueIdConfigs);
+      // Construir la consulta SQL dinámica
+      let recurrentes = [];
+      if (uniqueIdConfigs.length > 0) {
+        const placeholders = uniqueIdConfigs.map((_, index) => `$${index + 1}`).join(", ");
+        const query = `SELECT * FROM configevento WHERE id IN (${placeholders})`;
+        recurrentes = await connectionPostgres.query(query, uniqueIdConfigs);
+        recurrentes = recurrentes.rows;
+      }
+      data.recurrentes = recurrentes;
       data.userList = responseList.rows;
       return { statusCode: 200, data: data, message: "" };
     } catch (e) {
