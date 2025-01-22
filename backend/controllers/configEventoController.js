@@ -109,27 +109,33 @@ module.exports = {
 
   // Eliminar configuracion del evento y sus eventos que aun estan activos
   async deleteConfigEvent(id_config) {
+    const client = await connectionPostgres.connect(); // Obtener una conexión única
+
     try {
       await connectionPostgres.query("BEGIN");
-      let query = `DELETE FROM public."configevento" WHERE id = $1`;
 
-      const response = await connectionPostgres.query(query, [id_config]);
+      let query = `DELETE FROM public."Evento" WHERE id_config = $1 AND estado = 'Activo'`;
+      const responsedelete = await client.query(query, [id_config]);
+
+      query = `DELETE FROM public."configevento" WHERE id = $1`;
+
+      const response = await client.query(query, [id_config]);
       console.log("Resp", response);
       if (response.rowCount == 0) {
-        await connectionPostgres.query("ROLLBACK");
+        await client.query("ROLLBACK");
         return {
           statusCode: 400,
           message: "No se logró eliminar esta Configuración",
         };
       }
-      query = `DELETE FROM public."Evento" WHERE id_config = $1 AND estado = 'Activo'`;
-      const responsedelete = await connectionPostgres.query(query, [id_config]);
-      await connectionPostgres.query("COMMIT");
+      await client.query("COMMIT");
       return { statusCode: 200, message: "Se ha eliminado con éxito" };
     } catch (e) {
-      await connectionPostgres.query("ROLLBACK");
+      await client.query("ROLLBACK");
       console.log("Error: ", e);
       return { statusCode: 500, message: "Error al realizar petición" };
+    } finally {
+      client.release();
     }
   },
 

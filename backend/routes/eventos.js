@@ -41,11 +41,9 @@ module.exports = (app) => {
 
   // Crear Evento
   app.post("/eventos", async (req, res) => {
-    console.log("req.body");
     const { fechas, id_equipo, descripcion, horaInicio, horaFin, titulo, lugar, id_club } = req.body;
     try {
       const response = await EventosController.createEvento(fechas, id_equipo, descripcion, horaInicio, horaFin, titulo, lugar);
-      console.log("req.body", response);
 
       if (response.statusCode === 201) {
         //* -- ENVIAR NOTIFICACION A TODOS LOS MIMEBORS DEL EQUIPO -- /
@@ -61,15 +59,16 @@ module.exports = (app) => {
           const registrationTokens = responsetokens.rows.map((token) => {
             return token.tokenfb;
           });
+
           //console.log("TK", registrationTokens);
           //* Obtener nombre del club y del Equipo **/
           query = `SELECT "Club".nombre AS club, "Equipo".nombre AS equipo FROM public."Club"
         JOIN public."Equipo" ON "Club".id = "Equipo".id_club
         WHERE "Equipo".id = $2 AND "Club".id = $1`;
           const response2 = await connectionPostgres.query(query, [id_club, id_equipo]);
-
+          console.log("Query", response2, fechas.length, registrationTokens);
           if (fechas.length == 1) {
-            const fecha = new Date(fechas);
+            const fecha = new Date(fechas + ":00:00:00");
 
             // Obtener los componentes de la fecha
             const dia = String(fecha.getDate()).padStart(2, "0"); // Obtener el día y asegurarse que tenga 2 dígitos
@@ -84,7 +83,7 @@ module.exports = (app) => {
                 body: `Nuevo evento creado para el ${fechaFormateada}: ${titulo}`,
               },
               data: {
-                route: `/home/0/club/${id_club}/equipos/${id_equipo}`,
+                route: `/home/0/club/${id_club}/0`,
               },
               tokens: registrationTokens,
             };
@@ -97,16 +96,16 @@ module.exports = (app) => {
                 body: `Revisa en ClubConnect los eventos creados`,
               },
               data: {
-                route: `/home/0/club/${id_club}/equipos/${id_equipo}`,
+                route: `/home/0/club/${id_club}/0`,
               },
-              token: registrationTokens,
+              tokens: registrationTokens,
             };
             const notification = await getMessaging().sendEachForMulticast(message);
             console.log("Successfully sent message:", notification);
             return res.status(201).send({ data: response.data, message: response.message });
           }
         } catch (e) {
-          //console.log("Error: ", e);
+          console.log("Error: ", e);
           return res.status(201).send({ data: response.data, message: response.message });
         }
         /*try {
